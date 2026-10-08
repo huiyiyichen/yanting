@@ -1,0 +1,99 @@
+{
+  "version": "loreal-public-products-v2",
+  "checked_on": "2026-10-03",
+  "identity_rule": "Public-brand product references are independent of fictional Excel SKUs. REF-US identifiers are local reference IDs, not manufacturer SKUs. No inferred mapping, live price or clinical evaluation.",
+  "products": [
+    {
+      "sku": "LRLWX26013",
+      "name": "欧莱雅金致小蜜罐4.0水乳套装",
+      "aliases": ["4.0小蜜罐水乳", "小蜜罐水乳4.0"],
+      "brand": "巴黎欧莱雅",
+      "market": "CN",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+      "product_page": "https://www.lorealparis.com.cn/product/?id=JFyJMJrsHnZZNzPbfbS2Zx",
+      "source_label": "巴黎欧莱雅中国官网公开接口与4.0水乳详情图",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/4475bafa-1c03-418c-b33e-159ea9111835.png",
+      "source_receipt": "cn-product-source-review.json",
+      "content": "商品专属资料：欧莱雅金致小蜜罐4.0水乳套装，编号LRLWX26013。中国官网规格为精华水130ml和精华乳110ml；这是套装编号，不是面霜或单瓶货号。官网4.0水乳详情将水乳定位为轻盈质地、日间使用和后续跟妆，并展示混合肌的日用水乳/夜用水霜搭配。这可用于比较消费者明确的日间轻薄偏好，不证明本人一定适合、不出油或不卡粉。水乳详情提及白池花籽油、玻尿酸（脚注为透明质酸钠）和四重胜肽；这是品牌列出的部分信息，不是完整成分表，未提供各项浓度。详情宣称配方设计时不主动添加酒精、矿物油、尼泊金酯类防腐剂，不等于零残留、无香精、敏感肌适用或过敏安全。该说明限定4.0水乳，不能套到面霜、旧版或其他市场。官网百分比是限定受试者和使用条件的品牌数据，不转成人群或个人功效保证。不得映射赛题测试水乳或改写已有购买记录。"
+    },
+    {
+      "sku": "LRLWX26008",
+      "name": "欧莱雅小蜜罐4.0轻盈版水霜套装",
+      "aliases": ["4.0小蜜罐轻盈版水霜", "小蜜罐轻盈版水霜4.0"],
+      "brand": "巴黎欧莱雅",
+      "market": "CN",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+      "product_page": "https://www.lorealparis.com.cn/product/?id=JFyJMJrsHnZZNzPbfbS2Zx",
+      "source_label": "巴黎欧莱雅中国官网公开商品规格",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250829/83881ece-731d-4609-9aa9-0e8bb661ae16.png",
+      "source_receipt": "cn-product-source-review.json",
+      "content": "商品专属资料：欧莱雅小蜜罐4.0轻盈版水霜套装，编号LRLWX26008。中国官网规格是精华水130ml与面霜60ml，不包含精华乳；轻盈版是官网明确标注的版本，不能凭名称进一步推断其适用油皮、敏感肌或改善卡粉。它与水乳套装的主要可确认区别是第二件商品为面霜而不是精华乳。家族详情提供日用水乳/夜用水霜的搭配展示，但不构成个人使用保证或必须再叠加一层霜的要求。消费者只核对套装、拒绝再做保湿或不想增加商品时，只说明差异，不默认让其购买整套。当前已核对资料缺少轻盈版面霜的完整成分表、过敏原结论和精确使用量；水乳详情的“不主动添加酒精”等说明不能移用到此套装中的面霜。LRLWX26008是套装编号，不是单瓶面霜货号，也不证明赛题虚构商品属性。"
+    },
+    {
+      "sku": "LRLWX26010",
+      "name": "欧莱雅小蜜罐4.0滋润版水霜套装",
+      "aliases": ["4.0小蜜罐滋润版水霜", "小蜜罐滋润版水霜4.0"],
+      "brand": "巴黎欧莱雅",
+      "market": "CN",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+      "product_page": "https://www.lorealparis.com.cn/product/?id=JFyJMJrsHnZZNzPbfbS2Zx",
+      "source_label": "巴黎欧莱雅中国官网公开商品规格",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250829/5816c753-acbb-4192-8ad1-b742005ba6bc.png",
+      "source_receipt": "cn-product-source-review.json",
+      "content": "商品专属资料：欧莱雅小蜜罐4.0滋润版水霜套装，编号LRLWX26010。中国官网规格为精华水130ml与面霜60ml；滋润版与轻盈版为不同规格，不互换版本或编号。滋润版只是本次官网的规格标注，未据此验证消费者个人肤质适用性或持妆体验。当前核对资料不能给出滋润版面霜完整成分、浓度、无香精或敏感肌安全结论，也不能借用水乳详情的配方说明。可解释版本及套装组成，不能保证解决消费者干燥或卡粉；消费者已试过或明确拒绝重复护理时，不把叠加保湿包装成新方案。LRLWX26010为套装编号，不改写消费者已有订单，也不自动对应赛题测试面霜。"
+    },
+    {
+      "sku": "LRLWX26040",
+      "name": "黑胖子气垫 200 中性象牙白",
+      "brand": "巴黎欧莱雅",
+      "market": "CN",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/3GeacQVL7hweYdWbjaXeHa",
+      "product_page": "https://www.lorealparis.com.cn/product/3GeacQVL7hweYdWbjaXeHa",
+      "source_label": "巴黎欧莱雅中国官网公开商品资料",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250724/1d0d25e6-c011-4688-8528-f83dee0e00a5.png",
+      "content": "中国官网的商品记录为黑胖子气垫，款式编码MU022；200中性象牙白规格对应LRLWX26040。品牌介绍以轻雾哑光妆效和控油持妆为方向。这里只复述品牌定位，不保证消费者一定不出油、不脱妆或不卡粉。肤质、既往体验、实际色号仍需分别核对；公开文字未提供本次可核对的完整成分表和敏感肌适用性依据。不能把它映射到赛题测试粉底XC33002或XC33003。"
+    },
+    {
+      "sku": "LRLWX26041",
+      "name": "黑胖子气垫 240 中性自然色",
+      "brand": "巴黎欧莱雅",
+      "market": "CN",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/3GeacQVL7hweYdWbjaXeHa",
+      "product_page": "https://www.lorealparis.com.cn/product/3GeacQVL7hweYdWbjaXeHa",
+      "source_label": "巴黎欧莱雅中国官网公开商品资料",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250725/c91a69f1-c130-4d26-b4a8-86ce0c330355.png",
+      "content": "黑胖子气垫的240中性自然色规格对应LRLWX26041，与200规格的颜色描述不同；不能因两者同属气垫而互换规格。品牌的轻雾哑光及控油持妆定位不等于个人使用结果。没有消费者色号依据时不直接断言匹配，也不保证敏感肌安全或解决卡粉。此真实商品资料与赛题虚构订单保持独立，不改写任何历史购买记录。"
+    },
+    {
+      "sku": "REF-US-PROMATTE",
+      "name": "Infallible Pro-Matte 粉底液",
+      "aliases": ["Infallible Pro-Matte", "Pro-Matte"],
+      "brand": "巴黎欧莱雅",
+      "market": "US",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparisusa.com/makeup/face/foundation-makeup/infallible-pro-matte-foundation",
+      "product_page": "https://www.lorealparisusa.com/makeup/face/foundation-makeup/infallible-pro-matte-foundation",
+      "source_label": "巴黎欧莱雅美国官网商品页",
+      "image_url": "https://www.lorealparisusa.com/-/media/project/loreal/brand-sites/oap/americas/us/products/makeup/face/foundation-makeup/infallible-pro-matte-foundation/natural-beige-105/071249293041_t1-v2.png",
+      "content": "美国官网介绍Infallible Pro-Matte粉底液的半哑光妆效、中等遮盖和轻盈质地。可把偏好半哑光与中等遮盖作为比较条件，不将品牌说明转成个人持妆或肤质适用保证。REF-US-PROMATTE仅是本项目资料编号，不是厂商货号。只适用于美国版公开说明；不能据此推断中国大陆同名商品配方、售价、库存或已上市，也不证明赛题测试商品的属性。"
+    },
+    {
+      "sku": "REF-US-PROGLOW",
+      "name": "Infallible Pro-Glow 粉底液",
+      "aliases": ["Infallible Pro-Glow", "Pro-Glow"],
+      "brand": "巴黎欧莱雅",
+      "market": "US",
+      "identity_kind": "brand_reference",
+      "source_url": "https://www.lorealparisusa.com/makeup/face/foundation-makeup/infallible-pro-glow-foundation",
+      "product_page": "https://www.lorealparisusa.com/makeup/face/foundation-makeup/infallible-pro-glow-foundation",
+      "source_label": "巴黎欧莱雅美国官网商品页",
+      "image_url": "https://www.lorealparisusa.com/-/media/project/loreal/brand-sites/oap/americas/us/products/makeup/face/foundation-makeup/infallible-pro-glow-foundation/21-03-2023-packshots/203_t1-min.png",
+      "content": "美国官网介绍Infallible Pro-Glow粉底液的自然光泽、中等遮盖、轻盈水润质地，并将普通至干性肌肤作为产品定位。可比较光泽与半哑光的妆效取舍，但不能据品牌定位保证个人适用性或一定改善卡粉。REF-US-PROGLOW是本项目资料编号，非厂商货号。本条仅记录美国版公开资料，不代替中国大陆商品说明、购买信息或医学判断。"
+    }
+  ]
+}

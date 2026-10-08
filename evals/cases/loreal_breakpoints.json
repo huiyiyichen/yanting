@@ -1,0 +1,252 @@
+{
+  "version": "loreal-breakpoint-gate-v1",
+  "annotation": "冻结的程序证据门禁样例；不是人工专家标注，也不衡量模型理解两个话题是否相同。",
+  "scope": "只评估逐字引用、当前消息、时间窗口、承诺期限、订单/工单范围和状态角色边界。",
+  "cases": [
+    {
+      "id": "B01",
+      "expected": true,
+      "expectedKind": "repeated_question",
+      "context": {"conversationId": "c1", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c1", "label": "消费者自述", "text": "请问订单物流有没有进展？", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {}},
+        {"sourceId": "m2", "kind": "customer_message", "subjectId": "c1", "label": "消费者自述", "text": "物流还是没有更新，请帮我核对。", "occurredAt": "2026-05-01T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "物流进度",
+        "reason": "同一物流诉求在短时间内再次提出，需要核对实际进展。",
+        "evidence": [
+          {"source_ref": "m1", "quote": "请问订单物流有没有进展？"},
+          {"source_ref": "m2", "quote": "物流还是没有更新，请帮我核对。"}
+        ]
+      }
+    },
+    {
+      "id": "B02",
+      "expected": true,
+      "expectedKind": "repeated_question",
+      "context": {
+        "conversationId": "c2",
+        "orders": [{"orderId": "O111111", "conversationId": "c2"}],
+        "workOrders": []
+      },
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c2", "label": "消费者自述", "text": "订单号O111111的物流到哪里了？", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {"orderId": "O111111"}},
+        {"sourceId": "m2", "kind": "customer_message", "subjectId": "c2", "label": "消费者自述", "text": "订单号O111111还是没有物流更新。", "occurredAt": "2026-05-01T10:00:00+08:00", "fields": {"orderId": "O111111"}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "O111111物流",
+        "reason": "同一订单的物流诉求重复出现。",
+        "order_id": "O111111",
+        "evidence": [
+          {"source_ref": "m1", "quote": "订单号O111111的物流到哪里了？"},
+          {"source_ref": "m2", "quote": "订单号O111111还是没有物流更新。"}
+        ]
+      }
+    },
+    {
+      "id": "B03",
+      "expected": true,
+      "expectedKind": "unmet_promise",
+      "context": {"conversationId": "c3", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "s1", "kind": "staff_message", "subjectId": "c3", "label": "历史客服发言", "text": "我们会在48小时内给您答复。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {"speaker": "operator"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c3", "label": "消费者自述", "text": "已经超过时间了，我还没有收到答复，请帮我核实。", "occurredAt": "2026-05-03T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "unmet_promise",
+        "topic": "答复进度",
+        "reason": "客服发言包含明确期限，消费者在期限后反馈仍未收到答复，需要核实兑现情况。",
+        "promise_ref": "s1",
+        "evidence": [
+          {"source_ref": "s1", "quote": "我们会在48小时内给您答复。"},
+          {"source_ref": "m1", "quote": "已经超过时间了，我还没有收到答复，请帮我核实。"}
+        ]
+      }
+    },
+    {
+      "id": "B04",
+      "expected": true,
+      "expectedKind": "resolution_mismatch",
+      "context": {"conversationId": "c4", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "w1", "kind": "work_order", "subjectId": "c4", "label": "源工单 WO1", "text": "源工单WO1状态：已完结", "occurredAt": "2026-05-02T08:00:00+08:00", "fields": {"workOrderId": "WO1", "sourceStatus": "已完结", "completedAt": "2026-05-02T08:00:00+08:00"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c4", "label": "消费者自述", "text": "工单已经完结了，但包装破损的问题还没有解决。", "occurredAt": "2026-05-02T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "resolution_mismatch",
+        "topic": "包装破损处理",
+        "reason": "工单记录已完结，但消费者在完结后仍反馈原问题未解决，需要核实。",
+        "state_ref": "w1",
+        "work_order_id": "WO1",
+        "evidence": [
+          {"source_ref": "w1", "quote": "源工单WO1状态：已完结"},
+          {"source_ref": "m1", "quote": "工单已经完结了，但包装破损的问题还没有解决。"}
+        ]
+      }
+    },
+    {
+      "id": "B05",
+      "expected": false,
+      "expectedKind": "repeated_question",
+      "context": {"conversationId": "c5", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c5", "label": "消费者自述", "text": "请帮我查询物流。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "物流",
+        "reason": "只有一条消费者消息。",
+        "evidence": [{"source_ref": "m1", "quote": "请帮我查询物流。"}]
+      }
+    },
+    {
+      "id": "B06",
+      "expected": false,
+      "expectedKind": "repeated_question",
+      "context": {"conversationId": "c6", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c6", "label": "消费者自述", "text": "想问订单物流。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {}},
+        {"sourceId": "m2", "kind": "customer_message", "subjectId": "c6", "label": "消费者自述", "text": "几天后再次询问物流进度。", "occurredAt": "2026-05-04T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "物流",
+        "reason": "两次消息超出观察窗口。",
+        "evidence": [
+          {"source_ref": "m1", "quote": "想问订单物流。"},
+          {"source_ref": "m2", "quote": "几天后再次询问物流进度。"}
+        ]
+      }
+    },
+    {
+      "id": "B07",
+      "expected": false,
+      "expectedKind": "unmet_promise",
+      "context": {"conversationId": "c7", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "s1", "kind": "staff_message", "subjectId": "c7", "label": "历史客服发言", "text": "我们会尽快给您答复。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {"speaker": "operator"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c7", "label": "消费者自述", "text": "现在还没有答复，请帮我看看。", "occurredAt": "2026-05-05T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "unmet_promise",
+        "topic": "答复",
+        "reason": "模型不能从尽快补出期限。",
+        "promise_ref": "s1",
+        "evidence": [
+          {"source_ref": "s1", "quote": "我们会尽快给您答复。"},
+          {"source_ref": "m1", "quote": "现在还没有答复，请帮我看看。"}
+        ]
+      }
+    },
+    {
+      "id": "B08",
+      "expected": false,
+      "expectedKind": "unmet_promise",
+      "context": {"conversationId": "c8", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "s1", "kind": "staff_message", "subjectId": "c8", "label": "历史客服发言", "text": "我们会在48小时内给您答复。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {"speaker": "operator"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c8", "label": "消费者自述", "text": "24小时后我先来问一下进度。", "occurredAt": "2026-05-02T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "unmet_promise",
+        "topic": "答复",
+        "reason": "反馈仍在明确期限内。",
+        "promise_ref": "s1",
+        "evidence": [
+          {"source_ref": "s1", "quote": "我们会在48小时内给您答复。"},
+          {"source_ref": "m1", "quote": "24小时后我先来问一下进度。"}
+        ]
+      }
+    },
+    {
+      "id": "B09",
+      "expected": false,
+      "expectedKind": "resolution_mismatch",
+      "context": {"conversationId": "c9", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "w1", "kind": "work_order", "subjectId": "c9", "label": "源工单 WO9", "text": "源工单WO9状态：进行中", "occurredAt": "2026-05-02T08:00:00+08:00", "fields": {"workOrderId": "WO9", "sourceStatus": "进行中"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c9", "label": "消费者自述", "text": "包装破损的问题还没有解决。", "occurredAt": "2026-05-03T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "resolution_mismatch",
+        "topic": "包装破损",
+        "reason": "工单仍在进行中，不能说完结后未解决。",
+        "state_ref": "w1",
+        "work_order_id": "WO9",
+        "evidence": [
+          {"source_ref": "w1", "quote": "源工单WO9状态：进行中"},
+          {"source_ref": "m1", "quote": "包装破损的问题还没有解决。"}
+        ]
+      }
+    },
+    {
+      "id": "B10",
+      "expected": false,
+      "expectedKind": "resolution_mismatch",
+      "context": {"conversationId": "c10", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "s1", "kind": "staff_message", "subjectId": "c10", "label": "AI接待发言", "text": "已经完成处理。", "occurredAt": "2026-05-02T08:00:00+08:00", "fields": {"speaker": "assistant"}},
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c10", "label": "消费者自述", "text": "这件事还没解决。", "occurredAt": "2026-05-03T09:00:00+08:00", "fields": {}}
+      ],
+      "statements": ["s1"],
+      "candidate": {
+        "kind": "resolution_mismatch",
+        "topic": "处理结果",
+        "reason": "AI说完成不能作为业务完结记录。",
+        "state_ref": "s1",
+        "evidence": [
+          {"source_ref": "s1", "quote": "已经完成处理。"},
+          {"source_ref": "m1", "quote": "这件事还没解决。"}
+        ]
+      }
+    },
+    {
+      "id": "B11",
+      "expected": false,
+      "expectedKind": "repeated_question",
+      "context": {
+        "conversationId": "c11",
+        "orders": [
+          {"orderId": "O111111", "conversationId": "c11"},
+          {"orderId": "O222222", "conversationId": "c11"}
+        ],
+        "workOrders": []
+      },
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c11", "label": "消费者自述", "text": "订单号O111111的物流有进展吗？", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {"orderId": "O111111"}},
+        {"sourceId": "m2", "kind": "customer_message", "subjectId": "c11", "label": "消费者自述", "text": "订单号O222222的物流还没更新。", "occurredAt": "2026-05-01T09:00:00+08:00", "fields": {"orderId": "O222222"}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "物流",
+        "reason": "不同订单不应合并为同一服务断点。",
+        "evidence": [
+          {"source_ref": "m1", "quote": "订单号O111111的物流有进展吗？"},
+          {"source_ref": "m2", "quote": "订单号O222222的物流还没更新。"}
+        ]
+      }
+    },
+    {
+      "id": "B12",
+      "expected": false,
+      "expectedKind": "repeated_question",
+      "context": {"conversationId": "c12", "orders": [], "workOrders": []},
+      "sources": [
+        {"sourceId": "m1", "kind": "customer_message", "subjectId": "c12", "label": "消费者自述", "text": "我想问物流。", "occurredAt": "2026-05-01T08:00:00+08:00", "fields": {}},
+        {"sourceId": "m2", "kind": "customer_message", "subjectId": "c12", "label": "消费者自述", "text": "物流还是没进展。", "occurredAt": "2026-05-01T09:00:00+08:00", "fields": {}}
+      ],
+      "candidate": {
+        "kind": "repeated_question",
+        "topic": "物流",
+        "reason": "引用被模型改写，必须拒绝。",
+        "evidence": [
+          {"source_ref": "m1", "quote": "消费者一直在追问物流进展。"},
+          {"source_ref": "m2", "quote": "物流还是没进展。"}
+        ]
+      }
+    }
+  ]
+}

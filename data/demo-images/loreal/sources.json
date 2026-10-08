@@ -1,0 +1,30 @@
+{
+  "checked_on": "2026-10-07",
+  "publisher": "巴黎欧莱雅中国官网",
+  "images": [
+    {
+      "file": "LRLWX26013.png",
+      "product_name": "欧莱雅金致小蜜罐4.0水乳套装",
+      "reference_sku": "LRLWX26013",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/4475bafa-1c03-418c-b33e-159ea9111835.png",
+      "sha256": "39e65ec6a52f14382e094281168e58afbd3fb31a56a1af33c6604d0887d23015"
+    },
+    {
+      "file": "LRLWX26008.png",
+      "product_name": "欧莱雅小蜜罐4.0轻盈版水霜套装",
+      "reference_sku": "LRLWX26008",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250829/83881ece-731d-4609-9aa9-0e8bb661ae16.png",
+      "sha256": "c49a15cd8fe01cc97f8c0b8ccb9d4f543228fad1279cdbf96eeb2166e5bccde5"
+    },
+    {
+      "file": "LRLWX26040.png",
+      "product_name": "黑胖子气垫 200 中性象牙白",
+      "reference_sku": "LRLWX26040",
+      "source_url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/3GeacQVL7hweYdWbjaXeHa",
+      "image_url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20250724/1d0d25e6-c011-4688-8528-f83dee0e00a5.png",
+      "sha256": "d851fdef30d2f1ed4b433195746a93db633037a869feacac319854e0d7df6672"
+    }
+  ]
+}

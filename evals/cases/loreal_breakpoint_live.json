@@ -1,0 +1,36 @@
+{
+  "version": "loreal-breakpoint-live-v1",
+  "annotation": "未参与上一轮修正的工程样例；标签是预先写入的服务场景期望，不是人工专家标注。",
+  "cases": [
+    {
+      "id": "L01",
+      "messages": [
+        "我想查一下订单物流有没有进展。",
+        "物流还是没有更新，请继续核对。"
+      ],
+      "expectedFindings": true,
+      "expectedKinds": ["repeated_question"],
+      "reason": "同一物流诉求在短时间内重复追问。"
+    },
+    {
+      "id": "L02",
+      "messages": [
+        "请问订单物流状态？",
+        "谢谢，已经收到信息了。"
+      ],
+      "expectedFindings": false,
+      "expectedKinds": [],
+      "reason": "消费者明确表示已收到信息，不应继续判定未解决。"
+    },
+    {
+      "id": "L03",
+      "messages": [
+        "想问一下订单物流。",
+        "另外想了解这个色号怎么选。"
+      ],
+      "expectedFindings": false,
+      "expectedKinds": [],
+      "reason": "两条消息是不同诉求，不能合并为同一服务断点。"
+    }
+  ]
+}

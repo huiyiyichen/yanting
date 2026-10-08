@@ -1,0 +1,33 @@
+{
+  "note": "虚构夹具上的产品型号消歧标注集；不得作为官方业务结论。",
+  "purpose": "AC-02 产品型号消歧准确率；同时为 AC-03 提供多候选（应补问/确认）负例。",
+  "annotation_rules": {
+    "resolvable": "用户文本足以唯一确定一个产品型号（product_model）时，标注 expected_model。",
+    "ambiguous": "用户文本落在同名多产品上、无法唯一确定型号时，expected_model 为 null，且 must_ask=true（必须补问，不得直接进入高风险办理）。",
+    "unresolvable": "用户未提供任何可识别型号信息时，expected_model 为 null 且 must_ask=true。"
+  },
+  "cases": [
+    { "case_id": "MD-01", "query": "A1 Pro 扫地机器人拖完地有水", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-ROBOT", "kind": "resolvable" },
+    { "case_id": "MD-02", "query": "A1 Pro 扫拖机器人不出水了", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-ROBOT", "kind": "resolvable" },
+    { "case_id": "MD-03", "query": "A1 Pro 无线吸尘器吸力变弱", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-STICK", "kind": "resolvable" },
+    { "case_id": "MD-04", "query": "手持吸尘器 A1 Pro 充不上电", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-STICK", "kind": "resolvable" },
+    { "case_id": "MD-05", "query": "B2 Pro 智能看护器一直离线", "expected_model": "B2 Pro", "expected_product_id": "PRD-B2P-MONITOR", "kind": "resolvable" },
+    { "case_id": "MD-06", "query": "B2 Pro 摄像头画面卡顿", "expected_model": "B2 Pro", "expected_product_id": "PRD-B2P-MONITOR", "kind": "resolvable" },
+    { "case_id": "MD-07", "query": "C3 智能看护器连不上网", "expected_model": "C3", "expected_product_id": "PRD-C3-MONITOR", "kind": "resolvable" },
+    { "case_id": "MD-08", "query": "C3 摄像头夜视效果很差", "expected_model": "C3", "expected_product_id": "PRD-C3-MONITOR", "kind": "resolvable" },
+    { "case_id": "MD-09", "query": "D4 户外电源充电很慢", "expected_model": "D4", "expected_product_id": "PRD-D4-POWER", "kind": "resolvable" },
+    { "case_id": "MD-10", "query": "D4 移动电源能给笔记本供电吗", "expected_model": "D4", "expected_product_id": "PRD-D4-POWER", "kind": "resolvable" },
+    { "case_id": "MD-11", "query": "扫地机器人 A1 Pro 边刷不转", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-ROBOT", "kind": "resolvable" },
+    { "case_id": "MD-12", "query": "A1 Pro 吸尘器滤芯怎么清洗", "expected_model": "A1 Pro", "expected_product_id": "PRD-A1P-STICK", "kind": "resolvable" },
+
+    { "case_id": "MD-13", "query": "我的 A1 Pro 坏了", "expected_model": "A1 Pro", "expected_product_id": null, "kind": "ambiguous" },
+    { "case_id": "MD-14", "query": "A1 Pro 开不了机", "expected_model": "A1 Pro", "expected_product_id": null, "kind": "ambiguous" },
+    { "case_id": "MD-15", "query": "A1 Pro 在保修期内吗", "expected_model": "A1 Pro", "expected_product_id": null, "kind": "ambiguous" },
+    { "case_id": "MD-16", "query": "A1 Pro 可以退货吗", "expected_model": "A1 Pro", "expected_product_id": null, "kind": "ambiguous" },
+
+    { "case_id": "MD-17", "query": "我的吸尘器不吸了", "expected_model": null, "expected_product_id": null, "kind": "unresolvable" },
+    { "case_id": "MD-18", "query": "设备充不上电", "expected_model": null, "expected_product_id": null, "kind": "unresolvable" },
+    { "case_id": "MD-19", "query": "这个多少钱", "expected_model": null, "expected_product_id": null, "kind": "unresolvable" },
+    { "case_id": "MD-20", "query": "我要退款", "expected_model": null, "expected_product_id": null, "kind": "unresolvable" }
+  ]
+}

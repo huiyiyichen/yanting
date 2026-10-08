@@ -1,0 +1,226 @@
+{
+  "caseStatus": {
+    "open": "办理中",
+    "awaiting_user": "等待用户补充",
+    "pending_review": "待后台确认",
+    "closed": "已关闭"
+  },
+  "conversationStage": {
+    "new": "新会话",
+    "intake": "信息收集",
+    "disambiguation": "产品消歧",
+    "diagnosis": "故障诊断",
+    "eligibility": "资格核验",
+    "awaiting_confirmation": "等待人工确认",
+    "closure": "办理收尾",
+    "rating": "满意度评价",
+    "closed": "已关闭"
+  },
+  "requestType": {
+    "refund": "退款",
+    "replacement": "换货",
+    "repair": "维修",
+    "parts_reshipment": "补发配件",
+    "warranty_verification": "质保核验",
+    "dealer_authorization_review": "经销商授权复核",
+    "other": "其他申请"
+  },
+  "requestStatus": {
+    "draft": "草稿",
+    "pending_confirmation": "待人工确认",
+    "approved": "已批准",
+    "rejected": "已拒绝",
+    "needs_information": "退回补充"
+  },
+  "toolName": {
+    "knowledge_search": "知识检索",
+    "order_lookup": "订单查询",
+    "dealer_lookup": "经销商核验",
+    "product_lookup": "产品查询",
+    "warranty_evaluate": "质保判定",
+    "troubleshooting_plan": "排障方案",
+    "create_after_sales_request": "生成申请草稿",
+    "record_case_fact": "记录案件事实",
+    "record_rating": "记录满意度"
+  },
+  "toolResultStatus": {
+    "ok": "成功",
+    "empty": "空结果",
+    "not_found": "未命中",
+    "timeout": "超时",
+    "failed": "执行失败",
+    "denied": "无权限",
+    "invalid_argument": "参数非法",
+    "conflict": "结果冲突"
+  },
+  "riskLevel": {
+    "read_only": "只读",
+    "recording": "记录",
+    "request_creation": "生成申请",
+    "high_risk": "高风险"
+  },
+  "serviceRiskType": {
+    "emotion_escalation": "情绪升级",
+    "repeated_contact": "重复进线",
+    "repeated_refund": "重复退款",
+    "adverse_reaction": "不良反应",
+    "abnormal_return": "异常退货",
+    "work_order_overdue": "工单逾期",
+    "complaint_risk": "投诉风险",
+    "data_conflict": "数据冲突",
+    "service_breakpoint": "服务断点",
+    "response_wait": "未回复预警",
+    "followup_due_soon": "跟进临近截止",
+    "unknown": "未知"
+  },
+  "serviceRiskLevel": {
+    "low": "低",
+    "medium": "中",
+    "high": "高",
+    "unknown": "未知"
+  },
+  "serviceRiskStatus": {
+    "pending": "待处理",
+    "in_progress": "处理中",
+    "resolved": "已处理",
+    "ignored": "已忽略"
+  },
+  "knowledgeSourceType": {
+    "product_knowledge": "产品资料",
+    "troubleshooting": "排障资料",
+    "sop": "业务 SOP",
+    "warranty_policy": "质保政策"
+  },
+  "visibility": {
+    "customer_visible": "客户可见",
+    "internal": "内部可见"
+  },
+  "customerIntent": {
+    "diagnosis": "故障诊断",
+    "warranty_check": "质保查询",
+    "repair": "维修",
+    "parts": "补件",
+    "replacement": "换货",
+    "refund": "退款",
+    "complaint": "投诉",
+    "progress_check": "进度查询",
+    "unknown": "未知"
+  },
+  "faultType": {
+    "no_power": "无法开机",
+    "no_suction": "无吸力",
+    "weak_suction": "吸力减弱",
+    "water_leak": "漏水",
+    "abnormal_noise": "异响",
+    "overheating": "过热",
+    "charging_failure": "无法充电",
+    "connectivity_failure": "无法连接",
+    "physical_damage": "外观破损",
+    "performance_degradation": "性能下降",
+    "unknown": "未知"
+  },
+  "faultPart": {
+    "body": "机身",
+    "battery": "电池",
+    "charging_port": "充电口",
+    "filter": "滤网",
+    "brush": "刷头",
+    "tank": "水箱",
+    "seal": "密封件",
+    "motor": "电机",
+    "display": "显示面板",
+    "cable": "线材",
+    "accessory": "配件",
+    "unknown": "未知"
+  },
+  "emotionLevel": {
+    "calm": "平稳",
+    "dissatisfied": "不满",
+    "angry": "愤怒",
+    "unknown": "未知"
+  },
+  "emotionTrend": {
+    "stable": "平稳",
+    "rising": "升高",
+    "falling": "下降",
+    "repeated": "反复",
+    "unknown": "未知"
+  },
+  "complaintRisk": {
+    "flagged": "有投诉风险",
+    "not_flagged": "无投诉风险",
+    "unknown": "未知"
+  },
+  "ratingStatus": {
+    "not_requested": "未开始",
+    "pending": "待评价",
+    "submitted": "已评价",
+    "skipped": "已跳过"
+  },
+  "warrantyStatus": {
+    "in_warranty": "保修期内",
+    "out_of_warranty": "已过保",
+    "unknown": "未知",
+    "query_failed": "查询失败",
+    "conflicting": "依据冲突"
+  },
+  "dealerAuthorizationStatus": {
+    "authorized": "已核验授权",
+    "not_authorized": "非授权渠道",
+    "unknown": "未知",
+    "query_failed": "查询失败",
+    "multiple_matches": "多个匹配",
+    "not_applicable": "不适用"
+  },
+  "knowledgeHitStatus": {
+    "sufficient": "命中充分",
+    "insufficient": "命中不足",
+    "not_found": "未命中",
+    "conflicting": "依据冲突"
+  },
+  "troubleshootingResult": {
+    "resolved": "用户确认解决",
+    "unresolved": "未解决",
+    "not_attempted": "未尝试",
+    "unknown": "未知"
+  },
+  "serviceMode": {
+    "autonomous": "AI 托管",
+    "operator_assisted": "客服接管"
+  },
+  "senderRole": {
+    "customer": "客户",
+    "assistant": "智能助手",
+    "operator": "客服",
+    "system": "系统"
+  },
+  "viewRole": {
+    "customer": "客户",
+    "support": "客服工作台"
+  },
+  "actorType": {
+    "customer": "客户",
+    "agent": "Agent",
+    "operator": "客服",
+    "system": "系统"
+  },
+  "purchaseChannel": {
+    "official_website": "品牌官网",
+    "official_store": "品牌官方店",
+    "marketplace": "电商平台",
+    "authorized_dealer": "授权经销商",
+    "third_party_seller": "第三方卖家",
+    "offline_retail": "线下零售",
+    "unknown": "未知"
+  },
+  "locale": {
+    "CN": "中国大陆",
+    "US": "美国",
+    "DE": "德国",
+    "JP": "日本",
+    "GB": "英国",
+    "FR": "法国",
+    "AU": "澳大利亚",
+    "CA": "加拿大"
+  }
+}

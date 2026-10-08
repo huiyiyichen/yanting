@@ -1,0 +1,113 @@
+{
+  "manifest_version": "loreal-v2",
+  "data_provenance": {
+    "source": "official-fictional-excel-project-prd-and-official-consumer-materials",
+    "consumer_sources": "consumer-sources.json"
+  },
+  "knowledge_bases": [
+    {
+      "knowledge_base_id": "loreal-service",
+      "name": "消费者服务",
+      "source_type": "sop",
+      "enabled": true
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "loreal-consumer-labels",
+      "knowledge_base_id": "loreal-service",
+      "title": "中国大陆化妆品标签核对",
+      "document_version": "2026-10-02",
+      "source_path": "consumer-labels.md",
+      "visibility": "internal",
+      "product_models": ["global"],
+      "regions": ["CN"],
+      "channels": ["general"],
+      "effective_from": "2026-10-02"
+    },
+    {
+      "document_id": "loreal-consumer-efficacy",
+      "knowledge_base_id": "loreal-service",
+      "title": "中国大陆化妆品功效与敏感肌宣称",
+      "document_version": "2026-10-02",
+      "source_path": "consumer-efficacy.md",
+      "visibility": "internal",
+      "product_models": ["global"],
+      "regions": ["CN"],
+      "channels": ["general"],
+      "effective_from": "2026-10-02"
+    },
+    {
+      "document_id": "loreal-consumer-reactions",
+      "knowledge_base_id": "loreal-service",
+      "title": "中国大陆化妆品不良反应服务记录",
+      "document_version": "2026-10-02",
+      "source_path": "consumer-reactions.md",
+      "visibility": "internal",
+      "product_models": ["global"],
+      "regions": ["CN"],
+      "channels": ["general"],
+      "effective_from": "2026-10-02"
+    },
+    {
+      "document_id": "loreal-consumer-routine",
+      "knowledge_base_id": "loreal-service",
+      "title": "分区肤质与妆前护理",
+      "document_version": "2026-10-02",
+      "source_path": "consumer-routine.md",
+      "visibility": "internal",
+      "product_models": ["global"],
+      "regions": ["global"],
+      "channels": ["general"],
+      "effective_from": "2026-10-02"
+    },
+    {
+      "document_id": "loreal-consumer-product-testing",
+      "knowledge_base_id": "loreal-service",
+      "title": "新美妆产品试用与不适边界",
+      "document_version": "2026-10-02",
+      "source_path": "consumer-product-testing.md",
+      "visibility": "internal",
+      "product_models": ["global"],
+      "regions": ["global"],
+      "channels": ["general"],
+      "effective_from": "2026-10-02"
+    },
+    {
+      "document_id": "loreal-service",
+      "knowledge_base_id": "loreal-service",
+      "title": "消费者服务事实与处理边界",
+      "document_version": "1.0.0",
+      "source_path": "service.md",
+      "visibility": "internal",
+      "product_models": [
+        "global"
+      ],
+      "regions": [
+        "global"
+      ],
+      "channels": [
+        "general"
+      ],
+      "effective_from": "2026-05-01"
+    },
+    {
+      "document_id": "loreal-products",
+      "knowledge_base_id": "loreal-service",
+      "title": "官方虚构商品目录",
+      "document_version": "1.0.0",
+      "source_path": "products.md",
+      "visibility": "internal",
+      "product_models": [
+        "global"
+      ],
+      "regions": [
+        "global"
+      ],
+      "channels": [
+        "general"
+      ],
+      "effective_from": "2026-05-01"
+    }
+  ]
+}

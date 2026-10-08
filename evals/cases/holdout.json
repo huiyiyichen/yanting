@@ -1,0 +1,180 @@
+{
+  "eval_version": "1.0",
+  "generated_note": "独立留出集：用于最终验证，调参时不得反复使用。针对虚构知识夹具编写。",
+  "split": "holdout",
+  "cases": [
+    {
+      "case_id": "HOL-01",
+      "question": "集尘盒滤网多久清洗一次，清洗后要注意什么？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-s1pro-robot"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-02",
+      "question": "吸尘器接口没卡紧会影响吸力吗？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-stick-no-suction", "doc-product-s1pro-stick"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-03",
+      "question": "拖布太湿会不会导致地面有水渍？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-robot-leak"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-04",
+      "question": "看护器连不上 Wi-Fi 要先确认什么频段？",
+      "audience": "customer",
+      "product_model": "B2 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-monitor-offline", "doc-product-b2pro-monitor"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-05",
+      "question": "哪些情况不属于质保范围？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-warranty-consumer-cn"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-06",
+      "question": "没有购买凭证还能判断质保状态吗？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-warranty-consumer-cn"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-07",
+      "question": "美国地区的整机质保是多久？",
+      "audience": "customer",
+      "country_code": "US",
+      "expected_document_ids": ["doc-warranty-consumer-us"],
+      "answerable": true,
+      "note": "地区隔离负例防护"
+    },
+    {
+      "case_id": "HOL-08",
+      "question": "中国区销售的扫地机器人用什么规格的电源适配器？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-s1pro-robot-cn"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-09",
+      "question": "退货申请必须由谁确认？可以自动执行吗？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-refund-eligibility"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-10",
+      "question": "卖家名称匹配到多个候选时应该怎么处理？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-dealer-verification"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-11",
+      "question": "情绪等级会改变质保或者赔付规则吗？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-emotion-and-complaint"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-12",
+      "question": "排障步骤做完但用户没有确认，可以记录为已解决吗？",
+      "audience": "internal",
+      "product_model": "A1 Pro",
+      "expected_document_ids": ["doc-sop-suction-escalation"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-13",
+      "question": "相机镜头应该用什么清洁？",
+      "audience": "customer",
+      "product_model": "B2 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-b2pro-monitor"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-14",
+      "question": "吸力故障的处理顺序为什么必须先低风险后高风险？",
+      "audience": "internal",
+      "product_model": "A1 Pro",
+      "expected_document_ids": ["doc-sop-suction-escalation"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-15",
+      "question": "第三方渠道订单未命中，可以直接判定为非授权吗？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-dealer-verification", "doc-warranty-thirdparty-channel"],
+      "answerable": true
+    },
+    {
+      "case_id": "HOL-16",
+      "question": "F7 空气净化器的滤芯多久更换一次？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "not_in_knowledge_base"
+    },
+    {
+      "case_id": "HOL-17",
+      "question": "这台设备的序列号在哪里查看？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "not_in_knowledge_base",
+      "note": "夹具不涉及序列号定位"
+    },
+    {
+      "case_id": "HOL-18",
+      "question": "请告诉我授权经销商名单，让我自己挑一个",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "policy_forbidden",
+      "note": "不得向客户展示授权名录（AC-18）"
+    },
+    {
+      "case_id": "HOL-19",
+      "question": "帮我查一下 13800138000 这个手机号绑定的订单",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "out_of_scope",
+      "note": "不保存也不查询手机号"
+    },
+    {
+      "case_id": "HOL-20",
+      "question": "吸尘器滤芯冲洗之后马上装回去用会怎么样？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-stick-no-suction", "doc-guide-stick-full"],
+      "answerable": true,
+      "forbidden_document_ids": ["doc-ts-stick-no-suction-legacy"],
+      "note": "同一规则同时写在排障文档与完整指南的滤芯专题问答中；验证停用旧版仍被排除"
+    }
+  ]
+}

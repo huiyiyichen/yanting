@@ -1,0 +1,225 @@
+{
+  "eval_version": "1.0",
+  "generated_note": "本问题集针对虚构知识夹具编写，用于检索链路校准与留出评测。答案标注指向夹具中的具体文档，不代表任何官方结论。",
+  "split": "calibration",
+  "cases": [
+    {
+      "case_id": "CAL-01",
+      "question": "无线吸尘器吸力明显减弱，应该按什么顺序排查？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-stick-no-suction"],
+      "answerable": true,
+      "note": "吸力减弱主排障文档"
+    },
+    {
+      "case_id": "CAL-02",
+      "question": "滤芯清洗后可以直接装回使用吗？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-stick-no-suction", "doc-guide-stick-full"],
+      "answerable": true,
+      "note": "「必须晾干 24 小时」同时写在排障文档与完整指南的滤芯专题问答中，两者都算正确证据"
+    },
+    {
+      "case_id": "CAL-03",
+      "question": "扫地机器人拖地之后地面上一直有水，怎么处理？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-robot-leak"],
+      "answerable": true,
+      "note": "漏水排障"
+    },
+    {
+      "case_id": "CAL-04",
+      "question": "漏水的时候最要紧的一步是什么？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-robot-leak"],
+      "answerable": true,
+      "note": "立即停止使用并断电"
+    },
+    {
+      "case_id": "CAL-05",
+      "question": "看护器显示离线，先检查哪几项？",
+      "audience": "customer",
+      "product_model": "B2 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-monitor-offline"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-06",
+      "question": "中国大陆买的无线吸尘器质保多久？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-warranty-consumer-cn"],
+      "answerable": true,
+      "note": "必须命中 CN 政策，不能命中 US"
+    },
+    {
+      "case_id": "CAL-07",
+      "question": "中国地区多久之内可以申请退货、多久之内可以换货？",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-warranty-consumer-cn"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-08",
+      "question": "美国地区退换货窗口是多久？",
+      "audience": "customer",
+      "country_code": "US",
+      "expected_document_ids": ["doc-warranty-consumer-us"],
+      "answerable": true,
+      "note": "必须命中 US 政策，不能命中 CN"
+    },
+    {
+      "case_id": "CAL-09",
+      "question": "中国区扫地机器人的水箱和滤网有什么特别要求？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-s1pro-robot-cn"],
+      "answerable": true,
+      "note": "地区专属说明"
+    },
+    {
+      "case_id": "CAL-10",
+      "question": "退货退款申请在什么条件下可以受理？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-refund-eligibility"],
+      "answerable": true,
+      "note": "内部 SOP；客户视角不应命中"
+    },
+    {
+      "case_id": "CAL-11",
+      "question": "第三方卖家购买、订单查不到时，授权核验按什么顺序做？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-dealer-verification"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-12",
+      "question": "愤怒的客户需要直接转人工吗？投诉风险怎么处理？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-emotion-and-complaint"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-13",
+      "question": "生成退货申请草稿之前必须已经确认哪些信息？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-refund-eligibility"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-14",
+      "question": "吸力故障在什么情况下必须升级到人工确认？",
+      "audience": "internal",
+      "product_model": "A1 Pro",
+      "expected_document_ids": ["doc-sop-suction-escalation"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-15",
+      "question": "第三方渠道购买的产品，渠道核验通过就等于可以免费保修吗？",
+      "audience": "internal",
+      "expected_document_ids": [
+        "doc-sop-dealer-verification",
+        "doc-warranty-thirdparty-channel"
+      ],
+      "answerable": true,
+      "note": "「渠道核验不等于质保成立」这条规则同时写在经销商核验 SOP 与第三方渠道质保判定中，两者都算正确证据"
+    },
+    {
+      "case_id": "CAL-16",
+      "question": "无线吸尘器的尘杯容量和电池容量是多少？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-s1pro-stick"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-17",
+      "question": "扫地机器人的水箱容量和续航是多少？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-s1pro-robot"],
+      "answerable": true,
+      "note": "同名产品消歧后的资料"
+    },
+    {
+      "case_id": "CAL-18",
+      "question": "看护器的分辨率和夜视距离是多少？",
+      "audience": "customer",
+      "product_model": "B2 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-product-b2pro-monitor"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-19",
+      "question": "经销商核验要保存哪两个卖家名称字段？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-dealer-verification"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-20",
+      "question": "申请草稿里必须包含哪些内容？",
+      "audience": "internal",
+      "expected_document_ids": ["doc-sop-refund-eligibility"],
+      "answerable": true
+    },
+    {
+      "case_id": "CAL-21",
+      "question": "请给出 D9 无线音箱的固件升级步骤",
+      "audience": "customer",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "not_in_knowledge_base",
+      "note": "知识库中不存在该产品，必须返回未命中而不是编造"
+    },
+    {
+      "case_id": "CAL-22",
+      "question": "扫地机器人的激光雷达报错 E5 怎么修？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": [],
+      "answerable": false,
+      "negative_kind": "not_in_knowledge_base",
+      "note": "夹具中无激光雷达与 E5 错误码内容"
+    },
+    {
+      "case_id": "CAL-23",
+      "question": "无线吸尘器吸力变弱时，能不能用水冲洗滤芯后立刻继续用？",
+      "audience": "customer",
+      "product_model": "A1 Pro",
+      "country_code": "CN",
+      "expected_document_ids": ["doc-ts-stick-no-suction", "doc-guide-stick-full"],
+      "answerable": true,
+      "note": "负例防护：必须命中现行版本文档，不得命中已停用的 1.0.0 旧版",
+      "forbidden_document_ids": ["doc-ts-stick-no-suction-legacy"]
+    },
+    {
+      "case_id": "CAL-24",
+      "question": "保修期内的判定依据是什么？",
+      "audience": "internal",
+      "expected_document_ids": [
+        "doc-sop-suction-escalation",
+        "doc-sop-refund-eligibility"
+      ],
+      "answerable": true,
+      "note": "「按订单购买日期与地区政策计算质保」同时出现在吸力故障 SOP 与退款受理 SOP 中"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "version": "loreal-personalization-v1",
+  "sourceSha256": "b5ac027e863c5580dab39c8f459e4698d65e9fbec29832c9915448f2087307b7",
+  "annotation": "Two engineered turns for one focused feature-batch check. Designed after implementation, overlapping prior skin-care topics; not an untouched evaluation set or expert advice-quality benchmark.",
+  "rubric": {
+    "advice": "Inspect actual customer replies and personalizedAdvice together. A concrete, source-backed selection dimension is required; repeating the concern or only asking a question is insufficient.",
+    "correction": "Newest cheek description takes precedence; old dryness may be acknowledged as corrected but not reused as the current basis.",
+    "attempts": "Do not repeat hydration or cleanse operations the consumer already tried or declined.",
+    "preferences": "No brands or specific SKUs; general label-selection dimensions remain allowed.",
+    "scope": "General knowledge does not establish a specific product's ingredients, efficacy or suitability.",
+    "review": "Implementing-agent review is not independent expert assessment."
+  },
+  "cases": [
+    {
+      "id": "P01",
+      "topic": "通用筛选方案、已尝试措施与最新肤质纠正",
+      "semanticGoals": [
+        "建议和实际回复同时给有来源的通用筛选维度",
+        "保湿已经试过，不再重复要求先保湿",
+        "第二轮按两颊中性纠正，不继续按两颊干燥护理",
+        "不推品牌、不索要无关货号、不保证解决妆效"
+      ],
+      "turns": [
+        {
+          "body": "我选底妆时T区容易出油，两颊偏干，鼻翼还会卡粉。我已经试过加强保湿，还是不服帖。不要推荐品牌，也不要重复让我先保湿；请给有依据的通用选择条件，别猜具体商品功效。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": [
+            {"category": "attempted", "alternatives": ["已经试过加强保湿", "试过加强保湿"]}
+          ]
+        },
+        {
+          "body": "更正一下，两颊现在不是偏干而是中性；目前只在意T区出油。保湿试过了，也不要让我再清洁保湿或推荐牌子，只按当前情况说有依据的筛选条件。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": [
+            {"category": "known", "alternatives": ["两颊现在不是偏干而是中性", "中性"]}
+          ]
+        }
+      ]
+    }
+  ]
+}

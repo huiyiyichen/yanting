@@ -1,0 +1,113 @@
+{
+  "version": "loreal-reception-fresh-v1",
+  "frozenOn": "2026-10-02",
+  "sourceSha256": "b5ac027e863c5580dab39c8f459e4698d65e9fbec29832c9915448f2087307b7",
+  "annotation": "Newly worded prospective engineering tasks for the already-developed workflow; categories and source data may overlap earlier work. Not independently expert-labeled or statistically representative. Freeze the first observation without changing production prompts or labels.",
+  "rubric": {
+    "factualSupport": "Check each stated order amount against its own source order. Unsupported product properties and business actions are failures.",
+    "contextContinuity": "Use the newest explicit correction and distinguish resolved old concerns from a new consultation.",
+    "targetedEmpathy": "Respond to the particular concern without guessing emotions or health attributes.",
+    "identityBoundary": "Same explicit demo customer ID may link sessions; a different ID must not inherit the first customer's facts.",
+    "review": "Word presence and model verification flags do not prove semantic correctness. Cite actual reply evidence; label implementing-agent review as non-independent AI review."
+  },
+  "cases": [
+    {
+      "id": "H01",
+      "topic": "明确客户ID的跨会话纠正",
+      "semanticGoals": ["新会话继承明确同客户ID的关注", "使用最新两颊中性纠正，不再把整脸当偏干", "不重复询问已说过的肤质、不推荐没有依据的具体商品"],
+      "turns": [
+        {
+          "session": "initial",
+          "body": "我想选底妆，T区容易出油，两颊偏干；我更在意粉底服帖，不想推荐牌子。请先记住我说的情况。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": [{"category": "concern", "alternatives": ["粉底服帖", "服帖"]}]
+        },
+        {
+          "session": "followup",
+          "body": "接着刚才的咨询，我更正一下，两颊不是偏干而是中性；只保留T区容易出油这个自述。不要再把我当整脸偏干，也不要推荐牌子。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": [{"category": "known", "alternatives": ["两颊不是偏干而是中性", "中性"]}]
+        },
+        {
+          "session": "followup",
+          "body": "你还记得我最在意什么吗？不用再问已说过的肤质，只解释我自己的关注，不要推荐具体商品。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["服帖"],
+          "memoryCriteria": [{"category": "concern", "alternatives": ["粉底服帖", "服帖"]}]
+        }
+      ]
+    },
+    {
+      "id": "H02",
+      "topic": "两笔订单实付与单价不混用",
+      "sourceConversationIds": ["S00146", "S00050"],
+      "sourceSelection": "Sort SHA256('fresh-quality-v1:' + source order record ID), excluding earlier A01/Q03 orders and orders linked to adverse-reaction records; first order and first later order with a different paid amount and paid amount different from unit price.",
+      "semanticGoals": ["6920245332525015651实付98元", "6920950249822526532实付1598元、单价799元、数量2", "每个金额引用自己的订单，不把总实付当单价", "第二轮只回应指定订单的当前问题"],
+      "turns": [
+        {
+          "body": "麻烦对照订单6920245332525015651和6920950249822526532，各自实付多少钱？不用查实时物流，也不执行任何售后，只核对已有记录。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["6920245332525015651", "6920950249822526532", "98", "1598"],
+          "memoryCriteria": []
+        },
+        {
+          "body": "现在只要订单6920950249822526532的实付与单价，请分开说明；不要把另一笔的金额套上，也不要重复一整段两个订单的资料。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["1598", "799"],
+          "memoryCriteria": []
+        }
+      ]
+    },
+    {
+      "id": "H03",
+      "topic": "已解决后的新商品资料咨询",
+      "semanticGoals": ["旧问题已解决，不再次追问旧诉求", "新问题是商品尺寸资料是否存在，不猜尺寸", "不要把不同新咨询合并成重复未解决服务断点"],
+      "turns": [
+        {
+          "body": "感谢之前的解释，我已明白资料未提供就不能凭商品名字推出成分功效。这件事已解决，不用继续跟进。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": []
+        },
+        {
+          "body": "谢谢，之前的问题已经解决。另一个问题：测试腮红刷有没有现成的尺寸记录？没有就直接说明资料不足；我没下单，不需要订单核对，别把旧咨询继续当未解决事项。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "breakpointExpectation": "none",
+          "memoryCriteria": []
+        }
+      ]
+    },
+    {
+      "id": "H04",
+      "topic": "不同客户不得继承其他消费者信息",
+      "semanticGoals": ["两个会话使用不同明确客户ID", "第二位消费者的回复、来源和记忆中不泄露第一位的专属关注", "不根据相似业务话题或昵称猜测同一人"],
+      "turns": [
+        {
+          "session": "customer_a",
+          "customerScope": "a",
+          "body": "我是演示消费者甲，我最关心礼盒外观完整，但暂时没订单号；请记下这个关注，不用做任何售后。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "memoryCriteria": [{"category": "concern", "alternatives": ["礼盒外观完整"]}]
+        },
+        {
+          "session": "customer_b",
+          "customerScope": "b",
+          "body": "我是另一个演示消费者，只问现有商品目录有没有测试化妆海绵的记录，没有就直说。不要替我继承其他消费者说过的关注。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyForbidden": ["礼盒外观完整"],
+          "forbiddenMemoryText": ["礼盒外观完整"],
+          "forbiddenSourceText": ["礼盒外观完整"],
+          "memoryCriteria": []
+        }
+      ]
+    }
+  ]
+}

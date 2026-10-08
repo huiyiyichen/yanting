@@ -1,0 +1,173 @@
+{
+  "note": "虚构夹具上的混合诉求路由标注集；不得作为官方业务结论。",
+  "purpose": "AC-05 复杂意图路由准确率；同一批用例顺带产出 AC-04 受限字段合法率的样本。",
+  "annotation_rules": {
+    "expected_primary_intent": "本条消息的**主**诉求（进入高风险办理的那一个）；无高风险诉求时为 null。",
+    "expected_route": "期望的服务路径：troubleshooting / request_draft / warranty_check / dealer_verification / human_review。",
+    "must_keep_intents": "不得丢失的次要诉求（PRD：不删除尚未处理的次要诉求）。"
+  },
+  "cases": [
+    {
+      "case_id": "RT-01",
+      "message": "我的 A1 Pro 是在中国大陆买的，吸力变弱了，顺便问一下保修期是多久",
+      "expected_primary_intent": "diagnosis",
+      "expected_route": "warranty_check",
+      "must_keep_intents": [
+        "warranty_check"
+      ]
+    },
+    {
+      "case_id": "RT-02",
+      "message": "我的 A1 Pro 是在中国大陆买的，我要退款，另外这台机器噪音也很大",
+      "expected_primary_intent": "refund",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "diagnosis"
+      ]
+    },
+    {
+      "case_id": "RT-03",
+      "message": "我的 A1 Pro 是在中国大陆买的，在第三方店铺买的，想申请换货",
+      "expected_primary_intent": "replacement",
+      "expected_route": "dealer_verification",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-04",
+      "message": "我的 A1 Pro 是在中国大陆买的，机器还在保修期内吗？订单号是 ORD-DEMO-1001",
+      "expected_primary_intent": "warranty_check",
+      "expected_route": "warranty_check",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-05",
+      "message": "我的 A1 Pro 是在中国大陆买的，滚刷不转了怎么自己修",
+      "expected_primary_intent": "diagnosis",
+      "expected_route": "request_draft",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-06",
+      "message": "我的 A1 Pro 是在中国大陆买的，我要投诉！客服一直不回复，我要退款",
+      "expected_primary_intent": "refund",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "complaint"
+      ]
+    },
+    {
+      "case_id": "RT-07",
+      "message": "我的 A1 Pro 是在中国大陆买的，电池鼓包了，这属于质保范围吗，需要维修",
+      "expected_primary_intent": "warranty_check",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "repair"
+      ]
+    },
+    {
+      "case_id": "RT-08",
+      "message": "我的 A1 Pro 是在中国大陆买的，滤芯多久换一次",
+      "expected_primary_intent": "parts",
+      "expected_route": "request_draft",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-09",
+      "message": "我的 A1 Pro 是在中国大陆买的，收到货就有划痕，我要换一台新的，太失望了",
+      "expected_primary_intent": "replacement",
+      "expected_route": "request_draft",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-10",
+      "message": "我的 A1 Pro 是在中国大陆买的，这个型号支持以旧换新吗？另外我的机器充不上电",
+      "expected_primary_intent": "diagnosis",
+      "expected_route": "troubleshooting",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-11",
+      "message": "我的 A1 Pro 是在中国大陆买的，卖家说是官方的，能帮我确认一下吗",
+      "expected_primary_intent": null,
+      "expected_route": "dealer_verification",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-12",
+      "message": "我的 A1 Pro 是在中国大陆买的，用了半年就坏了，我要退货退款",
+      "expected_primary_intent": "refund",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "complaint"
+      ]
+    },
+    {
+      "case_id": "RT-13",
+      "message": "我的 A1 Pro 是在中国大陆买的，APP 连不上机器，顺便问下保修怎么算",
+      "expected_primary_intent": "diagnosis",
+      "expected_route": "warranty_check",
+      "must_keep_intents": [
+        "warranty_check"
+      ]
+    },
+    {
+      "case_id": "RT-14",
+      "message": "我的 A1 Pro 是在中国大陆买的，拖地后地面一直有水，能换货吗",
+      "expected_primary_intent": "replacement",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "diagnosis"
+      ]
+    },
+    {
+      "case_id": "RT-15",
+      "message": "我的 A1 Pro 是在中国大陆买的，我要申请售后维修，机器发出焦糊味",
+      "expected_primary_intent": "repair",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "diagnosis"
+      ]
+    },
+    {
+      "case_id": "RT-16",
+      "message": "我的 A1 Pro 是在中国大陆买的，边刷卡住了，另外补发一个边刷要多少钱",
+      "expected_primary_intent": "parts",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "diagnosis"
+      ]
+    },
+    {
+      "case_id": "RT-17",
+      "message": "我的 A1 Pro 是在中国大陆买的，集尘袋可以用水洗吗",
+      "expected_primary_intent": null,
+      "expected_route": "troubleshooting",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-18",
+      "message": "我的 A1 Pro 是在中国大陆买的，过保了还能付费维修吗，要怎么申请",
+      "expected_primary_intent": "repair",
+      "expected_route": "request_draft",
+      "must_keep_intents": [
+        "warranty_check"
+      ]
+    },
+    {
+      "case_id": "RT-19",
+      "message": "我的 A1 Pro 是在中国大陆买的，这个拖布多久换一次，在哪买",
+      "expected_primary_intent": "parts",
+      "expected_route": "request_draft",
+      "must_keep_intents": []
+    },
+    {
+      "case_id": "RT-20",
+      "message": "我的 A1 Pro 是在中国大陆买的，我要退货，但是我不知道订单号，也找不到包装",
+      "expected_primary_intent": "refund",
+      "expected_route": "request_draft",
+      "must_keep_intents": []
+    }
+  ],
+  "scenario_note": "消息自带型号与购买地区，使关键事实齐备，从而能测得真实的主意图与路由；缺失事实时的补问行为由 TestMissingFacts / AC-03 覆盖。",
+  "route_precedence_note": "期望路由按 decide_route 的真实优先级标注：缺失事实/冲突/无依据高风险 → 渠道核验 → 高风险草稿 → 质保查询 → 排障。"
+}

@@ -1,0 +1,80 @@
+[project]
+name = "anker-agent-api"
+version = "0.1.0"
+description = "安克智能服务 Agent 后端（本期 Demo）"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "fastapi==0.121.2",
+  "uvicorn[standard]==0.38.0",
+  "pydantic==2.12.4",
+  "pydantic-settings==2.13.0",
+  "python-multipart==0.0.20",
+  "sqlalchemy==2.0.44",
+  "langgraph==1.0.4",
+  "langgraph-checkpoint-sqlite==3.0.1",
+  "qdrant-client==1.16.1",
+  "onnxruntime==1.23.2",
+  "huggingface-hub==0.36.0",
+  "tokenizers==0.22.1",
+  "numpy==2.3.4",
+  "jieba==0.42.1",
+  "rapidfuzz==3.14.3",
+  "Pillow==12.0.0",
+  "httpx==0.28.1",
+  "python-dotenv==1.2.1",
+  "openpyxl==3.1.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.0.1",
+  "pytest-asyncio==1.3.0",
+  "pytest-cov==7.0.0",
+  "ruff==0.14.5",
+  "mypy==1.18.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+# E501：注释与文档字符串使用中文排版，不做硬性行宽限制。
+# RUF001/002/003：本项目文档与注释使用中文全角标点，属正常书写，不是「易混淆字符」。
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI 的依赖注入惯用法就是把 Depends(...) 放在参数默认值上，
+# B008 在这里是误报；换成 Annotated 只是为了绕开 linter，不增加可读性。
+"app/routes/*.py" = ["B008"]
+"app/deps.py" = ["B008"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-markers"
+markers = [
+  "live: 需要真实模型/索引服务的用例（无凭证时跳过并记录）",
+  "slow: 耗时用例",
+]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["app"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+no_implicit_optional = true

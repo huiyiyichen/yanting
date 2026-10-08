@@ -1,0 +1,72 @@
+{
+  "fixture_version": "1.0",
+  "generated_note": "全部为虚构产品数据，仅用于本 Demo。产品名称刻意包含同名不同品类的组合，用于验证产品消歧（官方难点二：问清/分流）。",
+  "products": [
+    {
+      "product_id": "PRD-A1P-ROBOT",
+      "product_model": "A1 Pro",
+      "product_category": "robot_vacuum",
+      "display_name": "A1 Pro 扫地机器人",
+      "aliases": ["A1 Pro 扫地机", "A1 Pro 扫拖机器人", "扫地机器人 A1 Pro"],
+      "sku": "AK-A1PRO-RB-CN",
+      "regions": ["CN"],
+      "released_at": "2026-01-15",
+      "spec_highlights": ["扫拖一体", "5200mAh", "0.35L 集尘盒"]
+    },
+    {
+      "product_id": "PRD-A1P-STICK",
+      "product_model": "A1 Pro",
+      "product_category": "stick_vacuum",
+      "display_name": "A1 Pro 无线吸尘器",
+      "aliases": ["A1 Pro 吸尘器", "手持吸尘器 A1 Pro", "杆式吸尘器 A1 Pro"],
+      "sku": "AK-A1PRO-ST-CN",
+      "regions": ["CN"],
+      "released_at": "2026-01-15",
+      "spec_highlights": ["三档吸力", "2500mAh 可拆电池", "HEPA 滤芯"]
+    },
+    {
+      "product_id": "PRD-A1P-STICK-US",
+      "product_model": "A1 Pro",
+      "product_category": "stick_vacuum",
+      "display_name": "A1 Pro 无线吸尘器（美国版）",
+      "aliases": ["A1 Pro Cordless Vacuum"],
+      "sku": "AK-A1PRO-ST-US",
+      "regions": ["US"],
+      "released_at": "2026-01-15",
+      "spec_highlights": ["三档吸力", "美规适配器"]
+    },
+    {
+      "product_id": "PRD-B2P-MONITOR",
+      "product_model": "B2 Pro",
+      "product_category": "baby_monitor",
+      "display_name": "B2 Pro 智能看护器",
+      "aliases": ["B2 Pro 看护器", "B2 Pro 摄像头", "智能看护器 B2 Pro"],
+      "sku": "AK-B2PRO-MN-GL",
+      "regions": ["CN", "US", "DE"],
+      "released_at": "2026-02-01",
+      "spec_highlights": ["2K 视频", "红外夜视", "2.4GHz Wi-Fi"]
+    },
+    {
+      "product_id": "PRD-C3-MONITOR",
+      "product_model": "C3",
+      "product_category": "baby_monitor",
+      "display_name": "C3 智能看护器",
+      "aliases": ["C3 看护器", "C3 摄像头"],
+      "sku": "AK-C3-MN-GL",
+      "regions": ["CN", "US"],
+      "released_at": "2025-06-01",
+      "spec_highlights": ["1080P 视频", "本地存储"]
+    },
+    {
+      "product_id": "PRD-D4-POWER",
+      "product_model": "D4",
+      "product_category": "power_station",
+      "display_name": "D4 户外电源",
+      "aliases": ["D4 移动电源", "户外电源 D4"],
+      "sku": "AK-D4-PS-GL",
+      "regions": ["CN", "US", "DE", "JP"],
+      "released_at": "2025-09-01",
+      "spec_highlights": ["1000Wh", "1000W 输出"]
+    }
+  ]
+}

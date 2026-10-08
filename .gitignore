@@ -1,0 +1,78 @@
+# 运行数据（SQLite、附件、索引、日志）不入库
+data/runtime/
+# e2e 隔离库与索引副本（由 scripts/run_e2e.ps1 每次重建）
+data/runtime-e2e/
+# 官方原件及标准化全量导出仅存本机；Git 保留代码与脱敏检查证据。
+data/source/
+data/normalized/
+
+# 本地知识索引与模型缓存
+data/index/
+.cache/
+
+# 环境变量与密钥（.env 的任何备份/变体都不入库：实测 .env.bak-vision 曾落在忽略规则之外）
+.env
+.env.local
+*.local.env
+.env.bak*
+.env.*.bak
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.playwright-cli/
+output/playwright/
+output/*.log
+output/vitest-*.json
+
+# 编辑器与系统
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 生成产物（可由脚本重建）
+packages/contracts/generated/
+
+# 发布仓库保留源码、示例与精选配图
+evals/results/
+docs/test-cases/screenshots/
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.db
+*.db-*
+*.pem
+*.key
+*.p12
+*.pfx
+*.onnx
+*.onnx_data
+*.safetensors
+*.pt
+model-cache/
+*.zip
+*.7z
+*.mkv
+*.mp4
+*.log

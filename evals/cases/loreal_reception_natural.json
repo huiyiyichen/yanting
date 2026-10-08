@@ -1,0 +1,46 @@
+{
+  "version": "loreal-natural-reception-v1",
+  "annotation": "Natural customer wording for targeted implementation checks, not a held-out accuracy benchmark. Existing frozen adversarial tasks remain unchanged.",
+  "sourceSha256": "b5ac027e863c5580dab39c8f459e4698d65e9fbec29832c9915448f2087307b7",
+  "rubric": {},
+  "cases": [
+    {
+      "id": "N01",
+      "topic": "查询实付与单价",
+      "semanticGoals": ["只回答当前订单的实付与单价，不输出系统能力声明或内部编号"],
+      "turns": [
+        {
+          "body": "帮我看看订单6920950249822526532，这个双支装我付了多少钱，每支多少钱呀？",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["1598", "799"],
+          "replyForbidden": ["工单", "本地跟进", "未查询实时物流", "未执行任何售后"],
+          "memoryCriteria": []
+        }
+      ]
+    },
+    {
+      "id": "N02",
+      "topic": "补发赠品与签收",
+      "sourceConversationId": "S00090",
+      "semanticGoals": ["明确回答补发赠品，不混用原包裹单号", "签收未知时直说未知，不解释工单规则"],
+      "turns": [
+        {
+          "body": "订单6920073870440867672之前漏了卸妆棉，补发的快递单号发我一下吧。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["463458174220690"],
+          "replyForbidden": ["工单", "本地跟进", "773701180841061", "未执行任何售后"],
+          "memoryCriteria": []
+        },
+        {
+          "body": "那这个补发包裹签收了没有？",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyForbidden": ["工单", "本地跟进", "只代表"],
+          "memoryCriteria": []
+        }
+      ]
+    }
+  ]
+}

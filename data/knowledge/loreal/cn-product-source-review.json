@@ -1,0 +1,53 @@
+{
+  "version": "loreal-cn-reference-review-v1",
+  "review_scope": "implementation-agent-visual-and-structured-source-review-not-clinical-validation",
+  "captured_at_utc": "2026-10-03T23:21:56Z",
+  "primary_source": {
+    "url": "https://www.lorealparis.com.cn/api/ec-portal/store/pl/goods/JFyJMJrsHnZZNzPbfbS2Zx",
+    "goods_id": "JFyJMJrsHnZZNzPbfbS2Zx",
+    "code": "BOM022",
+    "response_sha256": "03f651fb9dfd6de7bf73438562ee7775b6d296e7c42be026216f81e6e9643f09",
+    "runtime_receipt": "data/runtime/public-product-sources/JFyJMJrsHnZZNzPbfbS2Zx-20261003T232155825757Z/receipt.json"
+  },
+  "identity_evidence": [
+    { "sku": "LRLWX26013", "spec_id": "3SBrLwJffXZ7R8aEKPJnC4", "label": "4.0水乳", "components": ["精华水130ml", "精华乳110ml"], "boundary": "原规格value有乳110mlml重复字符，未猜测单瓶货号或改变容量" },
+    { "sku": "LRLWX26008", "spec_id": "5BA32chd6gZe53MgbJUgoN", "label": "4.0轻盈版水霜", "components": ["精华水130ml", "面霜60ml"] },
+    { "sku": "LRLWX26010", "spec_id": "9xMxLQ8uNBf7ykwkJbQGnX", "label": "4.0滋润版水霜", "components": ["精华水130ml", "面霜60ml"] }
+  ],
+  "visual_evidence": [
+    {
+      "index": 1,
+      "sha256": "39e65ec6a52f14382e094281168e58afbd3fb31a56a1af33c6604d0887d23015",
+      "url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/4475bafa-1c03-418c-b33e-159ea9111835.png",
+      "scope": "4.0精华水与精华乳",
+      "facts": ["第四代水乳的轻盈定位", "四重胜肽名称有脚注限定"],
+      "excluded_claims": ["促生胶原数值不是产品实际成分比例", "不据品牌体外试验推断个体功效"]
+    },
+    {
+      "index": 8,
+      "sha256": "32d6ad19fcae41ca09db2a5dfebc9536f09a576738936502610d9390d0c74b87",
+      "url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/2ea9903a-255a-4ae3-8323-8bb304dbf1a7.png",
+      "scope": "小蜜罐家族介绍，具体产品仍分别核对",
+      "facts": ["提及白池花籽油、玻尿酸和胜肽", "玻尿酸脚注写作透明质酸钠"],
+      "excluded_claims": ["不是完整成分表", "不补成分浓度或过敏原结论"]
+    },
+    {
+      "index": 9,
+      "sha256": "4d61146877cc92f0cbb4d3f887fc91fd51bf18f8e905efef04d94c7d38d584c1",
+      "url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/22af9267-17bc-40bf-a094-b488d2003560.png",
+      "scope": "4.0精华水与精华乳，不包括两款面霜",
+      "facts": ["轻盈质地与后续跟妆为品牌说明", "未主动添加酒精、矿物油和尼泊金酯类防腐剂"],
+      "limiting_footnote": "配方设计时不主动添加",
+      "excluded_claims": ["零残留", "无香精", "敏感肌适用", "绝不过敏", "四周个人效果保证"]
+    },
+    {
+      "index": 10,
+      "sha256": "a8b50ab07df3b54ff795dce3d327daa753e84086710662f1af80a4c48b5feaa1",
+      "url": "https://res-wxec-unipt.lorealchina.com/prod/pl/20260907/acff06f1-c43d-430b-be16-92e26a033ef2.png",
+      "scope": "品牌搭配示意，不是个人适用性评估",
+      "facts": ["混合肌主题下展示日用水乳和夜用水霜"],
+      "excluded_claims": ["推断所有混合肌都适合", "要求用户必须增加霜", "对已试过措施继续模板化推荐"]
+    }
+  ],
+  "not_verified": ["完整成分表", "各成分浓度", "个人敏感肌适用性", "个人妆效", "实时价格或库存", "与赛题虚构商品的同款关系"]
+}

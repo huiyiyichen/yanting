@@ -1,0 +1,79 @@
+{
+  "version": "loreal-consumer-sources-v1",
+  "reviewed_on": "2026-10-02",
+  "scope_marker": "非具体商品依据",
+  "documents": [
+    {
+      "document_id": "loreal-consumer-labels",
+      "path": "consumer-labels.md",
+      "title": "中国大陆化妆品标签核对",
+      "source_title": "化妆品标签管理办法",
+      "publisher": "国家药品监督管理局",
+      "official_host": "福建省药品监督管理局",
+      "url": "https://yjj.scjgj.fujian.gov.cn/hzp/flfg/202107/t20210722_5653447.htm",
+      "source_date": "2021-07-22",
+      "region": "CN",
+      "scope": "general_consumer",
+      "professional_product_evidence": false
+    },
+    {
+      "document_id": "loreal-consumer-efficacy",
+      "path": "consumer-efficacy.md",
+      "title": "中国大陆化妆品功效与敏感肌宣称",
+      "source_title": "化妆品功效宣称评价规范",
+      "publisher": "国家药品监督管理局",
+      "official_host": "福建省药品监督管理局",
+      "url": "https://yjj.scjgj.fujian.gov.cn/hzp/flfg/202107/t20210708_5642667.htm",
+      "source_date": "2021-07-08",
+      "region": "CN",
+      "scope": "general_consumer",
+      "professional_product_evidence": false
+    },
+    {
+      "document_id": "loreal-consumer-reactions",
+      "path": "consumer-reactions.md",
+      "title": "中国大陆化妆品不良反应服务记录",
+      "source_title": "化妆品不良反应监测管理办法",
+      "publisher": "国家药品监督管理局",
+      "official_host": "福建省药品监督管理局",
+      "url": "https://yjj.scjgj.fujian.gov.cn/hzp/flfg/202202/t20220225_5845296.htm",
+      "source_date": "2022-02-25",
+      "region": "CN",
+      "scope": "general_consumer",
+      "professional_product_evidence": false
+    },
+    {
+      "document_id": "loreal-consumer-routine",
+      "path": "consumer-routine.md",
+      "title": "分区肤质与妆前护理",
+      "source_title": "How to control oily skin; Dermatologists' top tips for relieving dry skin",
+      "publisher": "American Academy of Dermatology",
+      "official_host": "aad.org",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/oily-skin",
+      "source_date": "2024-09-03",
+      "region": "US",
+      "scope": "general_consumer",
+      "professional_product_evidence": false,
+      "additional_sources": [
+        {
+          "source_title": "Dermatologists' top tips for relieving dry skin",
+          "url": "https://www.aad.org/public/everyday-care/skin-care-basics/dry/dermatologists-tips-relieve-dry-skin",
+          "source_date": "2026-01-02"
+        }
+      ]
+    },
+    {
+      "document_id": "loreal-consumer-product-testing",
+      "path": "consumer-product-testing.md",
+      "title": "新美妆产品试用与不适边界",
+      "source_title": "How to test skin care products",
+      "publisher": "American Academy of Dermatology",
+      "official_host": "aad.org",
+      "url": "https://www.aad.org/public/everyday-care/skin-care-secrets/prevent-skin-problems/test-skin-care-products",
+      "source_date": "2021-08-10",
+      "region": "US",
+      "scope": "general_consumer",
+      "professional_product_evidence": false
+    }
+  ]
+}

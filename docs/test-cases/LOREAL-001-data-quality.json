@@ -1,0 +1,219 @@
+{
+  "datasetId": "loreal-official-mock",
+  "mappingVersion": "loreal-excel-v1",
+  "source": {
+    "name": "赛题 1：数据共情者-业务数据.xlsx",
+    "sha256": "b5ac027e863c5580dab39c8f459e4698d65e9fbec29832c9915448f2087307b7",
+    "sourceKind": "official_fictional_mock"
+  },
+  "batchId": "loreal-b5ac027e863c5580dab39c8f",
+  "qualityStatus": "passed",
+  "counts": {
+    "sheets": 7,
+    "messages": 998,
+    "orders": 113,
+    "workOrders": 80,
+    "conversations": 138,
+    "imageMessages": 29
+  },
+  "sheetCounts": {
+    "聊天记录": 998,
+    "订单": 113,
+    "补发换货工单": 24,
+    "线下打款工单": 13,
+    "物流工单": 15,
+    "不良反应工单": 10,
+    "售后退货工单": 18
+  },
+  "rawFieldMapping": {
+    "聊天记录": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "消息序号": "sequence",
+      "message_id": "message_id",
+      "发送时间": "sent_at",
+      "角色": "source_role",
+      "发送方": "sender",
+      "scene_major": "scene_major",
+      "scene_minor": "scene_minor",
+      "is_target_buyer_message": "is_target_buyer_message",
+      "message_text": "body",
+      "内容类型": "source_content_type",
+      "chat_content": "chat_content",
+      "category": "category",
+      "image_path": "image_ref",
+      "关联订单号": "order_id",
+      "关联工单号": "work_order_id"
+    },
+    "订单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "订单号": "order_id",
+      "商品货号": "sku",
+      "商品名称": "product_name",
+      "数量": "quantity",
+      "单价(元)": "unit_price",
+      "实付金额(元)": "paid_amount",
+      "订单状态": "source_status",
+      "下单时间": "ordered_at",
+      "付款时间": "paid_at",
+      "发货时间": "shipped_at",
+      "快递公司": "carrier",
+      "物流单号": "tracking_no",
+      "收货省": "province",
+      "收货市": "city",
+      "赠品": "gift",
+      "买家留言": "buyer_note"
+    },
+    "补发换货工单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "工单号": "work_order_id",
+      "关联订单号": "order_id",
+      "处理人": "handler",
+      "创建时间": "created_at",
+      "完成时间": "completed_at",
+      "工单类型": "service_type",
+      "售后原因": "reason",
+      "发出商品货号": "sku",
+      "发出商品名称": "product_name",
+      "数量": "quantity",
+      "原订单物流单号": "original_tracking_no",
+      "补发物流单号": "reship_tracking_no",
+      "快递公司": "carrier",
+      "发货仓库": "warehouse",
+      "客诉加急": "urgent",
+      "工单状态": "source_status"
+    },
+    "线下打款工单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "工单号": "work_order_id",
+      "关联订单号": "order_id",
+      "处理人": "handler",
+      "创建时间": "created_at",
+      "完成时间": "completed_at",
+      "打款类型": "payment_type",
+      "退款问题类型": "refund_reason",
+      "退款金额(元)": "refund_amount",
+      "支付宝实名": "payee_alias",
+      "支付宝账号": "payment_account",
+      "相关物流单号": "related_tracking_no",
+      "转账状态": "transfer_status",
+      "工单状态": "source_status"
+    },
+    "物流工单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "工单号": "work_order_id",
+      "关联订单号": "order_id",
+      "处理人": "handler",
+      "创建时间": "created_at",
+      "完成时间": "completed_at",
+      "问题类型": "issue_type",
+      "快递公司": "carrier",
+      "问题包裹物流单号": "tracking_no",
+      "发货仓": "warehouse",
+      "订单实付(元)": "paid_amount",
+      "处理方案": "solution",
+      "收货省": "province",
+      "收货市": "city",
+      "工单状态": "source_status"
+    },
+    "不良反应工单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "工单号": "work_order_id",
+      "关联订单号": "order_id",
+      "处理人": "handler",
+      "创建时间": "created_at",
+      "完成时间": "completed_at",
+      "类型": "channel",
+      "年龄": "age",
+      "肤质": "skin_type",
+      "使用商品": "product_name",
+      "产品批次号": "product_batch_no",
+      "不适部位": "affected_area",
+      "症状描述": "symptom_description",
+      "用后多久出现": "onset_interval",
+      "是否停用": "stopped_use",
+      "是否就医": "sought_medical_care",
+      "任务状态": "source_status"
+    },
+    "售后退货工单": {
+      "会话ID": "conversation_id",
+      "买家昵称": "buyer_alias",
+      "店铺": "shop",
+      "工单号": "work_order_id",
+      "关联订单号": "order_id",
+      "处理人": "handler",
+      "创建时间": "created_at",
+      "完成时间": "completed_at",
+      "包裹类型": "parcel_type",
+      "退货原因": "return_reason",
+      "退货物流单号": "tracking_no",
+      "快递公司": "carrier",
+      "退款编号": "refund_id",
+      "签收建议": "receipt_advice",
+      "是否异常": "abnormal",
+      "任务状态": "source_status"
+    }
+  },
+  "duplicateKeys": {},
+  "relationships": {
+    "orderConversationUnmatched": 0,
+    "workOrderConversationUnmatched": 0,
+    "workOrderOrderUnmatched": 0,
+    "messageOrderUnmatched": 0,
+    "messageWorkOrderUnmatched": 0,
+    "conversationOrderConflicts": {},
+    "conversationWorkOrderConflicts": {},
+    "conversationAliasConflicts": {}
+  },
+  "statusCounts": {
+    "订单": {
+      "交易成功": 29,
+      "预售-交易成功": 9,
+      "交易关闭": 10,
+      "预售-已发货": 15,
+      "已发货": 44,
+      "预售-待付尾款": 3,
+      "待发货": 3
+    },
+    "补发换货工单": {
+      "进行中": 4,
+      "已完结": 20
+    },
+    "线下打款工单": {
+      "已完结": 6,
+      "进行中": 7
+    },
+    "物流工单": {
+      "工单组处理": 3,
+      "仓库处理": 2,
+      "已完结": 10
+    },
+    "不良反应工单": {
+      "待处理": 2,
+      "已完结": 6,
+      "处理中": 2
+    },
+    "售后退货工单": {
+      "处理中": 8,
+      "已完结": 10
+    }
+  },
+  "imageReferences": {
+    "count": 29,
+    "withPath": 29
+  },
+  "issues": [],
+  "blockingIssues": [],
+  "warnings": []
+}

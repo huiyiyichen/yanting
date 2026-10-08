@@ -1,0 +1,33 @@
+{
+  "version": "loreal-real-products-v1",
+  "sourceSha256": "b5ac027e863c5580dab39c8f459e4698d65e9fbec29832c9915448f2087307b7",
+  "annotation": "One engineered feature-batch dialogue using explicitly identified US official product references. Not independently expert-labeled, not a personal efficacy or suitability evaluation.",
+  "rubric": {
+    "specificity": "Compare actual product attributes and give a bounded candidate reason, rather than only repeating a skin concern.",
+    "provenance": "Use exact product identity and its own official reference. State US-market scope and do not map products to fictional Excel SKUs.",
+    "preferences": "Honor the half-matte and coverage preference; do not repeat the declined moisturizing step.",
+    "safety": "Manufacturer descriptions do not guarantee an individual result, sensitive-skin safety or suitability.",
+    "review": "Mechanical word checks and generator verification are not independent semantic truth."
+  },
+  "cases": [
+    {
+      "id": "R01",
+      "topic": "真实品牌资料与肤质偏好对应的候选比较",
+      "semanticGoals": [
+        "按美国官网资料比较两款真实粉底",
+        "说明半哑光偏好与候选选择理由",
+        "明确与中国大陆版本、虚构测试商品不同",
+        "不重复加强保湿建议、不作个人适用保证"
+      ],
+      "turns": [
+        {
+          "body": "我要比较 Infallible Pro-Matte 粉底液和 Infallible Pro-Glow 粉底液的美国官网说明。T区容易出油，两颊现在中性；我已经试过加强保湿，还是不服帖。更在意半哑光和中等遮盖，不要重复让我先保湿。请按具体商品资料说明哪个更值得列为候选、有何取舍和未知信息，不要当作国内版，也不要保证适用或不卡粉。",
+          "expectedMode": "autonomous",
+          "expectModelReply": true,
+          "replyRequired": ["美国", "Pro-Matte", "Pro-Glow"],
+          "memoryCriteria": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "fixture_version": "1.0",
+  "generated_note": "全部为虚构授权经销商名录，仅用于本 Demo。刻意包含多候选与无匹配场景，用于验证自动核验与补问边界（AC-18）。绝不可作为真实授权名录使用。",
+  "authorized_dealers": [
+    {
+      "dealer_id": "DLR-CN-001",
+      "name_standard": "星海数码专营店",
+      "aliases": ["星海数码", "星海数码专营", "Xinghai Digital"],
+      "country_code": "CN",
+      "channels": ["marketplace"],
+      "authorization_status": "authorized",
+      "authorized_since": "2024-03-01"
+    },
+    {
+      "dealer_id": "DLR-CN-002",
+      "name_standard": "云栖智能家居旗舰店",
+      "aliases": ["云栖智能家居", "云栖旗舰店"],
+      "country_code": "CN",
+      "channels": ["marketplace"],
+      "authorization_status": "authorized",
+      "authorized_since": "2025-01-10"
+    },
+    {
+      "dealer_id": "DLR-CN-003",
+      "name_standard": "星海数码专营店（华东）",
+      "aliases": ["星海数码华东", "星海数码专营店华东分店"],
+      "country_code": "CN",
+      "channels": ["marketplace"],
+      "authorization_status": "authorized",
+      "authorized_since": "2024-08-15"
+    },
+    {
+      "dealer_id": "DLR-CN-004",
+      "name_standard": "星海数码旗舰店",
+      "aliases": ["星海数码官方旗舰店"],
+      "country_code": "CN",
+      "channels": ["marketplace"],
+      "authorization_status": "authorized",
+      "authorized_since": "2025-06-01",
+      "note": "与 DLR-CN-001 名称高度相似，用于验证「多个候选不得任选其一」"
+    },
+    {
+      "dealer_id": "DLR-US-001",
+      "name_standard": "Northwind Electronics LLC",
+      "aliases": ["Northwind Electronics", "Northwind"],
+      "country_code": "US",
+      "channels": ["marketplace", "third_party_seller"],
+      "authorization_status": "authorized",
+      "authorized_since": "2024-05-20"
+    },
+    {
+      "dealer_id": "DLR-DE-001",
+      "name_standard": "Nordwind Technik GmbH",
+      "aliases": ["Nordwind Technik", "Nordwind"],
+      "country_code": "DE",
+      "channels": ["authorized_dealer", "offline_retail"],
+      "authorization_status": "authorized",
+      "authorized_since": "2023-11-01"
+    },
+    {
+      "dealer_id": "DLR-US-900",
+      "name_standard": "QuickBuy Deals",
+      "aliases": ["QuickBuy"],
+      "country_code": "US",
+      "channels": ["third_party_seller"],
+      "authorization_status": "not_authorized",
+      "authorized_since": null,
+      "note": "明确未收录为授权卖家，用于验证 not_authorized 情形"
+    }
+  ],
+  "scenario_notes": {
+    "unique_match": "星海数码专营店（CN，marketplace）唯一匹配 DLR-CN-001",
+    "multiple_matches": "卖家名包含「星海数码」时同时命中 DLR-CN-001 与 DLR-CN-003，必须返回 multiple_matches 而不是任选其一",
+    "explicit_non_authorized": "QuickBuy Deals 明确未授权",
+    "no_match": "任意未收录名称返回 unknown，并提示补充凭证",
+    "country_mismatch": "同一卖家名在不同国家下不得跨国家命中"
+  }
+}

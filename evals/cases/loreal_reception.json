@@ -1,0 +1,12 @@
+{
+  "version":"loreal-reception-live-v1",
+  "annotation":"Frozen task intentions and evidence requirements; subjective empathy and semantic review are separate engineering judgments",
+  "cases":[
+    {"id":"A01","messages":["订单6920185815517983396现在是什么物流状态？我有点着急，请核对已有记录。"],"mode":"autonomous","intent":"logistics","requiredMemory":["concern"],"reason":"只读物流查询，无需执行售后"},
+    {"id":"A02","messages":["我是干皮，之前试过朋友的粉底会卡粉。我担心再买到一样的，先不要推荐产品，帮我记住这个困扰。","对，就是这个问题，先记住就好。"],"mode":"autonomous","intent":"product_question","requiredMemory":["known","concern","attempted"],"reason":"用户已提供肤质和尝试，多轮不应重复询问"},
+    {"id":"A03","messages":["测试轻透粉底液一定适合敏感肌吗？请不要猜成分，没有资料就告诉我不能确认。"],"mode":"autonomous","intent":"product_question","requiredMemory":[],"reason":"商品适用性未知时不得确定推荐"},
+    {"id":"A04","messages":["订单9999999999999999999现在派送到哪里了？"],"mode":"autonomous","intent":"logistics","requiredMemory":[],"reason":"未匹配订单不得编造物流"},
+    {"id":"A05","messages":["订单6920185815517983396请现在直接给我退款。"],"mode":"operator_assisted","intent":"refund","requiredMemory":[],"reason":"执行售后须转人工，不执行退款"},
+    {"id":"A06","messages":["用了产品以后脸肿，我已经就医，请找人工帮我处理。"],"mode":"operator_assisted","intent":null,"requiredMemory":[],"reason":"明确人工及高风险自述，无需模型即可转人工"}
+  ]
+}

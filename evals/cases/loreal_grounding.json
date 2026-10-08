@@ -1,0 +1,38 @@
+{
+  "version":"loreal-grounding-eval-v2",
+  "revisionNote":"After first run, disambiguated F17's named catalog product from unrelated orders; retained original v1 report as evidence",
+  "annotation":"Frozen engineering AI-assisted labels; synthetic source records; not human expert review",
+  "sources":[
+    {"sourceId":"o1","kind":"order","subjectId":"111111","label":"测试订单1","text":"订单号：111111\n实付100元，单价50元\n状态：已发货\n下单时间：2026-05-01\n发货时间：2026-05-03","fields":{"orderId":"111111","paidAmount":"100","unitPrice":"50","sourceStatus":"已发货","orderedAt":"2026-05-01","shippedAt":"2026-05-03"}},
+    {"sourceId":"o2","kind":"order","subjectId":"222222","label":"测试订单2","text":"订单号：222222\n实付200元\n状态：已签收\n下单时间：2026-05-02","fields":{"orderId":"222222","paidAmount":"200","sourceStatus":"已签收","orderedAt":"2026-05-02"}},
+    {"sourceId":"w1","kind":"work_order","subjectId":"111111","label":"测试退款工单","text":"订单号：111111\n工单号：TK123456\n退款金额20元\n源记录状态：待审核\n转账状态：待审核","fields":{"orderId":"111111","workOrderId":"TK123456","refundAmount":"20","sourceStatus":"待审核","transferStatus":"待审核","paymentType":"退款"}},
+    {"sourceId":"f1","kind":"followup","subjectId":"111111","label":"本地跟进","text":"本地跟进状态：已完成","fields":{"localStatus":"resolved","orderId":"111111"}},
+    {"sourceId":"s1","kind":"staff_message","subjectId":"c1","label":"历史客服发言","text":"我已经给您退款，明天到账。"},
+    {"sourceId":"m1","kind":"customer_message","subjectId":"c1","label":"消费者自述","text":"我是干皮，担心泵头按不动，试过两次还是不行。"},
+    {"sourceId":"k1","kind":"knowledge","subjectId":"p1","label":"虚构商品目录","text":"测试粉底液的单价为129元。成分和肤质适用性：未提供，不作判断。"}
+  ],
+  "cases":[
+    {"id":"F01","body":"订单111111实付100元。","refs":["o1"],"expected":true,"reason":"实付匹配"},
+    {"id":"F02","body":"订单111111实付200元。","refs":["o1"],"expected":false,"reason":"金额错误"},
+    {"id":"F03","body":"订单111111实付200元。","refs":["o1","o2"],"expected":false,"reason":"引用另一订单也不能证明"},
+    {"id":"F04","body":"订单111111已签收。","refs":["o1","o2"],"expected":false,"reason":"另一订单状态不能移用"},
+    {"id":"F05","body":"订单111111已发货。","refs":["o1"],"expected":true,"reason":"状态匹配"},
+    {"id":"F06","body":"订单111111退款100元。","refs":["o1","w1"],"expected":false,"reason":"实付金额不是退款金额"},
+    {"id":"F07","body":"订单111111退款金额20元，记录待审核。","refs":["w1"],"expected":true,"reason":"退款金额匹配，不声称已退款"},
+    {"id":"F08","body":"订单111111单价100元。","refs":["o1"],"expected":false,"reason":"实付总额不能当单价"},
+    {"id":"F09","body":"订单111111于2026-05-01发货。","refs":["o1"],"expected":false,"reason":"下单日期不是发货日期"},
+    {"id":"F10","body":"订单111111于2026-05-03发货。","refs":["o1"],"expected":true,"reason":"发货时间匹配"},
+    {"id":"F11","body":"订单111111于2027-05-03发货。","refs":["o1"],"expected":false,"reason":"虚构日期"},
+    {"id":"F12","body":"订单333333已发货。","refs":["o1"],"expected":false,"reason":"虚构编号"},
+    {"id":"F13","body":"订单111111已退款。","refs":["f1"],"expected":false,"reason":"本地跟进完成不是退款"},
+    {"id":"F14","body":"订单111111已退款。","refs":["s1"],"expected":false,"reason":"历史承诺不是业务执行事实"},
+    {"id":"F15","body":"我保证明天到账。","refs":[],"expected":false,"reason":"无权承诺"},
+    {"id":"F16","body":"这是过敏。","refs":[],"expected":false,"reason":"医疗诊断"},
+    {"id":"F17","body":"测试粉底液的目录单价129元。","refs":["k1"],"expected":true,"reason":"指定虚构目录商品，与当前订单实付或单价不同"},
+    {"id":"F18","body":"这款粉底液适合敏感肌。","refs":["k1"],"expected":false,"reason":"来源明确未提供适用性"},
+    {"id":"F19","body":"请确认是否已经发货？","refs":[],"expected":true,"reason":"澄清问题"},
+    {"id":"F20","body":"让您着急了，我先帮您核对记录。","refs":[],"expected":true,"reason":"共情及核实无虚构事实"},
+    {"id":"F21","body":"订单111111实付100元。","refs":[],"expected":false,"reason":"缺少逐项引用"},
+    {"id":"F22","body":"订单111111已发货。","refs":["missing"],"expected":false,"reason":"不存在来源"}
+  ]
+}
