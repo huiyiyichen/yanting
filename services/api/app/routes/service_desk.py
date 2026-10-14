@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,12 @@ from app.domain.consumer_service import (
     risk_judgments,
     service_breakpoints,
     tickets,
+)
+from app.domain.consumer_service.risk_overview import (
+    ProductClueView,
+    RiskOverviewView,
+    product_clues,
+    risk_overview,
 )
 from app.domain.consumer_service.workspace import reception_snapshot
 from app.routes.commit import CommitBeforeResponseRoute
@@ -42,7 +50,10 @@ def operator_roster():
 def stats(session: Session = Depends(get_session)):
     snapshot = reception_snapshot(session)
     risk = incidents.list_incidents(session)
+    from app.domain.consumer_service.service_metrics import reception_metrics
+
     return ReceptionStatsView(
+        **reception_metrics(session),
         live_conversations=sum(item.data_source == "live" for item in snapshot.items),
         historical_conversations=sum(item.data_source != "live" for item in snapshot.items),
         unread_messages=snapshot.unread_total,
@@ -80,6 +91,18 @@ def ticket_update(
 @router.get("/risks", response_model=list[RiskIncidentView])
 def risk_list(session: Session = Depends(get_session)):
     return incidents.list_incidents(session)
+
+
+@router.get("/risks/overview", response_model=RiskOverviewView)
+def risk_overview_view(scope: Literal["official", "live"] = "official", session: Session = Depends(get_session)):
+    """风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记。"""
+    return risk_overview(session, scope)
+
+
+@router.get("/risks/product-clues", response_model=list[ProductClueView])
+def risk_product_clues(session: Session = Depends(get_session)):
+    """商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数。"""
+    return product_clues(session)
 
 
 @router.get("/conversations/{conversation_id}/risks", response_model=list[RiskIncidentView])

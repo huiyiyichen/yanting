@@ -6,7 +6,7 @@ import { Sender } from '@ant-design/x'
 import { Alert, Avatar, Badge, Button, Collapse, Drawer, Empty, Input, Popconfirm, Segmented, Space, Spin, Tabs, Tag, Tooltip, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView } from '../api/client'
+import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
 import { QianniuTopbar } from '../components/QianniuTopbar'
@@ -17,6 +17,7 @@ import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } fro
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
+import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { emotionLevelLabels, serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
@@ -56,6 +57,14 @@ export function SupportWorkbench() {
   const [assistant, setAssistant] = useState<ConsumerServiceAssistantView | null>(null)
   const [memory, setMemory] = useState<ServiceMemoryView | null>(null)
   const [profile, setProfile] = useState<ConsumerProfileView | null>(null)
+  const [metrics, setMetrics] = useState<ReceptionStatsView | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next) }).catch(() => undefined) }
+    read()
+    const timer = window.setInterval(read, 15000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [])
   const [error, setError] = useState('')
   const [queueError, setQueueError] = useState('')
   const [aiError, setAiError] = useState('')
@@ -394,11 +403,7 @@ export function SupportWorkbench() {
   </div>
   return <div className="desk-workbench">
     {holder}
-    <QianniuTopbar title="客服工作台" stats={[
-      { label: '会话', value: snapshot?.items.length ?? 0 }, { label: '未读', value: snapshot?.unreadTotal ?? 0, warning: true },
-      { label: '人工会话', value: snapshot?.items.filter((c) => c.dataSource === 'live' && c.serviceMode === 'operator_assisted').length ?? 0 },
-      { label: '本会话工单', value: tickets.filter((t) => t.status !== 'resolved').length },
-    ]} />
+    <QianniuTopbar title="客服工作台" stats={serviceMetricStats(metrics)} />
     <div className="reception-workspace">
       {!mobile && queue}
       <section className="reception-chat" aria-label="客服对话">

@@ -2,12 +2,13 @@ import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, MessageOut
 import { Alert, Button, Collapse, Drawer, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError, deskApi, supportApi, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView } from '../api/client'
+import { ApiError, deskApi, supportApi, type ProductClueView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
 import { QianniuTopbar } from '../components/QianniuTopbar'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, optionsOf } from '../features/service-desk/shared'
 import { serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus, followupDeadlines, primaryConversation, signalAttention } from '../features/service-desk/riskPresentation'
 import { EmotionArc } from '../features/service-desk/EmotionArc'
+import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
 
 const actionLabels = { resolved: '复核关闭', ignored: '忽略风险', reopen: '重新介入' }
 const actionResults = {
@@ -60,6 +61,8 @@ export function RiskDashboardPage() {
   const [result, setResult] = useState<string>()
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
+  const [overview, setOverview] = useState<RiskOverviewView | null>(null)
+  const [clues, setClues] = useState<ProductClueView[]>([])
   const [toast, holder] = message.useMessage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -90,6 +93,14 @@ export function RiskDashboardPage() {
     } catch (err) { if (request === listRequest.current) setError((err as Error).message) }
     finally { if (request === listRequest.current) setLoading(false) }
   }, [])
+  const scope: 'official' | 'live' = mode === 'historical' || mode === 'initial' ? 'official' : 'live'
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([deskApi.riskOverview(scope), deskApi.productClues()])
+      .then(([nextOverview, nextClues]) => { if (!cancelled) { setOverview(nextOverview); setClues(nextClues) } })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [scope, scanning])
   useEffect(() => {
     void load()
     const sync = () => { if (!document.hidden) void load(true) }
@@ -215,7 +226,7 @@ export function RiskDashboardPage() {
         ? row.currentAction === 'record_only' : row.attentionState === 'closed'))
     && (!level || row.riskLevel === level)
     && (!type || row.signals.some((signal) => signal.riskType === type && (mode !== 'active' || signalAttention(signal) === 'active')))
-    && `${row.buyerAlias} ${row.orderIds.join(' ')} ${row.latestMessage}`.includes(query))
+    && `${row.buyerAlias} ${row.conversationIds.join(' ')} ${row.orderIds.join(' ')} ${row.latestMessage}`.includes(query))
   const safeFiltered = safeCustomers.filter((item) =>
     `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query))
   const incident = selected?.incident
@@ -262,6 +273,8 @@ export function RiskDashboardPage() {
     <div className="desk-page-body">
       {error && <Alert type="error" title={error} showIcon />}
       {runtimeWarning && <Alert type="warning" title="风险接口版本过旧，请更新后端" showIcon />}
+      {overview && <RiskOverviewPanel overview={overview} clues={clues}
+        onFilterType={(next) => setType(next)} onFilterConversation={(cid) => setQuery(cid)} />}
       <Tabs activeKey={mode} onChange={setMode} items={[
         { key: 'historical', label: `官方记录 ${historical.length}` },
         { key: 'safe', label: `低风险 / 无风险 ${lowRisk.length + safeCustomers.length}` },

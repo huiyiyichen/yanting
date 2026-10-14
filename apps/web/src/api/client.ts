@@ -13,6 +13,8 @@ import { getDemoOperator } from '../features/service-desk/operator'
 export type ConversationSummary = components['schemas']['ConversationSummary']
 export type ConsumerProfileView = components['schemas']['ConsumerProfileView']
 export type DraftFinding = components['schemas']['DraftFinding']
+export type RiskOverviewView = components['schemas']['RiskOverviewView']
+export type ProductClueView = components['schemas']['ProductClueView']
 export type MessageView = components['schemas']['MessageView']
 export type SendMessageResponse = components['schemas']['SendMessageResponse']
 export type QueueItem = components['schemas']['QueueItem']
@@ -583,6 +585,9 @@ export const deskApi = {
   createTicket: (body: TicketCreateRequest) => request<TicketView>('/api/support/desk/tickets', { method: 'POST', body, role: 'support' }),
   updateTicket: (id: string, body: TicketUpdateRequest) => request<TicketView>(`/api/support/desk/tickets/${id}`, { method: 'PUT', body, role: 'support' }),
   risks: () => request<RiskIncidentView[]>('/api/support/desk/risks', { role: 'support' }),
+  riskOverview: (scope: 'official' | 'live') =>
+    request<RiskOverviewView>(`/api/support/desk/risks/overview?scope=${scope}`, { role: 'support' }),
+  productClues: () => request<ProductClueView[]>('/api/support/desk/risks/product-clues', { role: 'support' }),
   conversationRisks: (id: string) => request<RiskIncidentView[]>(
     `/api/support/desk/conversations/${encodeURIComponent(id)}/risks`, { role: 'support' }),
   risk: (id: string) => request<RiskIncidentDetailView>(`/api/support/desk/risks/${id}`, { role: 'support' }),

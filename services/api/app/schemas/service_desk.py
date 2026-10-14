@@ -276,7 +276,19 @@ class RiskScanView(ApiModel):
     reference_time: str | None = None
 
 
+class HandoffBreakdown(ApiModel):
+    total: int
+    customer: int
+    safety: int
+    model_failure: int
+
+
 class ReceptionStatsView(ApiModel):
+    ai_conversations: int = 0
+    auto_reply_rate: float | None = None
+    handoffs: HandoffBreakdown = HandoffBreakdown(total=0, customer=0, safety=0, model_failure=0)
+    average_first_response_seconds: float | None = None
+    suggestion_adoption_rate: float | None = None
     live_conversations: int
     historical_conversations: int
     unread_messages: int

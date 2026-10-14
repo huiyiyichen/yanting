@@ -1246,6 +1246,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/desk/risks/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Risk Overview View
+         * @description 风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记。
+         */
+        get: operations["risk_overview_view_api_support_desk_risks_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/support/desk/risks/product-clues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Risk Product Clues
+         * @description 商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数。
+         */
+        get: operations["risk_product_clues_api_support_desk_risks_product_clues_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/desk/conversations/{conversation_id}/risks": {
         parameters: {
             query?: never;
@@ -2172,6 +2212,17 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HandoffBreakdown */
+        HandoffBreakdown: {
+            /** Total */
+            total: number;
+            /** Customer */
+            customer: number;
+            /** Safety */
+            safety: number;
+            /** Modelfailure */
+            modelFailure: number;
+        };
         /** HealthResponse */
         HealthResponse: {
             /**
@@ -2194,6 +2245,32 @@ export interface components {
             embedding: components["schemas"]["CapabilityStatus"];
             knowledgeIndex: components["schemas"]["CapabilityStatus"];
             rerank: components["schemas"]["CapabilityStatus"];
+        };
+        /** HighRiskMarker */
+        HighRiskMarker: {
+            /** Date */
+            date: string;
+            /** Hour */
+            hour: number;
+            /** Conversationid */
+            conversationId: string;
+            /** Alias */
+            alias: string;
+            /** Types */
+            types: string[];
+        };
+        /** HourBucket */
+        HourBucket: {
+            /** Date */
+            date: string;
+            /** Hour */
+            hour: number;
+            /** Calm */
+            calm: number;
+            /** Dissatisfied */
+            dissatisfied: number;
+            /** Angry */
+            angry: number;
         };
         /** KnowledgeBaseCreateRequest */
         KnowledgeBaseCreateRequest: {
@@ -2600,6 +2677,21 @@ export interface components {
             /** Quickreplies */
             quickReplies: components["schemas"]["QuickReplyView"][];
         };
+        /** OverviewCounts */
+        OverviewCounts: {
+            /** Events */
+            events: number;
+            /** Signals */
+            signals: number;
+            /** Pending */
+            pending: number;
+            /** High */
+            high: number;
+            /** Emotionescalation */
+            emotionEscalation: number;
+            /** Adversereaction */
+            adverseReaction: number;
+        };
         /** PaymentTicketDetail */
         "PaymentTicketDetail-Input": {
             /**
@@ -2672,6 +2764,27 @@ export interface components {
             evidence?: components["schemas"]["PersonalizedAdviceEvidence"][];
             /** Claims */
             claims?: components["schemas"]["GroundingClaim"][];
+        };
+        /** ProductClueView */
+        ProductClueView: {
+            /** Productname */
+            productName: string;
+            /** Adversereactions */
+            adverseReactions: number;
+            /** Medicalvisits */
+            medicalVisits: number;
+            /** Batches */
+            batches: string[];
+            /** Relatedtickets */
+            relatedTickets: number;
+            /** Othertickets */
+            otherTickets: number;
+            /** Abnormalreturns */
+            abnormalReturns: number;
+            /** Score */
+            score: number;
+            /** Workorderids */
+            workOrderIds: string[];
         };
         /** ProfileContacts */
         ProfileContacts: {
@@ -2986,6 +3099,26 @@ export interface components {
         };
         /** ReceptionStatsView */
         ReceptionStatsView: {
+            /**
+             * Aiconversations
+             * @default 0
+             */
+            aiConversations: number;
+            /** Autoreplyrate */
+            autoReplyRate?: number | null;
+            /**
+             * @default {
+             *       "total": 0,
+             *       "customer": 0,
+             *       "safety": 0,
+             *       "modelFailure": 0
+             *     }
+             */
+            handoffs: components["schemas"]["HandoffBreakdown"];
+            /** Averagefirstresponseseconds */
+            averageFirstResponseSeconds?: number | null;
+            /** Suggestionadoptionrate */
+            suggestionAdoptionRate?: number | null;
             /** Liveconversations */
             liveConversations: number;
             /** Historicalconversations */
@@ -3539,6 +3672,36 @@ export interface components {
             signalActive: boolean;
             /** Evidence */
             evidence?: components["schemas"]["RiskEvidenceView"][];
+        };
+        /** RiskOverviewView */
+        RiskOverviewView: {
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "official" | "live";
+            counts: components["schemas"]["OverviewCounts"];
+            /** Levels */
+            levels: {
+                [key: string]: number;
+            };
+            /** Types */
+            types: {
+                [key: string]: number;
+            };
+            /** Hourly */
+            hourly: components["schemas"]["HourBucket"][];
+            /** Highriskmarkers */
+            highRiskMarkers: components["schemas"]["HighRiskMarker"][];
+            /** Customermessages */
+            customerMessages: number;
+            /** Negativeshare */
+            negativeShare: number;
+            /**
+             * Emotionsource
+             * @constant
+             */
+            emotionSource: "rule";
         };
         /** RiskScanView */
         RiskScanView: {
@@ -6591,6 +6754,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RiskIncidentView"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_overview_view_api_support_desk_risks_overview_get: {
+        parameters: {
+            query?: {
+                scope?: "official" | "live";
+            };
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskOverviewView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_product_clues_api_support_desk_risks_product_clues_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductClueView"][];
                 };
             };
             /** @description Validation Error */
