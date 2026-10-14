@@ -18,6 +18,7 @@ import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
+import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { emotionLevelLabels, serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
@@ -58,6 +59,7 @@ export function SupportWorkbench() {
   const [memory, setMemory] = useState<ServiceMemoryView | null>(null)
   const [profile, setProfile] = useState<ConsumerProfileView | null>(null)
   const [metrics, setMetrics] = useState<ReceptionStatsView | null>(null)
+  const [ticketDrawer, setTicketDrawer] = useState(false)
   useEffect(() => {
     let cancelled = false
     const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next) }).catch(() => undefined) }
@@ -379,7 +381,7 @@ export function SupportWorkbench() {
         </section>)}
         <OrderFacts context={context} />
         <h3>工单 {tickets.length}</h3>
-        <Button icon={<FileTextOutlined />} disabled={!id} onClick={() => navigate(`/platform/work-orders?conversation=${id}&create=1`)}>新建工单</Button>
+        <Button icon={<FileTextOutlined />} disabled={!id} onClick={() => setTicketDrawer(true)}>新建工单</Button>
         {tickets.map((t) => <section className="service-section" key={t.ticketId}><div className="section-title-row"><strong>{ticketTypes[t.workOrderType]}</strong><TicketStatus status={t.status} /></div>
           <p>{t.ticketId}</p><p>{t.assignee || '待分配'}</p><Button size="small" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看详情</Button>
         </section>)}
@@ -448,7 +450,7 @@ export function SupportWorkbench() {
           <div className="composer-actions">
             <ChatImageButton upload={imageUpload.upload} disabled={!id || automatic || sending || uploading}
               uploading={uploading} />
-            <Button type="text" icon={<FileTextOutlined />} disabled={!id} onClick={() => navigate(`/platform/work-orders?conversation=${id}&create=1`)}>建工单</Button>
+            <Button type="text" icon={<FileTextOutlined />} disabled={!id} onClick={() => setTicketDrawer(true)}>建工单</Button>
             <Button type="text" icon={<ThunderboltOutlined />} disabled={!id} loading={generating} onClick={() => { setPluginTab('assistant'); if (compact) setPluginOpen(true); void generate() }}>AI 建议</Button></div>
           {draftFindings.length > 0 && <div className="yt-draft-review" aria-label="发送前质检">
             {draftFindings.map((item) => <Tag key={`${item.kind}-${item.start}`}
@@ -467,6 +469,9 @@ export function SupportWorkbench() {
       {!compact && <aside className="reception-plugin" aria-label="接待辅助信息">{plugin(true)}</aside>}
     </div>
     <Drawer title="会话" placement="left" size={300} open={queueOpen} onClose={() => setQueueOpen(false)}>{queue}</Drawer>
+    <TicketDraftDrawer open={ticketDrawer} conversationId={id ?? null} buyerAlias={current?.buyerAlias} context={context}
+      onClose={() => setTicketDrawer(false)}
+      onCreated={() => { setTicketDrawer(false); if (id) void deskApi.tickets(id).then(setTickets) }} />
     <Drawer title="接待辅助" size={460} open={pluginOpen} onClose={() => setPluginOpen(false)}>{plugin(pluginOpen)}</Drawer>
   </div>
 }

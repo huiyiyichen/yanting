@@ -17,8 +17,10 @@ from app.domain.consumer_service.risk_overview import (
     product_clues,
     risk_overview,
 )
+from app.domain.consumer_service.ticket_draft import TicketDraftView, draft_for_conversation
 from app.domain.consumer_service.workspace import reception_snapshot
 from app.routes.commit import CommitBeforeResponseRoute
+from app.schemas.base import ApiModel
 from app.schemas.service_breakpoints import ServiceBreakpointAssessmentView
 from app.schemas.service_desk import (
     DemoOperatorRosterView,
@@ -65,6 +67,16 @@ def stats(session: Session = Depends(get_session)):
 @router.get("/tickets", response_model=list[TicketView])
 def ticket_list(conversation_id: str | None = None, session: Session = Depends(get_session)):
     return tickets.list_tickets(session, conversation_id)
+
+
+class TicketDraftRequest(ApiModel):
+    conversation_id: str
+
+
+@router.post("/tickets/draft", response_model=TicketDraftView)
+def ticket_draft(payload: TicketDraftRequest, session: Session = Depends(get_session)):
+    """按会话原话预填工单类型与专属字段；只返回草稿，客服确认后才创建本地工单。"""
+    return draft_for_conversation(session, payload.conversation_id)
 
 
 @router.get("/tickets/{ticket_id}", response_model=TicketView)

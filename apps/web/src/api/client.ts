@@ -16,6 +16,7 @@ export type DraftFinding = components['schemas']['DraftFinding']
 export type RiskOverviewView = components['schemas']['RiskOverviewView']
 export type ProductClueView = components['schemas']['ProductClueView']
 export type UsageView = components['schemas']['UsageView']
+export type TicketDraftView = components['schemas']['TicketDraftView']
 export type MessageView = components['schemas']['MessageView']
 export type SendMessageResponse = components['schemas']['SendMessageResponse']
 export type QueueItem = components['schemas']['QueueItem']
@@ -584,6 +585,8 @@ export const deskApi = {
   tickets: (conversationId?: string) => request<TicketView[]>(
     `/api/support/desk/tickets${conversationId ? `?conversation_id=${encodeURIComponent(conversationId)}` : ''}`, { role: 'support' }),
   ticket: (id: string) => request<TicketView>(`/api/support/desk/tickets/${id}`, { role: 'support' }),
+  ticketDraft: (conversationId: string) =>
+    request<TicketDraftView>('/api/support/desk/tickets/draft', { method: 'POST', body: { conversationId }, role: 'support' }),
   createTicket: (body: TicketCreateRequest) => request<TicketView>('/api/support/desk/tickets', { method: 'POST', body, role: 'support' }),
   updateTicket: (id: string, body: TicketUpdateRequest) => request<TicketView>(`/api/support/desk/tickets/${id}`, { method: 'PUT', body, role: 'support' }),
   risks: () => request<RiskIncidentView[]>('/api/support/desk/risks', { role: 'support' }),

@@ -1231,6 +1231,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/desk/tickets/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ticket Draft
+         * @description 按会话原话预填工单类型与专属字段；只返回草稿，客服确认后才创建本地工单。
+         */
+        post: operations["ticket_draft_api_support_desk_tickets_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/desk/tickets/{ticket_id}": {
         parameters: {
             query?: never;
@@ -2108,6 +2128,17 @@ export interface components {
              * @default
              */
             sourceUrl: string;
+        };
+        /** DraftField */
+        DraftField: {
+            /** Field */
+            field: string;
+            /** Value */
+            value: string;
+            /** Sourceref */
+            sourceRef: string;
+            /** Quote */
+            quote: string;
         };
         /** DraftFinding */
         DraftFinding: {
@@ -4238,6 +4269,25 @@ export interface components {
             note: string;
             /** Localdetail */
             localDetail?: (components["schemas"]["ReshipTicketDetail"] | components["schemas"]["PaymentTicketDetail-Input"] | components["schemas"]["LogisticsTicketDetail"] | components["schemas"]["ReactionTicketDetail"] | components["schemas"]["ReturnTicketDetail"]) | null;
+        };
+        /** TicketDraftRequest */
+        TicketDraftRequest: {
+            /** Conversationid */
+            conversationId: string;
+        };
+        /** TicketDraftView */
+        TicketDraftView: {
+            /**
+             * Conversationid
+             * @default
+             */
+            conversationId: string;
+            /** Workordertype */
+            workOrderType: string | null;
+            /** Orderid */
+            orderId?: string | null;
+            /** Fields */
+            fields: components["schemas"]["DraftField"][];
         };
         /** TicketEventView */
         TicketEventView: {
@@ -6774,6 +6824,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ticket_draft_api_support_desk_tickets_draft_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDraftView"];
                 };
             };
             /** @description Validation Error */

@@ -154,3 +154,4 @@
 .yt-usage-kpis > div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--yt-hair); border-radius: 12px; background: var(--yt-card); }
 .yt-usage-kpis span { font-size: 12px; color: var(--yt-ink-3); }
 .yt-usage-kpis strong { font-size: 20px; font-variant-numeric: tabular-nums; color: var(--yt-ink); }
+.yt-draft-sources { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
