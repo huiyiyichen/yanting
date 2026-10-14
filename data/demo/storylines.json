@@ -1,6 +1,6 @@
 {
   "version": "demo-storylines-v1",
-  "customerViewId": "林**",
+  "customerViewId": "苏**",
   "official": [
     {"story": "A", "conversationIds": ["S00005", "S00059"], "focus": "承诺未兑现 + 空包裹投诉"},
     {"story": "D", "conversationIds": ["S00010", "S00015", "S00058"], "focus": "B5 多效修护面膜不良反应"}
@@ -9,7 +9,7 @@
     {
       "story": "B",
       "conversationId": "conv-demo-b-skin",
-      "customerId": "林**",
+      "customerId": "苏**",
       "title": "肤质咨询",
       "minutesAgo": 42,
       "messages": [
@@ -23,7 +23,7 @@
     {
       "story": "C",
       "conversationId": "conv-demo-c-logistics",
-      "customerId": "周**",
+      "customerId": "许**",
       "title": "物流延迟",
       "minutesAgo": 25,
       "messages": [
@@ -37,7 +37,7 @@
     {
       "story": "D",
       "conversationId": "conv-demo-d-reaction",
-      "customerId": "陈**",
+      "customerId": "温**",
       "title": "面膜使用后泛红",
       "minutesAgo": 12,
       "messages": [

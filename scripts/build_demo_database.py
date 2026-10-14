@@ -123,6 +123,12 @@ def audit_snapshot() -> dict:
         tickets = [row[0] or "" for row in connection.execute("select title from service_ticket")]
         conversations = connection.execute("select count(*) from service_conversation").fetchone()[0]
         alerts = connection.execute("select count(*) from service_risk_alert").fetchone()[0]
+        collisions = [row[0] for row in connection.execute(
+            "select distinct customer_id from conversation where customer_id in "
+            "(select buyer_alias from service_conversation)")]
+    if collisions:
+        # 本地剧情客户与官方买家同昵称会被画像卡合并成同一人
+        raise SystemExit(f"剧情客户与官方买家昵称重名：{collisions}")
     polluted = [t for t in titles + tickets if any(marker in t for marker in TEST_MARKERS)]
     if polluted:
         raise SystemExit(f"演示库含测试命名记录：{polluted[:5]}")
