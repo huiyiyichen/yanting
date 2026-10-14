@@ -47,7 +47,7 @@ def reception_metrics(session: Session) -> dict:
     adopted = ignored = 0
     for row in session.scalars(select(AuditEventRow).where(AuditEventRow.event_type == "consumer_suggestion_action")):
         action = json.loads(row.detail_json or "{}").get("action")
-        adopted += action == "adopt"
+        adopted += action in {"adopt", "adopt_edited"}
         ignored += action == "ignore"
     return {
         "ai_conversations": len({job.conversation_id for job in jobs}),

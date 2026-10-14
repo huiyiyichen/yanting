@@ -62,6 +62,12 @@ beforeEach(() => {
     if (path.endsWith('/reception/queue')) return json({ items: [item], unreadTotal: 1 })
     if (path.endsWith('/service-context')) return json(context)
     if (path.endsWith('/memory')) return json({ conversationId: 'live-1', revision: 0, items: [], sources: [], stale: false, verified: false })
+    if (path.includes('/assistant/stream')) {
+      generated = true
+      const events = [{ type: 'stage', name: '服务轨迹', status: 'running' }, { type: 'done', view: assistant }]
+      return new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''),
+        { status: 200, headers: { 'Content-Type': 'text/event-stream' } })
+    }
     if (path.endsWith('/assistant')) {
       if (options?.method === 'POST') generated = true
       return json(generated ? assistant : null)
@@ -247,8 +253,9 @@ describe('颜听工作台', () => {
     await screen.findByRole('button', { name: '消费者甲 live-1' })
     await waitFor(() => expect(screen.getByRole('button', { name: /生成建议/ })).toBeEnabled())
     await user.click(screen.getByRole('button', { name: /生成建议/ }))
-    await waitFor(() => expect(fetchMock.mock.calls.some(([path, options]) =>
-      String(path).endsWith('/assistant') && options?.method === 'POST')).toBe(true))
+    // P1-3：生成改为阶段流式接口（/assistant/stream），仍是客服显式操作
+    await waitFor(() => expect(fetchMock.mock.calls.some(([path]) =>
+      String(path).includes('/assistant/stream'))).toBe(true))
     await screen.findByText('我来核对这笔订单的换货记录。')
     await user.click(screen.getByRole('button', { name: /采\s*用/ }))
     expect(fetchMock.mock.calls.some(([path, options]) => String(path).endsWith('/messages') && options?.method === 'POST')).toBe(false)

@@ -1,5 +1,5 @@
 import {
-  CheckOutlined, CloseOutlined, FileTextOutlined, MenuOutlined, ProfileOutlined,
+  FileTextOutlined, MenuOutlined, ProfileOutlined,
   ReloadOutlined, SearchOutlined, SendOutlined, ThunderboltOutlined, UserOutlined, RobotOutlined, CustomerServiceOutlined,
 } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
@@ -19,13 +19,13 @@ import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
 import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
+import { ReplyCard } from '../features/service-desk/ReplyCard'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { emotionLevelLabels, serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
 import { handoffBrief } from '../features/service-desk/handoffBrief'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
-const styles: Record<string, string> = { recommended: '推荐', concise: '简洁', reassuring: '安抚' }
 const memoryLabels = { known: '已知信息', concern: '消费者关注', attempted: '已尝试措施', unresolved: '待解决事项' }
 const intentLabels: Record<string, string> = {
   product_question: '商品咨询', order_status: '订单查询', logistics: '物流查询',
@@ -60,6 +60,7 @@ export function SupportWorkbench() {
   const [profile, setProfile] = useState<ConsumerProfileView | null>(null)
   const [metrics, setMetrics] = useState<ReceptionStatsView | null>(null)
   const [ticketDrawer, setTicketDrawer] = useState(false)
+  const [stages, setStages] = useState<{ name: string; status: string }[]>([])
   useEffect(() => {
     let cancelled = false
     const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next?.handoffs ? next : null) }).catch(() => undefined) }
@@ -159,14 +160,21 @@ export function SupportWorkbench() {
     return () => { disposed = true; clearInterval(timer); window.removeEventListener('focus', sync) }
   }, [loadDetail, setParams, toast])
 
-  const generate = async (target = id) => {
+  const generate = async (target = id, style?: string) => {
     if (!target || generating) return
-    assistantRequest.current++
-    setGenerating(true); setAiError('')
+    const request = ++assistantRequest.current
+    setGenerating(true); setAiError(''); setStages([])
     try {
-      await supportApi.generateAssistant(target)
-      const [cached, remembered] = await Promise.all([supportApi.assistant(target), supportApi.memory(target)])
-      if (active.current === target) { setAssistant(cached); setMemory(remembered) }
+      let failure = ''
+      await supportApi.streamAssistant(target, style, (event) => {
+        if (active.current !== target || request !== assistantRequest.current) return
+        if (event.type === 'stage') setStages((old) => [...old.filter((item) => item.name !== event.name), { name: event.name, status: event.status }])
+        else if (event.type === 'done') setAssistant(event.view)
+        else failure = event.message
+      })
+      if (failure) throw new Error(failure)
+      const remembered = await supportApi.memory(target)
+      if (active.current === target) setMemory(remembered)
     } catch (err) { if (active.current === target) setAiError((err as Error).message) }
     finally { setGenerating(false) }
   }
@@ -204,13 +212,13 @@ export function SupportWorkbench() {
     } catch (err) { setError((err as Error).message) }
     finally { setSwitching(false) }
   }
-  const adopt = async (style: string, body: string, action: 'adopt' | 'ignore') => {
+  const adopt = async (style: string, body: string, action: 'adopt' | 'adopt_edited' | 'ignore') => {
     if (!id || !assistant) return
     const target = id
     try {
-      await supportApi.assistantAction(target, assistant.inputHash ?? '', style, action)
+      await supportApi.assistantAction(target, assistant.inputHash ?? '', style, action, action === 'adopt_edited' ? body : undefined)
       if (active.current !== target) return
-      if (action === 'adopt') {
+      if (action !== 'ignore') {
         drafts.set(target, 'support', body)
         setAssistant((old) => old ? { ...old, adoptedCount: (old.adoptedCount ?? 0) + 1 } : old)
         setPluginOpen(false)
@@ -218,6 +226,10 @@ export function SupportWorkbench() {
       }
       else setAssistant((old) => old ? { ...old, replySuggestions: old.replySuggestions.filter((r) => r.style !== style) } : old)
     } catch (err) { if (active.current === target) setAiError((err as Error).message) }
+  }
+  const rewrite = async (style: string, body: string, instruction: 'gentler' | 'concise' | 'professional') => {
+    if (!id) throw new Error('未选择会话')
+    return (await supportApi.rewriteSuggestion(id, style, body, instruction)).text
   }
 
   const queueItems = (snapshot?.items ?? []).filter((item) =>
@@ -293,18 +305,16 @@ export function SupportWorkbench() {
           {assistant?.verificationStatus === 'partial' && <Tag color="warning">
             已移除 {Number(assistant.modelUsage?.segmentsDropped ?? 0)} 段
           </Tag>}
-          {assistant && !assistant.stale ? assistant.replySuggestions.map((item) => <article className="reply-candidate" key={item.style}>
-            <div className="reply-candidate-head"><Tag>{styles[item.style] ?? item.style}</Tag>
-              <Space size={4} wrap>{item.empathyDimensions?.map((dimension) => <Tag
-                key={dimension.key} color={dimension.status === 'present' ? 'success' : 'default'}
-                title={dimension.reason}>{dimension.label}</Tag>)}</Space>
-            </div><p>{item.body}</p><Space>
-              <Tooltip title={automatic ? 'AI 接待中' : !['verified', 'partial'].includes(assistant.verificationStatus ?? '') ? '待核验' : undefined}>
-                <span><Button size="small" icon={<CheckOutlined />} disabled={automatic || !['verified', 'partial'].includes(assistant.verificationStatus ?? '')} onClick={() => void adopt(item.style, item.body, 'adopt')}>采用</Button></span>
-              </Tooltip>
-              <Button size="small" icon={<CloseOutlined />} onClick={() => void adopt(item.style, item.body, 'ignore')}>忽略</Button>
-            </Space>
-          </article>) : <Tag>{generating ? '生成中' : '待生成'}</Tag>}
+          {generating && stages.length > 0 && <ol className="yt-stages" aria-label="生成进度">
+            {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
+          </ol>}
+          {assistant && !assistant.stale && assistant.replySuggestions.length ? <ReplyCard key={`${id}-${assistant.inputHash}`}
+            suggestions={assistant.replySuggestions} automatic={automatic} generating={generating}
+            adoptable={['verified', 'partial'].includes(assistant.verificationStatus ?? '')}
+            onAdopt={(style, body, edited) => void adopt(style, body, edited ? 'adopt_edited' : 'adopt')}
+            onIgnore={(style) => void adopt(style, '', 'ignore')}
+            onRegenerate={(style) => void generate(id, style)} onRewrite={rewrite} />
+            : <Tag>{generating ? '生成中' : '待生成'}</Tag>}
         </section>
         {id ? <SupportRiskPanel key={id} conversationId={id}
           enabled={visible && pluginTab === 'assistant'} refreshKey={riskRefreshKey}

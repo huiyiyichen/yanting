@@ -1063,7 +1063,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Generate */
+        /**
+         * Generate
+         * @description 生成接待辅助；带 style 时只替换该风格，其余风格保留上次已核验内容。
+         */
         post: operations["generate_api_support_reception__conversation_id__assistant_post"];
         delete?: never;
         options?: never;
@@ -1173,6 +1176,46 @@ export interface paths {
          * @description 发送前质检：纯规则提示，不阻断发送，不调用模型；每次结果写审计。
          */
         post: operations["draft_review_api_support_reception__conversation_id__draft_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/support/reception/{conversation_id}/assistant/rewrite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rewrite Suggestion
+         * @description 改写回复建议：快速模型生成，程序校验事实保真；未通过返回 422 并保留原文。
+         */
+        post: operations["rewrite_suggestion_api_support_reception__conversation_id__assistant_rewrite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/support/reception/{conversation_id}/assistant/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Assistant
+         * @description 按工作流节点推送生成阶段（SSE）。完成事件携带已核验结果；失败推送 error，不伪造成功。
+         */
+        get: operations["stream_assistant_api_support_reception__conversation_id__assistant_stream_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1647,6 +1690,8 @@ export interface components {
             style: string;
             /** Action */
             action: string;
+            /** Editedtext */
+            editedText?: string | null;
         };
         /** AssistantReplySuggestionView */
         AssistantReplySuggestionView: {
@@ -3361,6 +3406,26 @@ export interface components {
             expectedRevision?: number | null;
             /** Expectedpayloadhash */
             expectedPayloadHash?: string | null;
+        };
+        /** RewriteRequest */
+        RewriteRequest: {
+            /** Style */
+            style: string;
+            /** Text */
+            text: string;
+            /** Instruction */
+            instruction: string;
+        };
+        /** RewriteView */
+        RewriteView: {
+            /** Style */
+            style: string;
+            /** Text */
+            text: string;
+            /** Instruction */
+            instruction: string;
+            /** Model */
+            model: string;
         };
         /** RiskAlertDetailView */
         RiskAlertDetailView: {
@@ -6467,7 +6532,9 @@ export interface operations {
     };
     generate_api_support_reception__conversation_id__assistant_post: {
         parameters: {
-            query?: never;
+            query?: {
+                style?: ("recommended" | "concise" | "reassuring") | null;
+            };
             header?: {
                 "X-Demo-View-Role"?: string | null;
             };
@@ -6693,6 +6760,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DraftReviewView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rewrite_suggestion_api_support_reception__conversation_id__assistant_rewrite_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RewriteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RewriteView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_assistant_api_support_reception__conversation_id__assistant_stream_get: {
+        parameters: {
+            query?: {
+                style?: ("recommended" | "concise" | "reassuring") | null;
+            };
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

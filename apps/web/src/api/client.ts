@@ -155,6 +155,37 @@ export class ApiError extends Error {
 
 const baseUrl = import.meta.env.VITE_API_BASE ?? ''
 
+export type AssistantStreamEvent =
+  | { type: 'stage'; name: string; status: string }
+  | { type: 'done'; view: ConsumerServiceAssistantView }
+  | { type: 'error'; code: string; message: string }
+
+/** 读取生成阶段（SSE）。EventSource 不能带身份头，所以用 fetch 读流。 */
+async function streamAssistant(
+  id: string, style: string | undefined, onEvent: (event: AssistantStreamEvent) => void, signal?: AbortSignal,
+): Promise<void> {
+  const query = style ? `?style=${encodeURIComponent(style)}` : ''
+  const response = await fetch(`${baseUrl}/api/support/reception/${id}/assistant/stream${query}`, {
+    headers: { 'X-Demo-View-Role': 'support', 'X-Demo-Operator': getDemoOperator() }, signal,
+  })
+  if (!response.ok || !response.body) throw new ApiError(response.status, 'stream_failed', '生成连接失败，请重试', null)
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  for (;;) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let index
+    while ((index = buffer.indexOf('\n\n')) >= 0) {
+      const chunk = buffer.slice(0, index)
+      buffer = buffer.slice(index + 2)
+      const line = chunk.split('\n').find((item) => item.startsWith('data: '))
+      if (line) onEvent(JSON.parse(line.slice(6)) as AssistantStreamEvent)
+    }
+  }
+}
+
 async function request<T>(
   path: string,
   options: { method?: string; body?: unknown; role?: ViewRoleHeader } = {},
@@ -349,10 +380,15 @@ export const supportApi = {
     request<ConsumerServiceAssistantView>(`/api/support/reception/${id}/assistant`, {
       method: 'POST', role: 'support',
     }),
-  assistantAction: (id: string, inputHash: string, style: string, action: 'adopt' | 'ignore') =>
+  assistantAction: (id: string, inputHash: string, style: string, action: 'adopt' | 'adopt_edited' | 'ignore', editedText?: string) =>
     request(`/api/support/reception/${id}/suggestion-action`, {
-      method: 'POST', body: { inputHash, style, action }, role: 'support',
+      method: 'POST', body: { inputHash, style, action, ...(editedText === undefined ? {} : { editedText }) }, role: 'support',
     }),
+  rewriteSuggestion: (id: string, style: string, text: string, instruction: 'gentler' | 'concise' | 'professional') =>
+    request<{ style: string; text: string; instruction: string; model: string }>(`/api/support/reception/${id}/assistant/rewrite`, {
+      method: 'POST', body: { style, text, instruction }, role: 'support',
+    }),
+  streamAssistant,
   sourceWorkOrders: () =>
     request<ServiceWorkOrder[]>('/api/support/reception/work-orders/all', { role: 'support' }),
 

@@ -183,3 +183,22 @@
   .yt-rail .desk-brand strong { display: none; }
   .yt-rail .desk-nav-item > span:not(.anticon), .yt-rail .desk-nav-item .ant-badge + span { display: block; font-size: 11px; }
 }
+
+/* 回复建议卡（5.4.4）：金色顶边 + 暖色投影，仅 AI 内容使用 */
+.yt-reply {
+  position: relative; display: grid; gap: 10px; padding: 12px 12px 0; overflow: hidden;
+  background: var(--yt-card); border: 1px solid var(--yt-gold-line); border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(138, 101, 50, 0.12); transition: opacity 0.2s;
+}
+.yt-reply::before { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--yt-gold), var(--yt-gold-line)); }
+.yt-reply.is-refreshing { opacity: 0.55; }
+.yt-reply-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.yt-reply-body { margin: 0; font-size: 14px; line-height: 1.75; color: var(--yt-ink); white-space: pre-wrap; }
+.yt-reply-empathy { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--yt-calm); }
+.yt-reply-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 -12px; padding: 8px 12px; background: var(--yt-porcelain); border-top: 1px solid var(--yt-hair); }
+.yt-reply-actions > :last-child { margin-left: auto; }
+.yt-stages { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--yt-ink-3); }
+.yt-stages li.is-running { color: var(--yt-gold-ink); font-weight: 600; }
+.yt-stages li.is-passed { color: var(--yt-calm); }
+.yt-stages li.is-failed { color: var(--yt-fury); }
+.yt-reply-empathy .is-missing { color: var(--yt-ink-3); }

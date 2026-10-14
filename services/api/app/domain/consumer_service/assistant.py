@@ -116,6 +116,17 @@ def _risk_summary(session: Session, conversation_id: str):
     )
 
 
+def edit_distance(a: str, b: str) -> int:
+    """字符级编辑距离（采纳度量用）。"""
+    previous = list(range(len(b) + 1))
+    for i, left in enumerate(a, 1):
+        current = [i]
+        for j, right in enumerate(b, 1):
+            current.append(min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (left != right)))
+        previous = current
+    return previous[-1]
+
+
 def _adopted_count(session: Session, conversation_id: str) -> int:
     rows = session.scalars(select(AuditEventRow).where(
         AuditEventRow.conversation_id == conversation_id,
@@ -127,7 +138,7 @@ def _adopted_count(session: Session, conversation_id: str) -> int:
             detail = json.loads(row.detail_json)
         except (TypeError, ValueError):
             continue
-        if detail.get("action") == "adopt":
+        if detail.get("action") in {"adopt", "adopt_edited"}:
             total += 1
     return total
 
@@ -144,6 +155,8 @@ class ConsumerServiceAssistant:
         still_current: Callable[[], bool] | None = None,
         require_breakpoints: bool = False,
         timeout_seconds: float | None = None,
+        on_step: Callable[[str, str], None] | None = None,
+        only_style: str | None = None,
     ) -> ConsumerServiceAssistantView:
         if not self._provider.available():
             raise ProviderNotConfigured(
@@ -161,7 +174,9 @@ class ConsumerServiceAssistant:
             timeout_seconds=timeout_seconds if timeout_seconds is not None else
             self._runtime.settings.auto_reply_timeout_seconds if automatic and self._runtime else None,
             settings=self._runtime.settings if self._runtime else None,
+            on_step=on_step,
         )
+        previous = read_assistant(self._session, conversation_id) if only_style else None
         parsed, context, result = state["draft"], state["context"], state["result"]
         assert parsed is not None
         messages, input_hash = state["messages"], state["input_hash"]
@@ -228,6 +243,13 @@ class ConsumerServiceAssistant:
                 style=item.style, body=body, claims=item.claims,
                 empathy_dimensions=dimensions,
             ))
+        if only_style and previous is not None and not previous.stale and previous.input_hash == input_hash:
+            # 单风格重生成：只替换该风格，其余风格保留上次已核验的内容
+            fresh = next((item for item in suggestions if item.style == only_style), None)
+            if fresh is not None:
+                suggestions = [fresh if item.style == only_style else item for item in previous.reply_suggestions]
+                if only_style not in [item.style for item in previous.reply_suggestions]:
+                    suggestions.append(fresh)
         personalized_advice = advice_views(
             parsed.personalized_advice, {source.source_id: source for source in state["sources"]},
         )
@@ -442,6 +464,9 @@ def record_suggestion_action(
     AuditRecorder(session).record(
         AuditContext.new_turn(actor_type="operator", conversation_id=conversation_id),
         event_type="consumer_suggestion_action",
-        detail={"style": payload.style, "action": payload.action, "inputHash": view.input_hash},
+        detail={"style": payload.style, "action": payload.action, "inputHash": view.input_hash,
+                **({"editDistance": edit_distance(
+                    next(item.body for item in view.reply_suggestions if item.style == payload.style),
+                    payload.edited_text or "")} if payload.action == "adopt_edited" else {})},
     )
     return {"ok": True}

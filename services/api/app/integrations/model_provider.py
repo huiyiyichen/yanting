@@ -75,6 +75,7 @@ class ModelProvider(Protocol):
         max_tokens: int = 1024,
         json_mode: bool = False,
         timeout_seconds: float | None = None,
+        model_tier: str = "main",
     ) -> ChatResult: ...
 
 
@@ -237,9 +238,11 @@ class OpenAICompatibleModelProvider:
         max_tokens: int = 1024,
         json_mode: bool = False,
         timeout_seconds: float | None = None,
+        model_tier: str = "main",
     ) -> ChatResult:
         wants_vision = any(message.image_data_urls for message in messages)
-        model = self._model
+        # 改写、分类等轻任务走快速模型（未配置时回退主模型）
+        model = self.fast_model_id if model_tier == "fast" else self._model
         base_url, api_key = self._base_url, self._api_key
         if wants_vision:
             if not self.supports_vision:
@@ -376,8 +379,9 @@ class MockModelProvider:
         max_tokens: int = 1024,
         json_mode: bool = False,
         timeout_seconds: float | None = None,
+        model_tier: str = "main",
     ) -> ChatResult:
-        del temperature, max_tokens, timeout_seconds
+        del temperature, max_tokens, timeout_seconds, model_tier
         self._calls.append(list(messages))
         if self._responses:
             text = self._responses.pop(0)

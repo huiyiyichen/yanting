@@ -337,6 +337,7 @@ def run_grounded_workflow(
     still_current: Callable[[], bool] | None = None,
     require_breakpoints: bool = False,
     settings: Any = None,
+    on_step: Callable[[str, str], None] | None = None,
 ) -> FlowState:
     from app.domain.consumer_service.assistant import AUTO_RECEPTION_PROMPT, SYSTEM_PROMPT
     from app.domain.consumer_service.workspace import assistant_input_hash, conversation_messages
@@ -361,10 +362,14 @@ def run_grounded_workflow(
     def tracked(name: str, handler: Callable):
         def node(state: FlowState):
             start = time.perf_counter()
+            if on_step is not None:
+                on_step(name, "running")
             try:
                 alive()
                 result = handler(state)
             except Exception as exc:
+                if on_step is not None:
+                    on_step(name, "failed")
                 exc.workflow_steps = [s.dump() for s in state.get("steps", [])] + [{
                     "name": name, "status": "failed", "durationMs": round((time.perf_counter() - start) * 1000),
                     "attempt": state.get("attempt", 0),
@@ -379,6 +384,8 @@ def run_grounded_workflow(
                 attempt=result.get("attempt", state.get("attempt", 1)),
                 issues=[str(issue)[:200] for issue in result.get("issues", [])[:8]],
             )]
+            if on_step is not None:
+                on_step(name, steps[-1].status)
             return {**result, "steps": steps}
         return node
 

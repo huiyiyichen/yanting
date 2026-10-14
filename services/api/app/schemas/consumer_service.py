@@ -222,7 +222,9 @@ class ConsumerServiceAssistantView(ApiModel):
 class AssistantActionRequest(ApiModel):
     input_hash: str
     style: str
-    action: str = Field(pattern="^(adopt|ignore)$")
+    action: str = Field(pattern="^(adopt|adopt_edited|ignore)$")
+    #: 编辑后采用时的最终文本，只用于计算编辑距离，不保存原文
+    edited_text: str | None = Field(default=None, max_length=800)
 
 
 class RiskAlertView(ApiModel):
