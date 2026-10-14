@@ -142,6 +142,9 @@ class ReceptionItemView(ApiModel):
     mode_revision: int = 0
     auto_reply_status: str = "idle"
     handoff_reason: str | None = None
+    #: 本次等待起点（与 response_wait 规则同口径）；无等待为空
+    waiting_since: str | None = None
+    wait_threshold_seconds: int = 120
 
 
 class ReceptionSnapshotView(ApiModel):

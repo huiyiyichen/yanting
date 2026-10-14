@@ -152,6 +152,28 @@ def is_refund(ticket: RuleTicket) -> bool:
             and not any(v in state for v in ("撤销", "拒绝", "取消")))
 
 
+def pending_wait_start(history: list[RuleMessage]) -> RuleMessage | None:
+    """本次等待的起点：最后一次可见服务回复（或结束服务）之后的第一条消费者消息。
+
+    消费者最后一句是致谢/确认等平稳收尾时不算等待。队列等待时长与 response_wait 规则共用此口径。
+    """
+    customers = [message for message in history if message.sender_role == "customer"]
+    if not customers:
+        return None
+    text = customers[-1].body.strip()
+    if score_message(text) == 0 and (
+        RELIEF.search(text) or CALM_FOLLOW_UP.fullmatch(text) or ACKNOWLEDGEMENT.fullmatch(text)
+    ):
+        return None
+    replies = [message.at for message in history
+               if message.sender_role in {"operator", "assistant"}
+               and (message.body.strip() or message.has_attachments)]
+    boundary = max([*replies, *[message.service_closed_at for message in history
+                              if message.service_closed_at]], default=None)
+    pending = [message for message in customers if boundary is None or message.at > boundary]
+    return pending[0] if pending else None
+
+
 def waiting_signals(messages: list[RuleMessage], *, now: datetime, wait_seconds: int):
     if wait_seconds <= 0:
         return []
@@ -161,24 +183,10 @@ def waiting_signals(messages: list[RuleMessage], *, now: datetime, wait_seconds:
             local_history[message.conversation_id].append(message)
     result: list[RiskSignal] = []
     for cid, history in local_history.items():
-        customers = [message for message in history if message.sender_role == "customer"]
-        if not customers:
+        started = pending_wait_start(history)
+        if started is None:
             continue
-        latest = customers[-1]
-        text = latest.body.strip()
-        if score_message(text) == 0 and (
-            RELIEF.search(text) or CALM_FOLLOW_UP.fullmatch(text) or ACKNOWLEDGEMENT.fullmatch(text)
-        ):
-            continue
-        replies = [message.at for message in history
-                   if message.sender_role in {"operator", "assistant"}
-                   and (message.body.strip() or message.has_attachments)]
-        boundary = max([*replies, *[message.service_closed_at for message in history
-                                  if message.service_closed_at]], default=None)
-        pending = [message for message in customers if boundary is None or message.at > boundary]
-        if not pending:
-            continue
-        started = pending[0]
+        latest = [message for message in history if message.sender_role == "customer"][-1]
         deadline = started.at + timedelta(seconds=wait_seconds)
         if now < deadline:
             continue

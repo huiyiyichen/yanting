@@ -3308,6 +3308,13 @@ export interface components {
             autoReplyStatus: string;
             /** Handoffreason */
             handoffReason?: string | null;
+            /** Waitingsince */
+            waitingSince?: string | null;
+            /**
+             * Waitthresholdseconds
+             * @default 120
+             */
+            waitThresholdSeconds: number;
         };
         /** ReceptionSnapshotView */
         ReceptionSnapshotView: {

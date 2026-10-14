@@ -4,7 +4,7 @@ import {
 } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
 import { Alert, Avatar, Badge, Button, Collapse, Drawer, Empty, Input, Popconfirm, Segmented, Space, Spin, Tabs, Tag, Tooltip, message } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
 import { MessageList } from '../components/MessageList'
@@ -15,6 +15,8 @@ import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
+import { escalationMessage, messageEmotions } from '../features/service-desk/messageEmotion'
+import { QueueRow, riskHref } from '../features/service-desk/QueueRow'
 import { DeskProductCard } from '../features/service-desk/DeskProductCard'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
@@ -34,8 +36,6 @@ const intentLabels: Record<string, string> = {
   complaint: '投诉', other: '其他诉求', unknown: '待明确',
 }
 const emotionTagColors: Record<string, string> = { calm: 'success', dissatisfied: 'warning', angry: 'error' }
-const riskHref = (conversationId: string, risk: string) =>
-  `/risk?${new URLSearchParams({ conversation: conversationId, type: risk }).toString()}`
 
 export function SupportWorkbench() {
   const [params, setParams] = useSearchParams()
@@ -52,6 +52,8 @@ export function SupportWorkbench() {
   const [pluginTab, setPluginTab] = useState('assistant')
   const [snapshot, setSnapshot] = useState<ReceptionSnapshot | null>(null)
   const [mode, setMode] = useState('全部')
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 30000); return () => window.clearInterval(timer) }, [])
   const [query, setQuery] = useState('')
   const [messages, setMessages] = useState<MessageView[]>([])
   const [context, setContext] = useState<ConsumerServiceContextView | null>(null)
@@ -233,43 +235,22 @@ export function SupportWorkbench() {
     return (await supportApi.rewriteSuggestion(id, style, body, instruction)).text
   }
 
+  const emotionsById = useMemo(() => messageEmotions(profile, id), [profile, id])
+  const escalationId = useMemo(() => escalationMessage(profile, id), [profile, id])
   const queueItems = (snapshot?.items ?? []).filter((item) =>
     (mode !== '未读' || item.unreadCount > 0)
     && (mode !== '人工' || item.serviceMode === 'operator_assisted')
-    && (mode !== '历史' || item.dataSource === 'imported')
+    && (mode !== '风险' || Boolean(item.activeRiskTypes?.length || item.reviewRiskTypes?.length))
     && `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query))
   const queue = <div className="reception-queue">
     <div className="reception-queue-head">
       <div className="section-title-row"><h2>会话</h2><Badge count={snapshot?.unreadTotal ?? 0} /></div>
       <Input prefix={<SearchOutlined />} placeholder="客户、会话、消息" aria-label="搜索会话" value={query} allowClear onChange={(e) => setQuery(e.target.value)} />
-      <Segmented block options={['全部', '人工', '未读', '历史']} value={mode} onChange={setMode} />
+      <Segmented block options={['全部', '人工', '风险', '未读']} value={mode} onChange={setMode} />
     </div>
-    <div className="reception-list">{queueItems.map((item) => <div key={item.conversationId}
-      className={`reception-row-item${id === item.conversationId ? ' is-active' : ''}`}>
-      <button className={`reception-row${id === item.conversationId ? ' is-active' : ''}`}
-        aria-label={`${item.buyerAlias} ${item.conversationId}`}
-        onClick={() => { setParams({ conversation: item.conversationId }); setQueueOpen(false) }}>
-        <Badge count={item.unreadCount} size="small"><Avatar icon={<UserOutlined />} /></Badge>
-        <span className="reception-row-main">
-          <span className="reception-row-title"><strong>{item.buyerAlias}</strong><time>{dateLabel(item.updatedAt)}</time></span>
-          <span className="reception-row-preview">{item.serviceMode === 'autonomous' ? 'AI · ' : '人工 · '}{item.preview || '新会话'}</span>
-          <span className="reception-row-status">
-            {item.currentEmotion ? <Tag color={emotionTagColors[item.currentEmotion]}>{emotionLevelLabels[item.currentEmotion]}</Tag> : null}
-            {item.riskLevel === 'high' ? <Tag color="error">高风险</Tag> : null}
-          </span>
-        </span>
-      </button>
-      {item.activeRiskTypes?.length || item.reviewRiskTypes?.length ? <div className="reception-risk-links">
-        {item.activeRiskTypes?.slice(0, 2).map((risk) => <Link key={risk} to={riskHref(item.conversationId, risk)}
-          aria-label={`查看${serviceRiskTypeLabels[risk]} · ${item.buyerAlias}`}>
-          <Tag color="warning">{serviceRiskTypeLabels[risk]}</Tag>
-        </Link>)}
-        {item.reviewRiskTypes?.slice(0, 1).map((risk) => <Link key={`review-${risk}`} to={riskHref(item.conversationId, risk)}
-          aria-label={`复核${serviceRiskTypeLabels[risk]} · ${item.buyerAlias}`}>
-          <Tag color="processing">待复核 · {serviceRiskTypeLabels[risk]}</Tag>
-        </Link>)}
-      </div> : null}
-    </div>)}
+    <div className="reception-list">{queueItems.length ? <div className="yt-queue-group">正在接待</div> : null}
+      {queueItems.map((item) => <QueueRow key={item.conversationId} item={item} active={id === item.conversationId} now={now}
+        onOpen={() => { setParams({ conversation: item.conversationId }); setQueueOpen(false) }} />)}
       {!queueItems.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无会话" />}
     </div>
   </div>
@@ -451,7 +432,8 @@ export function SupportWorkbench() {
           onOpenOrder={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }} />}
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
-        <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support" />}</div>
+        <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support"
+          emotions={emotionsById} escalationMessageId={escalationId} />}</div>
         <div className="anker-composer anker-hairline-top">
           {imageUpload.image?.error && <Alert type="error" showIcon title={imageUpload.image.error}
             closable={{ onClose: () => imageUpload.clear() }} />}

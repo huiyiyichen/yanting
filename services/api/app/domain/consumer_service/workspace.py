@@ -107,6 +107,25 @@ def reception_snapshot(session: Session) -> ReceptionSnapshotView:
         if row.sender_role == "customer":
             last_customer_source[row.conversation_id] = row
     emotion_labels = {0: "calm", 1: "dissatisfied", 2: "angry"}
+    from app.config import get_settings
+    from app.domain.consumer_service.risk_rules import RuleMessage, pending_wait_start, utc
+
+    wait_threshold = get_settings().risk_response_wait_seconds
+    closed = {row.conversation_id: utc(row.closed_at) for row in session.scalars(select(CaseRow).where(
+        CaseRow.case_status == "closed", CaseRow.closed_at.is_not(None)))}
+
+    def waiting_since(history: list[MessageRow]) -> str | None:
+        if wait_threshold <= 0 or not history:
+            return None
+        cid = history[0].conversation_id
+        started = pending_wait_start([RuleMessage(
+            m.message_id, cid, "", m.body or "", utc(m.created_at), sender_role=m.sender_role,
+            is_source=False, service_closed_at=closed.get(cid), has_attachments=m.attachments_json != "[]",
+        ) for m in history])
+        if started is None:
+            return None
+        row = next(m for m in history if m.message_id == started.ref)
+        return (row.created_at.replace(tzinfo=UTC) if row.created_at.tzinfo is None else row.created_at).isoformat()
 
     def current_emotion(local_messages: list[MessageRow], source_message):
         candidates = [
@@ -202,6 +221,8 @@ def reception_snapshot(session: Session) -> ReceptionSnapshotView:
             auto_reply_status=jobs[row.conversation_id].status if row.conversation_id in jobs else "idle",
             handoff_reason=HANDOFF_REASONS.get(handoffs[row.conversation_id].reason, "待人工跟进")
             if row.conversation_id in handoffs else None,
+            waiting_since=waiting_since(history),
+            wait_threshold_seconds=wait_threshold,
         )
     ordered = sorted(
         items.values(),

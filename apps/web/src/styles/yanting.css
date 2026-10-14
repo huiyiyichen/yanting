@@ -206,7 +206,7 @@
 /* 触发词高亮（P1-6）：激烈/投诉红下划线，不满橙下划线 */
 mark.yt-trigger { background: none; color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
 mark.yt-trigger.is-angry, mark.yt-trigger.is-complaint { text-decoration-color: var(--yt-fury); }
-mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-amber, #d9822b); }
+mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 
 /* 商品卡（P1-4）：白底圆角 14，左侧 52px 商品图 */
 .yt-product-card, .yt-desk-product { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 8px 10px; text-align: left; }
@@ -219,3 +219,25 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-amber, #d9822b
 .yt-product-picker { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; width: 280px; }
 .yt-product-picker button { border: 0; background: none; padding: 0; cursor: pointer; }
 .yt-product-picker button:hover .yt-product-card { background: #f7f5fa; }
+
+/* 客服视角消息（P1-1）：情绪标记、升级分隔线、AI 头像 */
+.yt-emotion-mark { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.yt-emotion-mark i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.yt-escalation-divider { display: flex; align-items: center; gap: 10px; color: var(--yt-fury); font-size: 12px; }
+.yt-escalation-divider::before, .yt-escalation-divider::after { content: ''; flex: 1; border-top: 1px dashed var(--yt-fury); opacity: 0.6; }
+.ant-avatar.yt-ai-avatar { background: var(--yt-plum); color: var(--yt-gold); }
+
+/* 队列项（P1-1）：头像情绪点、左侧风险色条、超时等待 */
+.reception-row-item { position: relative; }
+.reception-row-item.is-risk-high::before, .reception-row-item.is-risk-medium::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px; }
+.reception-row-item.is-risk-high::before { background: var(--yt-fury); }
+.reception-row-item.is-risk-medium::before { background: var(--yt-upset); }
+.yt-queue-avatar { position: relative; display: inline-flex; }
+.yt-emotion-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid #fff; }
+.yt-emotion-dot.is-calm { background: var(--yt-calm); }
+.yt-emotion-dot.is-dissatisfied { background: var(--yt-upset); }
+.yt-emotion-dot.is-angry { background: var(--yt-fury); }
+.yt-queue-wait { color: var(--yt-fury); font-weight: 600; }
+.reception-row-preview { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.reception-row-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-queue-group { font-size: 12px; color: var(--yt-ink-3); padding: 6px 12px 2px; }

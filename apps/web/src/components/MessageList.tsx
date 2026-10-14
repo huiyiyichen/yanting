@@ -11,7 +11,7 @@
 import { RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
 import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
-import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, memo, useLayoutEffect, useRef, useState } from 'react'
 import { ProductCardBubble } from './ProductCard'
 
 import type { MessageView } from '../api/client'
@@ -30,11 +30,21 @@ interface MessageListProps {
   conversationId?: string | null
   /** 发送失败的本地消息（不落库，仅提示）。 */
   failedKeys?: Record<string, string>
+  /** 仅客服视角：消费者消息的规则情绪，按消息 ID。 */
+  emotions?: Record<string, 'calm' | 'dissatisfied' | 'angry' | null | undefined>
+  /** 仅客服视角：情绪升级发生的那条消息。 */
+  escalationMessageId?: string | null
 }
 
+const EMOTION_TEXT = { dissatisfied: '不满', angry: '激烈' } as const
+const EMOTION_COLOR = { calm: 'var(--yt-calm)', dissatisfied: 'var(--yt-upset)', angry: 'var(--yt-fury)' } as const
+
 /** 头像：客户用人形图标，服务方用机器人图标，靠底色区分身份。 */
-function roleAvatar(senderRole: SenderRole) {
+function roleAvatar(senderRole: SenderRole, viewRole: ViewRole) {
   const isService = senderRole === 'assistant' || senderRole === 'operator'
+  if (viewRole === 'support' && senderRole === 'assistant') {
+    return <Avatar size={38} className="yt-ai-avatar" icon={<RobotOutlined />} aria-hidden="true" />
+  }
   return (
     <Avatar
       size={38}
@@ -88,7 +98,10 @@ export const MessageList = memo(function MessageList({
   viewRole,
   conversationId,
   failedKeys = {},
+  emotions = {},
+  escalationMessageId,
 }: MessageListProps) {
+  const internal = viewRole === 'support'
   const root = useRef<HTMLDivElement>(null)
   const pinned = useRef(true)
   const seen = useRef({ conversation: '', count: 0, last: '' })
@@ -152,13 +165,19 @@ export const MessageList = memo(function MessageList({
             const side = messageSide(senderRole, viewRole)
             const failure = failedKeys[message.messageId]
             if (senderRole === 'system') return <div key={message.messageId} className="chat-system-message">{message.body}</div>
+            const emotion = internal && senderRole === 'customer' ? emotions[message.messageId] ?? null : null
+            const emotionText = emotion && emotion !== 'calm' ? EMOTION_TEXT[emotion] : null
 
             return (
-              <div key={message.messageId} style={{ display: 'flex', flexDirection: 'column' }}>
+              <Fragment key={message.messageId}>
+              {internal && escalationMessageId === message.messageId
+                ? <div role="separator" className="yt-escalation-divider"><span>情绪升级</span></div> : null}
+              <div data-message-id={message.messageId} data-emotion={emotion ?? undefined}
+                style={{ display: 'flex', flexDirection: 'column' }}>
                 <Bubble
                   placement={side === 'end' ? 'end' : 'start'}
                   variant={side === 'center' ? 'outlined' : 'filled'}
-                  avatar={side === 'center' ? undefined : roleAvatar(senderRole)}
+                  avatar={side === 'center' ? undefined : roleAvatar(senderRole, viewRole)}
                   header={
                     side === 'center' ? undefined : (
                       <span
@@ -172,6 +191,8 @@ export const MessageList = memo(function MessageList({
                         <span style={{ fontSize: 13, color: 'var(--anker-graphite-soft)' }}>
                           {senderLabel(senderRole)}
                         </span>
+                        {emotionText && emotion ? <span className="yt-emotion-mark" style={{ color: EMOTION_COLOR[emotion] }}>
+                          <i style={{ background: EMOTION_COLOR[emotion] }} />{emotionText}</span> : null}
                         <span style={{ fontSize: 12, color: 'var(--anker-muted)' }}>
                           {formatTime(message.createdAt)}
                         </span>
@@ -186,9 +207,12 @@ export const MessageList = memo(function MessageList({
                       background:
                         side === 'center'
                           ? 'var(--anker-bubble-in)'
-                          : side === 'end'
-                            ? 'var(--anker-bubble-out)'
-                            : 'var(--anker-bubble-in)',
+                          : internal && side === 'end'
+                            ? 'var(--yt-service-bubble, #f1ecf7)'
+                            : side === 'end'
+                              ? 'var(--anker-bubble-out)'
+                              : 'var(--anker-bubble-in)',
+                      boxShadow: emotion ? `inset 3px 0 0 ${EMOTION_COLOR[emotion]}` : undefined,
                       borderRadius: 10,
                       padding: '10px 14px',
                       maxWidth: 560,
@@ -223,6 +247,7 @@ export const MessageList = memo(function MessageList({
                   </div>
                 ) : null}
               </div>
+              </Fragment>
             )
           })}
         </div>
