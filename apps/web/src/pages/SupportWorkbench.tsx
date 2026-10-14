@@ -62,7 +62,7 @@ export function SupportWorkbench() {
   const [ticketDrawer, setTicketDrawer] = useState(false)
   useEffect(() => {
     let cancelled = false
-    const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next) }).catch(() => undefined) }
+    const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next?.handoffs ? next : null) }).catch(() => undefined) }
     read()
     const timer = window.setInterval(read, 15000)
     return () => { cancelled = true; window.clearInterval(timer) }
@@ -275,7 +275,7 @@ export function SupportWorkbench() {
   const plugin = (visible: boolean) => <div className="desk-plugin-inner">
     <Tabs size="small" activeKey={pluginTab} onChange={setPluginTab} items={[
       { key: 'assistant', label: 'AI 辅助', children: <>
-        {profile && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
+        {profile?.memory && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
         <section className="service-section" aria-label="交接摘要">
           <div className="section-title-row"><h3>交接摘要</h3><Button size="small" icon={<ThunderboltOutlined />} loading={generating} disabled={!id}
             onClick={() => void generate()}>{assistant ? '重新生成' : '生成建议'}</Button></div>

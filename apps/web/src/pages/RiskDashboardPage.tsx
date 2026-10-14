@@ -97,7 +97,11 @@ export function RiskDashboardPage() {
   useEffect(() => {
     let cancelled = false
     Promise.all([deskApi.riskOverview(scope), deskApi.productClues()])
-      .then(([nextOverview, nextClues]) => { if (!cancelled) { setOverview(nextOverview); setClues(nextClues) } })
+      .then(([nextOverview, nextClues]) => {
+        if (cancelled) return
+        setOverview(nextOverview?.counts ? nextOverview : null)
+        setClues(Array.isArray(nextClues) ? nextClues : [])
+      })
       .catch(() => undefined)
     return () => { cancelled = true }
   }, [scope, scanning])

@@ -15,7 +15,7 @@ export function useDraftReview(conversationId: string | undefined, draft: string
     let cancelled = false
     const timer = window.setTimeout(() => {
       supportApi.draftReview(conversationId, draft)
-        .then((view) => { if (!cancelled) setResult({ key, findings: view.findings }) })
+        .then((view) => { if (!cancelled) setResult({ key, findings: Array.isArray(view?.findings) ? view.findings : [] }) })
         .catch(() => undefined)
     }, 500)
     return () => { cancelled = true; window.clearTimeout(timer) }

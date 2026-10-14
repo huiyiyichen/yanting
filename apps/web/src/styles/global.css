@@ -1,7 +1,7 @@
 /* 全局基础样式。
  *
- * **2026-09-25 用户确认的变更**：视觉统一到 Ant Design 默认设计语言
- * （主色 #1677ff、官方组件外观），不再使用薄荷 + 珊瑚定制皮肤。
+ * 2026-10-14 起主色改为颜听深紫（见 theme.ts 与 yanting.css 的 `--yt-*` 令牌）；
+ * `--anker-*` 变量保留旧名、指向新值，随 P2-1 改名为 `--yt-*`。
  * 这里只保留三类内容：
  * 1. 重置与页面基座（高度、滚动、换行）；
  * 2. 与 antd 默认色板一致的 CSS 变量，供少量自定义容器使用；
@@ -15,9 +15,9 @@
   color-scheme: light;
 
   /* 与 antd v6 默认色板一致的取值（改主题只改 styles/theme.ts 与这里两处） */
-  --anker-primary: #1677ff;
-  --anker-primary-hover: #4096ff;
-  --anker-primary-active: #0958d9;
+  --anker-primary: #3b2a4a;
+  --anker-primary-hover: #574066;
+  --anker-primary-active: #2a1f33;
   --anker-text: rgba(0, 0, 0, 0.88);
   --anker-text-secondary: rgba(0, 0, 0, 0.65);
   --anker-text-tertiary: rgba(0, 0, 0, 0.45);
@@ -37,7 +37,7 @@
    * 组件不必逐个改名即可获得一致外观；后续重构可逐步替换掉这些别名。 */
   --anker-mint-bg: var(--anker-layout-bg);
   --anker-mint-soft: #fafafa;
-  --anker-mint-surface: #e6f4ff; /* antd 主色浅底（选中态） */
+  --anker-mint-surface: #efe9f3; /* antd 主色浅底（选中态） */
   --anker-mint-border: var(--anker-border-secondary);
   --anker-teal: var(--anker-primary);
   --anker-teal-dark: var(--anker-primary-active);
@@ -344,7 +344,7 @@ body {
 .reception-list { flex: 1; min-height: 0; overflow: auto; padding: 4px 0; }
 .reception-row { display: flex; width: 100%; height: 72px; align-items: center; gap: 10px; border: 0; border-bottom: 1px solid #f0f0f0; background: #fff; padding: 10px 12px; text-align: left; cursor: pointer; font: inherit; }
 .reception-row:hover { background: #f5f8fc; }
-.reception-row.is-active { background: #e6f4ff; border-left: 3px solid #1677ff; padding-left: 9px; }
+.reception-row.is-active { background: #e6f4ff; border-left: 3px solid var(--anker-primary); padding-left: 9px; }
 .reception-row-main { flex: 1; min-width: 0; display: grid; gap: 5px; }
 .reception-row-title { display: flex; align-items: center; gap: 4px; }
 .reception-row-title strong { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
@@ -610,11 +610,11 @@ body {
 .desk-nav { width: 168px; flex: 0 0 168px; padding: 18px 10px; background: #fafbfc; border-right: 1px solid #e6e9ed; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
 .desk-brand { display: flex; align-items: center; gap: 9px; padding: 0 6px 24px; white-space: nowrap; }
 .desk-brand strong { font-size: 15px; }
-.desk-logo { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 6px; background: #1677ff; color: white; font-size: 13px; font-weight: 600; }
+.desk-logo { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 6px; background: var(--anker-primary); color: white; font-size: 13px; font-weight: 600; }
 .desk-nav-item { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 12px; border-radius: 6px; color: #525963; text-decoration: none; font-size: 13px; }
 .desk-nav-item > .anticon { font-size: 18px; }
-.desk-nav-item:hover { color: #1677ff; background: #f0f4f9; }
-.desk-nav-item.active { color: #0958d9; background: #e6f0ff; font-weight: 600; }
+.desk-nav-item:hover { color: var(--anker-primary); background: #f0f4f9; }
+.desk-nav-item.active { color: var(--anker-primary-active); background: #e6f0ff; font-weight: 600; }
 .desk-nav-item.section-start { margin-top: 24px; }
 .desk-main { flex: 1; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
 .desk-workbench { width: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: white; }
@@ -671,7 +671,7 @@ body {
 .consumer-history-summary span { color: #737b86; font-size: 12px; }
 .consumer-history-item { padding: 10px 12px; border-bottom: 1px solid #eef0f2; }
 .consumer-history-item:last-child { border-bottom: 0; }
-.consumer-history-item.is-related { border-left: 3px solid #1677ff; padding-left: 9px; background: #f5f9ff; }
+.consumer-history-item.is-related { border-left: 3px solid var(--anker-primary); padding-left: 9px; background: #f5f9ff; }
 .consumer-history-item-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
 .consumer-history-item-head strong { color: #475467; }
 .consumer-history-item-head time { color: #8a929d; white-space: nowrap; }
@@ -688,20 +688,20 @@ body {
 .emotion-arc-axis { display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0 17px; color: #9aa2ad; font-size: 10px; line-height: 1; }
 .emotion-arc-chart svg { display: block; width: 100%; min-width: 0; height: 150px; overflow: visible; }
 .emotion-arc-grid { stroke: #e7ebef; stroke-width: 1; stroke-dasharray: 3 4; }
-.emotion-arc-line { fill: none; stroke: #1677ff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.emotion-arc-line { fill: none; stroke: var(--anker-primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .emotion-arc-comparison-line { fill: none; stroke: #aeb8c5; stroke-width: 2; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
 .emotion-arc-point { stroke: #fff; stroke-width: 2; cursor: pointer; }
 .emotion-arc-point:hover { stroke-width: 3; }
 .emotion-arc-rapid-zone { fill: #fff1f2; }
-.emotion-arc-intervention { stroke: #1677ff; stroke-width: 1.5; stroke-dasharray: 4 4; }
-.emotion-arc-intervention-label { fill: #1677ff; font-size: 10px; font-weight: 600; }
-.emotion-arc-service-point { fill: #1677ff; stroke: #fff; stroke-width: 2; cursor: pointer; }
+.emotion-arc-intervention { stroke: var(--anker-primary); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.emotion-arc-intervention-label { fill: var(--anker-primary); font-size: 10px; font-weight: 600; }
+.emotion-arc-service-point { fill: var(--anker-primary); stroke: #fff; stroke-width: 2; cursor: pointer; }
 .emotion-arc-service-point:hover { r: 5; }
 .emotion-arc-foot { display: flex; justify-content: space-between; gap: 8px; color: #7a8490; font-size: 11px; }
-.emotion-arc-turn { color: #1677ff; }
+.emotion-arc-turn { color: var(--anker-primary); }
 .emotion-arc-turns { display: grid; gap: 4px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #e9edf1; }
 .emotion-arc-turns div { display: flex; gap: 7px; min-width: 0; font-size: 11px; line-height: 1.5; }
-.emotion-arc-turns b { flex: 0 0 auto; color: #1677ff; font-weight: 600; }
+.emotion-arc-turns b { flex: 0 0 auto; color: var(--anker-primary); font-weight: 600; }
 .emotion-arc-turns span { overflow: hidden; color: #697586; text-overflow: ellipsis; white-space: nowrap; }
 .emotion-arc-selected { display: grid; gap: 7px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9edf1; }
 .emotion-arc-selected-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
@@ -729,7 +729,7 @@ body {
 .knowledge-bases { flex: 0 0 208px; padding: 16px; border-right: 1px solid #e6e9ed; overflow: auto; background: #fafbfc; }
 .knowledge-base-item { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; border: 0; border-radius: 6px; padding: 10px 8px; margin-bottom: 5px; background: transparent; text-align: left; cursor: pointer; color: #505962; font: inherit; font-size: 13px; }
 .knowledge-base-item span:first-child { flex: 1; overflow-wrap: anywhere; }
-.knowledge-base-item.active { color: #0958d9; background: #e6f0ff; }
+.knowledge-base-item.active { color: var(--anker-primary-active); background: #e6f0ff; }
 .knowledge-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.8; font-family: inherit; max-height: 500px; overflow-y: auto; }
 .ant-drawer-body .reception-queue { position: static; width: 100%; height: 100%; border: 0; box-shadow: none; }
 @media (max-width: 1350px) {
