@@ -6,7 +6,7 @@ import { Sender } from '@ant-design/x'
 import { Alert, Avatar, Badge, Button, Collapse, Drawer, Empty, Input, Popconfirm, Segmented, Space, Spin, Tabs, Tag, Tooltip, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView } from '../api/client'
+import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView } from '../api/client'
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
 import { QianniuTopbar } from '../components/QianniuTopbar'
@@ -15,6 +15,8 @@ import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
+import { PersonaCard } from '../features/service-desk/PersonaCard'
+import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { emotionLevelLabels, serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
@@ -53,6 +55,7 @@ export function SupportWorkbench() {
   const [tickets, setTickets] = useState<TicketView[]>([])
   const [assistant, setAssistant] = useState<ConsumerServiceAssistantView | null>(null)
   const [memory, setMemory] = useState<ServiceMemoryView | null>(null)
+  const [profile, setProfile] = useState<ConsumerProfileView | null>(null)
   const [error, setError] = useState('')
   const [queueError, setQueueError] = useState('')
   const [aiError, setAiError] = useState('')
@@ -69,10 +72,12 @@ export function SupportWorkbench() {
   const queueUnavailable = useRef(false)
   const current = snapshot?.items.find((item) => item.conversationId === id)
   const automatic = current?.serviceMode === 'autonomous'
+  const draftFindings = useDraftReview(id ?? undefined, draft, !automatic)
   const aiReplying = automatic && ['queued', 'running'].includes(current?.autoReplyStatus ?? '')
   const imageUpload = useChatImage(id, supportApi.uploadAttachment)
   const uploading = imageUpload.image?.uploading ?? false
   const attachmentId = imageUpload.image?.attachment?.attachmentId
+  const acknowledgedDraft = useRef<string | null>(null)
   const sendRef = useRef<() => void>(() => undefined)
   sendRef.current = () => { void send() }
 
@@ -80,12 +85,13 @@ export function SupportWorkbench() {
     const request = ++detailRequest.current
     const analysisVersion = assistantRequest.current
     try {
-      const [rows, facts, cached, work, remembered] = await Promise.all([
+      const [rows, facts, cached, work, remembered, persona] = await Promise.all([
         supportApi.receptionMessages(target), supportApi.serviceContext(target),
         supportApi.assistant(target), deskApi.tickets(target), supportApi.memory(target),
+        supportApi.profile(target).catch(() => null),
       ])
       if (active.current !== target || request !== detailRequest.current) return
-      setMessages(rows); setContext(facts); setTickets(work); setMemory(remembered); setError('')
+      setMessages(rows); setContext(facts); setTickets(work); setMemory(remembered); setProfile(persona); setError('')
       if (analysisVersion === assistantRequest.current) setAssistant(cached)
       await supportApi.markSeen(target, rows.at(-1)?.messageRevision ?? 0)
     } catch (err) {
@@ -96,7 +102,7 @@ export function SupportWorkbench() {
   }, [])
 
   useEffect(() => {
-    setMessages([]); setContext(null); setAssistant(null); setTickets([]); setMemory(null); setAiError('')
+    setMessages([]); setContext(null); setAssistant(null); setTickets([]); setMemory(null); setProfile(null); setAiError('')
     if (id) { setLoading(true); void loadDetail(id) }
   }, [id, loadDetail])
 
@@ -155,6 +161,12 @@ export function SupportWorkbench() {
   }
   const send = async () => {
     if (!id || (!draft.trim() && !attachmentId) || automatic || sending || uploading) return
+    if (shouldHoldSend(draftFindings, draft, acknowledgedDraft.current)) {
+      acknowledgedDraft.current = draft
+      void toast.warning({ content: draftFindings.find((item) => item.severity === 'high')?.label, key: 'draft-review' })
+      return
+    }
+    acknowledgedDraft.current = null
     const target = id, body = draft
     setSending(true)
     try {
@@ -252,6 +264,7 @@ export function SupportWorkbench() {
   const plugin = (visible: boolean) => <div className="desk-plugin-inner">
     <Tabs size="small" activeKey={pluginTab} onChange={setPluginTab} items={[
       { key: 'assistant', label: 'AI 辅助', children: <>
+        {profile && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
         <section className="service-section" aria-label="交接摘要">
           <div className="section-title-row"><h3>交接摘要</h3><Button size="small" icon={<ThunderboltOutlined />} loading={generating} disabled={!id}
             onClick={() => void generate()}>{assistant ? '重新生成' : '生成建议'}</Button></div>
@@ -432,6 +445,10 @@ export function SupportWorkbench() {
               uploading={uploading} />
             <Button type="text" icon={<FileTextOutlined />} disabled={!id} onClick={() => navigate(`/platform/work-orders?conversation=${id}&create=1`)}>建工单</Button>
             <Button type="text" icon={<ThunderboltOutlined />} disabled={!id} loading={generating} onClick={() => { setPluginTab('assistant'); if (compact) setPluginOpen(true); void generate() }}>AI 建议</Button></div>
+          {draftFindings.length > 0 && <div className="yt-draft-review" aria-label="发送前质检">
+            {draftFindings.map((item) => <Tag key={`${item.kind}-${item.start}`}
+              color={item.severity === 'high' ? 'error' : 'warning'} title={item.quote}>{item.label}</Tag>)}
+          </div>}
           <Sender value={draft} components={{ input: ComposerInput }} placeholder="回复客户"
             onChange={(value) => id && drafts.set(id, 'support', value)} onSubmit={() => sendRef.current()}
             onPasteFile={(files) => { if (files[0]) void imageUpload.upload(files[0]) }}

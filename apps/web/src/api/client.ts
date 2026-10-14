@@ -11,6 +11,8 @@ import type { components } from '../contracts/api'
 import { getDemoOperator } from '../features/service-desk/operator'
 
 export type ConversationSummary = components['schemas']['ConversationSummary']
+export type ConsumerProfileView = components['schemas']['ConsumerProfileView']
+export type DraftFinding = components['schemas']['DraftFinding']
 export type MessageView = components['schemas']['MessageView']
 export type SendMessageResponse = components['schemas']['SendMessageResponse']
 export type QueueItem = components['schemas']['QueueItem']
@@ -316,6 +318,12 @@ export const supportApi = {
     ),
   memory: (conversationId: string) =>
     request<ServiceMemoryView>(`/api/support/reception/${conversationId}/memory`, { role: 'support' }),
+  draftReview: (conversationId: string, body: string) =>
+    request<{ findings: DraftFinding[] }>(`/api/support/reception/${conversationId}/draft-review`, {
+      role: 'support', method: 'POST', body: { body },
+    }),
+  profile: (conversationId: string) =>
+    request<ConsumerProfileView>(`/api/support/reception/${conversationId}/profile`, { role: 'support' }),
   reception: () => request<ReceptionSnapshot>('/api/support/reception/queue', { role: 'support' }),
   receptionMessages: (id: string) =>
     request<MessageView[]>(`/api/support/reception/${id}/messages`, { role: 'support' }),

@@ -1119,6 +1119,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/reception/{conversation_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consumer Profile
+         * @description 画像卡：只读聚合聊天、订单、工单与服务记忆，不调用模型。
+         */
+        get: operations["consumer_profile_api_support_reception__conversation_id__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/support/reception/{conversation_id}/draft-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft Review
+         * @description 发送前质检：纯规则提示，不阻断发送，不调用模型；每次结果写审计。
+         */
+        post: operations["draft_review_api_support_reception__conversation_id__draft_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/desk/operators": {
         parameters: {
             query?: never;
@@ -1735,6 +1775,34 @@ export interface components {
             /** Sametopic */
             sameTopic?: boolean | null;
         };
+        /** ConsumerProfileView */
+        ConsumerProfileView: {
+            /** Conversationid */
+            conversationId: string;
+            /** Alias */
+            alias: string;
+            /** Aggregation */
+            aggregation: string;
+            /**
+             * Asof
+             * Format: date-time
+             */
+            asOf: string;
+            contacts: components["schemas"]["ProfileContacts"];
+            lastContact: components["schemas"]["ProfileLastContact"] | null;
+            skin: components["schemas"]["ProfileSkin"] | null;
+            memory: components["schemas"]["ProfileMemory"];
+            /** Promises */
+            promises: components["schemas"]["ProfilePromise"][];
+            /** Purchases */
+            purchases: components["schemas"]["ProfilePurchase"][];
+            /** Currentemotion */
+            currentEmotion: string | null;
+            /** Escalatedat */
+            escalatedAt: string | null;
+            /** Emotiontrail */
+            emotionTrail: components["schemas"]["EmotionPoint"][];
+        };
         /** ConsumerServiceAssistantView */
         ConsumerServiceAssistantView: {
             /** Observationid */
@@ -1981,12 +2049,51 @@ export interface components {
              */
             sourceUrl: string;
         };
+        /** DraftFinding */
+        DraftFinding: {
+            /** Kind */
+            kind: string;
+            /** Severity */
+            severity: string;
+            /** Label */
+            label: string;
+            /** Quote */
+            quote: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+        };
+        /** DraftReviewRequest */
+        DraftReviewRequest: {
+            /** Body */
+            body: string;
+        };
+        /** DraftReviewView */
+        DraftReviewView: {
+            /** Findings */
+            findings: components["schemas"]["DraftFinding"][];
+        };
         /**
          * EmotionLevel
          * @description 情绪等级。只影响沟通策略，不改变质保或赔付规则。
          * @enum {string}
          */
         EmotionLevel: "calm" | "dissatisfied" | "angry" | "unknown";
+        /** EmotionPoint */
+        EmotionPoint: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Role */
+            role: string;
+            /** Level */
+            level: string | null;
+            /** Sourceref */
+            sourceRef: string;
+        };
         /**
          * EmotionTrend
          * @description 消费者消息情绪趋势。
@@ -2565,6 +2672,85 @@ export interface components {
             evidence?: components["schemas"]["PersonalizedAdviceEvidence"][];
             /** Claims */
             claims?: components["schemas"]["GroundingClaim"][];
+        };
+        /** ProfileContacts */
+        ProfileContacts: {
+            /** Withinthreedays */
+            withinThreeDays: number;
+            /** Total */
+            total: number;
+        };
+        /** ProfileItem */
+        ProfileItem: {
+            /** Text */
+            text: string;
+            /** Sourceref */
+            sourceRef: string;
+        };
+        /** ProfileLastContact */
+        ProfileLastContact: {
+            /** Conversationid */
+            conversationId: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Scene */
+            scene: string;
+        };
+        /** ProfileMemory */
+        ProfileMemory: {
+            /** Concerns */
+            concerns: components["schemas"]["ProfileItem"][];
+            /** Rejected */
+            rejected: components["schemas"]["ProfileItem"][];
+            /** Tried */
+            tried: components["schemas"]["ProfileItem"][];
+            /** Pending */
+            pending: components["schemas"]["ProfileItem"][];
+        };
+        /** ProfilePromise */
+        ProfilePromise: {
+            /** Text */
+            text: string;
+            /**
+             * Madeat
+             * Format: date-time
+             */
+            madeAt: string;
+            /**
+             * Dueat
+             * Format: date-time
+             */
+            dueAt: string;
+            /** Status */
+            status: string;
+            /** Sourceref */
+            sourceRef: string;
+            /** Evidenceref */
+            evidenceRef?: string | null;
+        };
+        /** ProfilePurchase */
+        ProfilePurchase: {
+            /** Product */
+            product: string;
+            /** Orderid */
+            orderId: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /** ProfileSkin */
+        ProfileSkin: {
+            /** Text */
+            text: string;
+            /** Sourceref */
+            sourceRef: string;
+            /** Quote */
+            quote: string;
         };
         /** PromptBindingRequest */
         PromptBindingRequest: {
@@ -6102,6 +6288,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceModeView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consumer_profile_api_support_reception__conversation_id__profile_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsumerProfileView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_review_api_support_reception__conversation_id__draft_review_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftReviewView"];
                 };
             };
             /** @description Validation Error */

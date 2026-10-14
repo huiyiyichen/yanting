@@ -3,6 +3,8 @@ from pydantic import Field
 from sqlalchemy.orm import Session
 
 from app.deps import get_context, get_session, require_support
+from app.domain.consumer_service.consumer_profile import ConsumerProfileView
+from app.domain.consumer_service.draft_review import DraftFinding
 from app.domain.consumer_service.workspace import (
     conversation_messages,
     ensure_local_conversation,
@@ -147,3 +149,38 @@ def set_mode(
     from app.domain.consumer_service.auto_reception import change_mode
 
     return change_mode(session, conversation_id, payload.mode, actor="operator")
+
+
+@router.get("/{conversation_id}/profile", response_model=ConsumerProfileView)
+def consumer_profile(conversation_id: str, session: Session = Depends(get_session)):
+    """画像卡：只读聚合聊天、订单、工单与服务记忆，不调用模型。"""
+    from app.domain.consumer_service.consumer_profile import build_consumer_profile
+    from app.errors import NotFoundError
+
+    profile = build_consumer_profile(session, conversation_id)
+    if profile is None:
+        raise NotFoundError(f"会话不存在：{conversation_id}")
+    return profile
+
+
+class DraftReviewRequest(ApiModel):
+    body: str = Field(max_length=2000)
+
+
+class DraftReviewView(ApiModel):
+    findings: list[DraftFinding]
+
+
+@router.post("/{conversation_id}/draft-review", response_model=DraftReviewView)
+def draft_review(conversation_id: str, payload: DraftReviewRequest, session: Session = Depends(get_session)):
+    """发送前质检：纯规则提示，不阻断发送，不调用模型；每次结果写审计。"""
+    from app.audit.recorder import AuditContext, AuditRecorder
+    from app.domain.consumer_service.draft_review import review_conversation_draft
+
+    findings = review_conversation_draft(session, conversation_id, payload.body) if payload.body.strip() else []
+    AuditRecorder(session).record(
+        AuditContext.new_turn(actor_type="support", conversation_id=conversation_id),
+        event_type="draft_review", input_text=payload.body,
+        detail={"findings": [item.model_dump(by_alias=True) for item in findings]},
+    )
+    return DraftReviewView(findings=findings)

@@ -13,6 +13,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { antdTheme } from './styles/theme'
 import './styles/global.css'
+import './styles/yanting.css'
 
 const container = document.getElementById('root')
 if (!container) {
