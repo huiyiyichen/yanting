@@ -27,8 +27,8 @@ def main() -> int:
     assert provider._session is not None and provider._tokenizer is not None
 
     texts = [
-        "S1 Pro 吸尘器吸力变弱，请先检查集尘盒滤网是否堵塞并清洗滤网。",
-        "保修期自购买之日起 24 个月，需提供有效购买凭证。",
+        "复颜玻尿酸水光精华建议洁面后取两泵均匀涂抹，再叠加面霜锁水。",
+        "开封后的产品建议在 12 个月内用完，存放时避免阳光直射和高温。",
     ]
     encodings = provider._tokenizer.encode_batch(texts)
     inputs = {

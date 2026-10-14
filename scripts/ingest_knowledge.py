@@ -1,7 +1,7 @@
 """知识导入命令行入口（受控本地导入）。
 
 用法：
-    python scripts/ingest_knowledge.py                 # 导入并激活快照
+    python scripts/ingest_knowledge.py                 # 按默认清单（data/knowledge/loreal）导入并激活快照
     python scripts/ingest_knowledge.py --no-activate   # 只写暂存快照
     python scripts/ingest_knowledge.py --manifest <path>
 
@@ -30,7 +30,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="导入知识清单并发布快照")
     parser.add_argument(
         "--manifest",
-        default=str(REPO / "data" / "knowledge" / "manifest.json"),
+        default=str(REPO / "data" / "knowledge" / "loreal" / "manifest.json"),
         help="清单路径",
     )
     parser.add_argument("--no-activate", action="store_true", help="只写暂存快照，不激活")

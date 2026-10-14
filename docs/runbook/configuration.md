@@ -51,6 +51,20 @@
 - 超时抛 `ProviderTimeout`（HTTP 504）。**模型/工具超时与「人工等待」是完全分开的概念**，
   本期不设人工处理时限与超时升级。
 
+### 3.1 接待与预警阈值
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `ANKER_AGENT_AUTO_REPLY_TIMEOUT_SECONDS` | `45` | AI 接待模式下等待自动回复的超时（秒），范围 5–120 |
+| `ANKER_AGENT_RISK_RESPONSE_WAIT_SECONDS` | `120` | 风险事件等待客服响应的时长，`0` 停用 |
+| `ANKER_AGENT_RISK_FOLLOWUP_WARNING_MINUTES` | `30` | 跟进未完成的预警提前量（分钟），`0` 停用 |
+| `ANKER_AGENT_RISK_MONITOR_INTERVAL_SECONDS` | `15` | 风险监控轮询间隔（秒），范围 5–300 |
+| `ANKER_AGENT_RISK_REPEAT_CONTACT_HOURS` | `72` | 重复进线的回溯窗口（小时） |
+| `ANKER_AGENT_RISK_SOURCE_TICKET_HOURS` | `48` | 由工单触发风险的窗口（小时） |
+
+这些是演示阈值，不代表生产 SLA。风险状态只由程序规则和客服操作改变，
+模型不能把风险标记为已处理或已忽略。
+
 ## 4. 编码模型
 
 模型请求在 DeepSeek 官方端点传 `thinking.type=disabled`，Qwen3 文本模型在硅基流动及百炼端点传 `enable_thinking=false`。Qwen3-VL-Instruct 采用直接输出；硅基流动此型号拒绝 `enable_thinking` 参数，视觉请求省略该字段。调用记录保留供应方响应中的实际型号与缓存命中 Token；视觉请求使用视觉服务自己的端点和凭证。
@@ -61,6 +75,7 @@
 | `ANKER_AGENT_EMBEDDING_MODEL_ID` | 模型 ID | `BAAI/bge-m3` |
 | `ANKER_AGENT_EMBEDDING_MODEL_PATH` | 本地 ONNX 目录；留空则按缓存自动定位 | 空 |
 | `ANKER_AGENT_EMBEDDING_HTTP_BASE_URL` | `http` 后端基址 | 空 |
+| `ANKER_AGENT_EMBEDDING_HTTP_API_KEY` | `http` 后端凭证，只放后端 | 空 |
 | `ANKER_AGENT_EMBEDDING_DIMENSION` | `http` 后端需显式声明维度 | 空 |
 
 约束：
@@ -70,6 +85,20 @@
 - 不同编码模型不能共用同一向量空间；维度必须来自模型输出或显式声明，不填猜测值。
 - **标准 `/embeddings` 接口只返回稠密向量**，因此 `http` 后端本身不等于混合检索；
   稀疏通道缺失时批次里的 `sparse` 为空，必须在报告中标注为单路检索。
+
+### 4.1 重排模型（可选）
+
+| 变量 | 取值 | 默认 |
+|---|---|---|
+| `ANKER_AGENT_RERANK_BACKEND` | `none` / `http` / `mock` | `none` |
+| `ANKER_AGENT_RERANK_BASE_URL` | OpenAI 兼容 rerank 服务基址 | 空 |
+| `ANKER_AGENT_RERANK_API_KEY` | 凭证，只放后端 | 空 |
+| `ANKER_AGENT_RERANK_MODEL` | 重排模型 ID | 空 |
+| `ANKER_AGENT_RERANK_TIMEOUT_SECONDS` | 超时（秒） | `30` |
+| `ANKER_AGENT_RERANK_CANDIDATES` | 送入重排的候选数，范围 2–64 | `16` |
+
+**默认是 `none`，即重排关闭**：此时候选只按稠密/稀疏融合排序。需要重排时必须显式
+把 `BACKEND` 设为 `http` 并补齐地址、凭证与模型，否则不会报错、也不会生效。
 
 ## 5. 存储
 

@@ -156,7 +156,7 @@ def main() -> int:
 
         probe = subprocess.run(  # noqa: S603
             [str(PYTHON), str(REPO_ROOT / "scripts" / "probe_retrieval.py"),
-             "--query", "无线吸尘器吸力明显减弱，应该按什么顺序排查？"],
+             "--query", "这款粉底液适合敏感肌吗，应该怎么用？"],
             cwd=str(SERVICES_API), env=env, capture_output=True, text=True,
             encoding="utf-8", errors="replace", timeout=600,
         )
@@ -183,7 +183,7 @@ def main() -> int:
     passed = all(bool(item["ok"]) for item in steps)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     report = {
-        "note": "在独立运行目录上从零重建；数据源仅 data/knowledge 与 data/fixtures。",
+        "note": "在独立运行目录上从零重建；数据源为 data/knowledge 下的知识清单。",
         "scope": (
             "复现范围说明：本次在**同一台机器、同一 Python 环境**下验证了"
             "「无运行数据 → 自动建库 → 导入知识 → 检索可用」这条链路。"

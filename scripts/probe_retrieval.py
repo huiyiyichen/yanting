@@ -1,10 +1,10 @@
 """检索探针：按查询与过滤条件执行混合检索并打印证据。
 
-用途：S1 校准与留出评测的取证工具，也用于人工核对证据来源与适用条件。
+用途：检索取证工具，也用于人工核对证据来源与适用条件。
 
 用法：
-    python scripts/probe_retrieval.py --query "吸尘器没有吸力了怎么排查"
-    python scripts/probe_retrieval.py --query "质保多久" --model "A1 Pro" --country CN
+    python scripts/probe_retrieval.py --query "精华用后刺痛怎么处理"
+    python scripts/probe_retrieval.py --query "成分有哪些" --model "复颜玻尿酸水光精华" --country CN
     python scripts/probe_retrieval.py --query "退货条件" --audience internal
 """
 

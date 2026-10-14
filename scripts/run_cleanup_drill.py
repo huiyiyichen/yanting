@@ -1,13 +1,13 @@
 """测试数据清理演练（PRD AC-21）。
 
-**要求**：创建模拟案件、附件、评价和日志后手动清理，运行数据移除且**知识源/夹具不受影响**。
+**要求**：创建模拟案件、附件、评价和日志后手动清理，运行数据移除且**知识源不受影响**。
 
 做法（在**隔离的**运行目录上演练，不碰开发库）：
-1. 记录知识源（`data/knowledge`）与夹具（`data/fixtures`）的指纹；
+1. 记录知识源（`data/knowledge`）的指纹；
 2. 在该运行目录上通过真实 API 创建会话 → 发消息 → 上传附件 → 结束案件并评价，
    确认案件/附件/评价/审计记录**确实落到运行数据里**；
 3. 手动清理运行目录；
-4. 复核：运行数据已移除、进程不再占用，且知识源与夹具指纹**完全一致**。
+4. 复核：运行数据已移除、进程不再占用，且知识源指纹**完全一致**。
 
 用法（在 `code/services/api` 下）：
     .\.venv\Scripts\python.exe ..\..\scripts\run_cleanup_drill.py
@@ -122,10 +122,8 @@ def main() -> int:
 
     base = f"http://127.0.0.1:{args.port}"
     knowledge_dir = REPO_ROOT / "data" / "knowledge"
-    fixtures_dir = REPO_ROOT / "data" / "fixtures"
 
     before_knowledge = fingerprint(knowledge_dir)
-    before_fixtures = fingerprint(fixtures_dir)
 
     # 演练用独立运行目录，绝不碰 data/runtime
     if RUNTIME_DRILL.exists():
@@ -169,7 +167,7 @@ def main() -> int:
         status, _ = post_json(
             f"{base}/api/customer/conversations/{conversation_id}/messages",
             {
-                "body": "我的 A1 Pro 无线吸尘器吸力变弱，还在保修期内，我想申请换货",
+                "body": "这款粉底液用了以后脸上有点泛红，我想退货",
                 "clientMessageKey": "drill-1",
             },
             CUSTOMER,
@@ -239,7 +237,6 @@ def main() -> int:
         print(f"清理失败：{exc}")
 
     after_knowledge = fingerprint(knowledge_dir)
-    after_fixtures = fingerprint(fixtures_dir)
 
     checks = {
         "runtime_data_present_before_cleanup": evidence["runtime_files"] > 0,  # type: ignore[operator]
@@ -248,7 +245,6 @@ def main() -> int:
         "audit_written": (evidence["audit_records"] or 0) > 0,
         "runtime_removed": removed_ok and not RUNTIME_DRILL.exists(),
         "knowledge_untouched": before_knowledge == after_knowledge,
-        "fixtures_untouched": before_fixtures == after_fixtures,
         # 服务未结束时评价必须被拒绝（AC-13 边界）；演练同时固定这条不变量
         "rating_gated_before_service_end": any(
             step.get("step") == "request_rating_before_service_end"
@@ -266,7 +262,6 @@ def main() -> int:
         "evidence": evidence,
         "checks": checks,
         "knowledge": {"before": before_knowledge, "after": after_knowledge},
-        "fixtures": {"before": before_fixtures, "after": after_fixtures},
         "result": "passed" if passed else "failed",
     }
 
