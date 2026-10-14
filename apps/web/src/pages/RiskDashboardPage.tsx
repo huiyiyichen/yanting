@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, deskApi, supportApi, type ProductClueView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
 import { QianniuTopbar } from '../components/QianniuTopbar'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, optionsOf } from '../features/service-desk/shared'
+import { HighlightedText } from '../features/service-desk/HighlightedText'
 import { serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus, followupDeadlines, primaryConversation, signalAttention } from '../features/service-desk/riskPresentation'
 import { EmotionArc } from '../features/service-desk/EmotionArc'
@@ -253,7 +254,7 @@ export function RiskDashboardPage() {
     return <blockquote className="evidence-quote" key={evidence.ref}>
       <div className="section-title-row"><span>{dateLabel(evidence.occurredAt)} · {evidence.label}</span>
         {conversationId && <Button size="small" type="text" icon={<MessageOutlined />} onClick={() => openConversation(conversationId)}>打开会话</Button>}</div>
-      <p>{evidence.body}</p>
+      <p><HighlightedText text={evidence.body} highlights={evidence.highlights} /></p>
     </blockquote>
   }
   return <div className="desk-workbench">{holder}

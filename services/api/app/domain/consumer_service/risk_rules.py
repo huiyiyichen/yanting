@@ -30,7 +30,7 @@ from app.domain.consumer_service.models import (
 from app.domain.enums import ServiceRiskLevel as Level
 from app.domain.enums import ServiceRiskType as Kind
 from app.repositories.consumer_service import _detail
-from app.schemas.service_desk import RiskEvidenceView
+from app.schemas.service_desk import EvidenceHighlight, RiskEvidenceView
 
 RULE_VERSION = "loreal-risk-v2.7"
 RANK = {Level.UNKNOWN: 0, Level.LOW: 1, Level.MEDIUM: 2, Level.HIGH: 3}
@@ -56,6 +56,13 @@ def utc(value: datetime | str | None, *, source: bool = False) -> datetime | Non
     return value - timedelta(hours=8) if source else value
 
 
+
+def message_highlights(body: str) -> list[EvidenceHighlight]:
+    from app.domain.consumer_service.emotion import trigger_highlights
+
+    return [EvidenceHighlight(start=h.start, end=h.end, kind=h.kind) for h in trigger_highlights(body)]
+
+
 @dataclass(frozen=True)
 class RuleMessage:
     ref: str
@@ -75,6 +82,7 @@ class RuleMessage:
             ref=self.ref, kind="message", label=self.conversation_id, body=self.body,
             conversation_id=self.conversation_id,
             occurred_at=self.at.replace(tzinfo=UTC).isoformat(),
+            highlights=message_highlights(self.body) if self.sender_role == "customer" else [],
         )
 
 

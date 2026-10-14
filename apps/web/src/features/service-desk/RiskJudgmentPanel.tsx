@@ -3,6 +3,7 @@ import { Button, Collapse, Empty, Input, Modal, Segmented, Space, Tag, message }
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, deskApi, type RiskIncidentDetailView, type RiskJudgmentRequest } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
+import { HighlightedText } from './HighlightedText'
 import { dateLabel } from './shared'
 
 export const judgmentLabels = {
@@ -95,7 +96,7 @@ export function RiskJudgmentPanel({ detail, onChange }: {
         <Collapse size="small" items={[{ key: 'snapshot', label: '证据快照', children: <>
           <p>{item.triggerSummary}</p>
           {item.evidence?.map((evidence) => <blockquote className="evidence-quote" key={evidence.ref}>
-            <small>{evidence.label} · {dateLabel(evidence.occurredAt)}</small><p>{evidence.body}</p>
+            <small>{evidence.label} · {dateLabel(evidence.occurredAt)}</small><p><HighlightedText text={evidence.body} highlights={evidence.highlights} /></p>
           </blockquote>)}
         </> }]} />
       </div>) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无判断记录：当前信号还没有人工确认结果" />}

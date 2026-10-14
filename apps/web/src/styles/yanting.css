@@ -202,3 +202,8 @@
 .yt-stages li.is-passed { color: var(--yt-calm); }
 .yt-stages li.is-failed { color: var(--yt-fury); }
 .yt-reply-empathy .is-missing { color: var(--yt-ink-3); }
+
+/* 触发词高亮（P1-6）：激烈/投诉红下划线，不满橙下划线 */
+mark.yt-trigger { background: none; color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
+mark.yt-trigger.is-angry, mark.yt-trigger.is-complaint { text-decoration-color: var(--yt-fury); }
+mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-amber, #d9822b); }

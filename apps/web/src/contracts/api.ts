@@ -2236,6 +2236,18 @@ export interface components {
          * @enum {string}
          */
         EmotionTrend: "stable" | "rising" | "falling" | "repeated" | "unknown";
+        /** EvidenceHighlight */
+        EvidenceHighlight: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "angry" | "dissatisfied" | "complaint";
+        };
         /**
          * EvidenceView
          * @description 知识依据。只暴露来源定位与摘录，不暴露内部提示词或工具日志。
@@ -3567,6 +3579,8 @@ export interface components {
             occurredAt?: string | null;
             /** Conversationid */
             conversationId?: string | null;
+            /** Highlights */
+            highlights?: components["schemas"]["EvidenceHighlight"][];
         };
         /** RiskIncidentDetailView */
         RiskIncidentDetailView: {

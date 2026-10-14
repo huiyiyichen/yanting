@@ -25,6 +25,7 @@ from app.domain.consumer_service.risk import (
     risk_alert_view,
     signal_attention,
 )
+from app.domain.consumer_service.risk_rules import message_highlights
 from app.domain.consumer_service.service_breakpoints import moment
 from app.domain.consumer_service.tickets import events_for, list_tickets, record_event
 from app.domain.consumer_service.workspace import (
@@ -424,12 +425,17 @@ def incident_detail(session: Session, incident_id: str) -> RiskIncidentDetailVie
             evidence[event.source_record_id] = RiskEvidenceView(
                 ref=event.source_record_id, kind=event.entity_type,
                 label=context.conversation_id, body=body, occurred_at=event.occurred_at,
+                highlights=message_highlights(body)
+                if event.message and str(getattr(event.message.sender_role, "value", event.message.sender_role)) == "customer"
+                else [],
             )
         for message in _messages(session, context.conversation_id):
             if message.message_id in refs:
                 evidence[message.message_id] = RiskEvidenceView(
                     ref=message.message_id, kind="message", label=context.conversation_id,
                     body=message.body, occurred_at=message.created_at,
+                    highlights=message_highlights(message.body or "")
+                    if str(getattr(message.sender_role, "value", message.sender_role)) == "customer" else [],
                 )
     for ref in refs - evidence.keys():
         evidence[ref] = RiskEvidenceView(ref=ref, kind="source", label="关联记录", body=ref)

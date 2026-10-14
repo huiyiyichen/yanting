@@ -118,6 +118,10 @@ def has_complaint_signal(text: str) -> bool:
 
 
 def _has_signal(pattern: re.Pattern[str], text: str) -> bool:
+    return next(_signal_matches(pattern, text), None) is not None
+
+
+def _signal_matches(pattern: re.Pattern[str], text: str):
     for match in pattern.finditer(text):
         prefix = re.split(r"[，。；！？,;!?\n]", text[:match.start()])[-1][-40:]
         sentence_prefix = re.split(r"[。；！？;!?\n]", text[:match.start()])[-1][-80:]
@@ -131,8 +135,7 @@ def _has_signal(pattern: re.Pattern[str], text: str) -> bool:
             or (re.search(r"如果(我|以后|将来|未来)", sentence_prefix) and re.search(r"吗|么|如何|怎么|流程|途径", suffix))
         ):
             continue
-        return True
-    return False
+        yield match
 
 
 @dataclass(frozen=True)
@@ -180,3 +183,23 @@ def emotion_trend(bodies: Iterable[str]) -> EmotionTrend:
     if len(set(scores)) > 1:
         return EmotionTrend.REPEATED
     return EmotionTrend.STABLE
+
+
+@dataclass(frozen=True)
+class TriggerHighlight:
+    """规则命中的触发词在原文中的位置（半开区间），供风险依据加下划线。"""
+
+    start: int
+    end: int
+    kind: str
+
+
+def trigger_highlights(text: str) -> list[TriggerHighlight]:
+    """返回通过否定/转述过滤后的触发词位置；重叠时投诉 > 激烈 > 不满，取先到者。"""
+    found: list[TriggerHighlight] = []
+    for kind, pattern in (("complaint", _COMPLAINT_RE), ("angry", _ANGRY_RE), ("dissatisfied", _DISSATISFIED_RE)):
+        for match in _signal_matches(pattern, text or ""):
+            if any(match.start() < item.end and item.start < match.end() for item in found):
+                continue
+            found.append(TriggerHighlight(match.start(), match.end(), kind))
+    return sorted(found, key=lambda item: item.start)

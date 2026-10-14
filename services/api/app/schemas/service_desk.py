@@ -124,6 +124,12 @@ class TicketUpdateRequest(ApiModel):
     local_detail: TicketDetail | None = None
 
 
+class EvidenceHighlight(ApiModel):
+    start: int
+    end: int
+    kind: Literal["angry", "dissatisfied", "complaint"]
+
+
 class RiskEvidenceView(ApiModel):
     ref: str
     kind: str
@@ -131,6 +137,8 @@ class RiskEvidenceView(ApiModel):
     body: str
     occurred_at: str | None = None
     conversation_id: str | None = None
+    #: 规则命中的触发词位置；只用于消费者原话，模型生成的服务断点不带
+    highlights: list[EvidenceHighlight] = Field(default_factory=list)
 
 
 RiskJudgmentVerdict = Literal["confirmed", "false_positive", "insufficient"]
