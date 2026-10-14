@@ -54,6 +54,9 @@ class ModelConfigView(ApiModel):
     has_api_key: bool = False
     text_model: str | None = None
     vision_model: str | None = None
+    vision_base_url: str = ""
+    vision_api_key_masked: str = ""
+    fast_model: str = ""
     #: 向量：本地 ONNX 或远端 OpenAI 兼容服务（不再写死"本地"）
     embedding_backend: str = "onnx-local"
     embedding_model: str | None = None
@@ -115,8 +118,8 @@ async def model_config(
             value
             for value in [
                 provider.model_id,
-                settings.llm_model,
-                settings.llm_vision_model,
+                getattr(provider, "fast_model_id", settings.llm_fast_model),
+                getattr(provider, "vision_model_id", settings.llm_vision_model),
             ]
             if value
         )
@@ -125,7 +128,14 @@ async def model_config(
 
     vision_state = "ready" if provider.supports_vision else health.vision.state
 
-    from app.domain.platform.settings import API_KEY_KEY, BASE_URL_KEY, get_setting, mask_secret
+    from app.domain.platform.settings import (
+        API_KEY_KEY,
+        BASE_URL_KEY,
+        VISION_API_KEY_KEY,
+        VISION_BASE_URL_KEY,
+        get_setting,
+        mask_secret,
+    )
 
     saved_base = get_setting(session, BASE_URL_KEY) or settings.llm_base_url
     saved_key = get_setting(session, API_KEY_KEY) or settings.llm_api_key
@@ -142,7 +152,10 @@ async def model_config(
         api_key_masked=mask_secret(saved_key),
         has_api_key=bool(saved_key),
         text_model=provider.model_id,
-        vision_model=settings.llm_vision_model or None,
+        vision_model=getattr(provider, "vision_model_id", settings.llm_vision_model) or None,
+        vision_base_url=get_setting(session, VISION_BASE_URL_KEY) or settings.llm_vision_base_url,
+        vision_api_key_masked=mask_secret(get_setting(session, VISION_API_KEY_KEY) or settings.llm_vision_api_key),
+        fast_model=getattr(provider, "fast_model_id", settings.llm_fast_model or provider.model_id),
         embedding_backend=settings.embedding_backend,
         embedding_model=settings.embedding_model_id or None,
         embedding_path=settings.embedding_model_path or "",
@@ -164,7 +177,7 @@ async def model_config(
                 key="llm",
                 label="文本模型（LLM）",
                 provider="OpenAI 兼容网关",
-                model=settings.llm_model or None,
+                model=provider.model_id or None,
                 state=health.llm.state,
                 detail=health.llm.detail,
                 note="理解与回复都由它生成",
@@ -173,7 +186,7 @@ async def model_config(
                 key="vision",
                 label="多模态模型",
                 provider="OpenAI 兼容网关",
-                model=settings.llm_vision_model or None,
+                model=getattr(provider, "vision_model_id", settings.llm_vision_model) or None,
                 state=vision_state,
                 detail=(
                     "已配置多模态模型，可从图片提取可见线索"
@@ -235,7 +248,11 @@ async def test_model(
 
     # 只允许测试**已配置的模型**或**网关确实提供的模型**：
     # 否则这个接口就成了「任意模型名的代理」，可以拿它试探未授权模型。
-    allowed = {context.settings.llm_model, context.settings.llm_vision_model}
+    allowed = {
+        context.model_provider.model_id,
+        getattr(context.model_provider, "vision_model_id", context.settings.llm_vision_model),
+        getattr(context.model_provider, "fast_model_id", context.settings.llm_fast_model),
+    }
     # 拿不到网关列表时仍然允许测已配置的模型；用 suppress 而不是裸 except pass
     with contextlib.suppress(Exception):
         allowed.update(context.model_provider.list_models())
@@ -254,10 +271,10 @@ async def test_model(
             message=f"{type(exc).__name__}: {str(exc)[:200]}",
         )
     return TestModelView(
-        model=model,
+        model=result.model,
         ok=True,
         latency_seconds=round(result.latency_seconds or (time.perf_counter() - started), 3),
-        message=f"连通（返回 {(result.text or '').strip()[:40] or '空内容'}）",
+        message=f"连通 · {result.model} · {(result.text or '').strip()[:40] or '空内容'}",
     )
 
 
@@ -962,6 +979,9 @@ class SaveModelConfigRequest(ApiModel):
     api_key: str | None = None
     model: str | None = None
     vision_model: str | None = None
+    vision_base_url: str | None = None
+    vision_api_key: str | None = None
+    fast_model: str | None = None
     #: 向量模型：本地 ONNX 或远端 OpenAI 兼容服务
     embedding_backend: str | None = None
     embedding_model: str | None = None
@@ -1007,11 +1027,14 @@ async def save_model_config(
         EMBEDDING_DIMENSION_KEY,
         EMBEDDING_MODEL_KEY,
         EMBEDDING_PATH_KEY,
+        FAST_MODEL_KEY,
         MODEL_KEY,
         RERANK_API_KEY_KEY,
         RERANK_BACKEND_KEY,
         RERANK_BASE_URL_KEY,
         RERANK_MODEL_KEY,
+        VISION_API_KEY_KEY,
+        VISION_BASE_URL_KEY,
         VISION_MODEL_KEY,
         set_setting,
     )
@@ -1029,6 +1052,11 @@ async def save_model_config(
         set_setting(session, "llm.active_model", payload.model.strip())
     if payload.vision_model is not None:
         set_setting(session, VISION_MODEL_KEY, payload.vision_model.strip())
+    for key, value in ((VISION_BASE_URL_KEY, payload.vision_base_url), (FAST_MODEL_KEY, payload.fast_model)):
+        if value is not None:
+            set_setting(session, key, value.strip())
+    if payload.vision_api_key:
+        set_setting(session, VISION_API_KEY_KEY, "" if payload.vision_api_key == "-" else payload.vision_api_key.strip())
     if payload.embedding_backend is not None and payload.embedding_backend.strip():
         backend = payload.embedding_backend.strip()
         if backend not in {"onnx-local", "http"}:
@@ -1070,6 +1098,9 @@ async def save_model_config(
         api_key=payload.api_key,
         model=payload.model,
         vision_model=payload.vision_model,
+        vision_base_url=payload.vision_base_url,
+        vision_api_key=payload.vision_api_key,
+        fast_model=payload.fast_model,
     )
 
     # 重排序是纯 HTTP 调用，可以热替换：保存后立刻让运行时用新配置
@@ -1097,9 +1128,10 @@ async def save_model_config(
     message = "已保存（未做测试）" + restart_hint
     ok = True
     try:
-        result = context.model_provider.test_model(context.model_provider.model_id)
+        configured_model = payload.vision_model or payload.model or payload.fast_model or context.model_provider.model_id
+        result = context.model_provider.test_model(configured_model)
         message = (
-            f"已保存并测试通过：{context.model_provider.model_id} "
+            f"已保存并测试通过：{result.model} "
             f"返回 {(result.text or '').strip()[:40]}{restart_hint}"
         )
     except Exception as exc:

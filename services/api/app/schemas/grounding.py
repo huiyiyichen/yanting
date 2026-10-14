@@ -2,9 +2,41 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.base import ApiModel
+
+
+class VerificationIssue(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    category: Literal["fact", "citation", "safety", "style"] = "fact"
+    reply_index: int | None = Field(default=None, alias="replyIndex", ge=0)
+    segment_index: int | None = Field(default=None, alias="segmentIndex", ge=0)
+    source_id: str | None = Field(default=None, alias="sourceId")
+    detail: str = Field(min_length=1, max_length=500)
+    format_error: bool = Field(default=False, exclude=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_issue(cls, value):
+        if isinstance(value, str):
+            return {"category": "fact", "detail": value, "format_error": True}
+        if isinstance(value, dict) and value.get("category") not in {"fact", "citation", "safety", "style"}:
+            return {**value, "category": "fact", "format_error": True}
+        return value
+
+
+class Verification(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    supported: bool
+    issues: list[VerificationIssue] = Field(default_factory=list, max_length=8)
+
+    @property
+    def blocking_issues(self) -> list[VerificationIssue]:
+        issues = [issue for issue in self.issues if issue.category != "style"]
+        if not self.supported and not self.issues:
+            return [VerificationIssue(detail="核验结果缺少具体依据", format_error=True)]
+        return issues
 
 
 class GroundingSource(ApiModel):

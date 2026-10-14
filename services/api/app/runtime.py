@@ -137,7 +137,10 @@ class RuntimeContext:
             ACTIVE_MODEL_KEY,
             API_KEY_KEY,
             BASE_URL_KEY,
+            FAST_MODEL_KEY,
             MODEL_KEY,
+            VISION_API_KEY_KEY,
+            VISION_BASE_URL_KEY,
             VISION_MODEL_KEY,
             get_setting,
         )
@@ -151,6 +154,9 @@ class RuntimeContext:
                     API_KEY_KEY,
                     MODEL_KEY,
                     VISION_MODEL_KEY,
+                    VISION_BASE_URL_KEY,
+                    VISION_API_KEY_KEY,
+                    FAST_MODEL_KEY,
                     ACTIVE_MODEL_KEY,
                 )
             }
@@ -165,6 +171,9 @@ class RuntimeContext:
                 api_key=saved[API_KEY_KEY],
                 model=model,
                 vision_model=saved[VISION_MODEL_KEY],
+                vision_base_url=saved[VISION_BASE_URL_KEY],
+                vision_api_key=saved[VISION_API_KEY_KEY],
+                fast_model=saved[FAST_MODEL_KEY],
             )
             applied = [key for key, value in saved.items() if value]
             if applied:
@@ -298,7 +307,7 @@ class RuntimeContext:
             name="vision",
             state="ready",
             detail="已配置多模态模型",
-            model_id=self.settings.llm_vision_model,
+            model_id=getattr(provider, "vision_model_id", self.settings.llm_vision_model),
             revision="unavailable",
         )
 

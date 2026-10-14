@@ -10,8 +10,8 @@
  */
 import { RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
-import { Avatar, Tag, Tooltip, Typography } from 'antd'
-import { memo } from 'react'
+import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
+import { memo, useLayoutEffect, useRef, useState } from 'react'
 
 import type { MessageView } from '../api/client'
 import {
@@ -26,6 +26,7 @@ const { Text } = Typography
 interface MessageListProps {
   messages: MessageView[]
   viewRole: ViewRole
+  conversationId?: string | null
   /** 发送失败的本地消息（不落库，仅提示）。 */
   failedKeys?: Record<string, string>
 }
@@ -84,8 +85,44 @@ function AttachmentThumb({ attachment }: { attachment: Record<string, unknown> }
 export const MessageList = memo(function MessageList({
   messages,
   viewRole,
+  conversationId,
   failedKeys = {},
 }: MessageListProps) {
+  const root = useRef<HTMLDivElement>(null)
+  const pinned = useRef(true)
+  const seen = useRef({ conversation: '', count: 0, last: '' })
+  const [unread, setUnread] = useState(0)
+  const conversation = conversationId ?? messages[0]?.conversationId ?? ''
+  const last = messages.at(-1)?.messageId ?? ''
+  const bottom = () => {
+    const scroller = root.current?.closest<HTMLElement>('.anker-scroll')
+    if (scroller) scroller.scrollTop = scroller.scrollHeight
+    pinned.current = true
+    setUnread(0)
+  }
+  useLayoutEffect(() => {
+    const scroller = root.current?.closest<HTMLElement>('.anker-scroll')
+    if (!scroller) return
+    const onScroll = () => {
+      pinned.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 120
+      if (pinned.current) setUnread(0)
+    }
+    const onLoad = () => { if (pinned.current) scroller.scrollTop = scroller.scrollHeight }
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    scroller.addEventListener('load', onLoad, true)
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('load', onLoad, true)
+    }
+  }, [])
+  useLayoutEffect(() => {
+    const previous = seen.current
+    if (previous.conversation !== conversation || pinned.current || previous.count === 0) bottom()
+    else if (last !== previous.last && messages.length > previous.count) {
+      setUnread((count) => count + messages.length - previous.count)
+    }
+    seen.current = { conversation, count: messages.length, last }
+  }, [conversation, last, messages.length])
   /**
    * `role="log"` 的容器**始终渲染**，空态也包含在里面。
    *
@@ -95,7 +132,7 @@ export const MessageList = memo(function MessageList({
    * 会话状态下都可定位（此前空会话下该区域不存在，按名定位会超时）。
    */
   return (
-    <div aria-label="消息列表" role="log" aria-live="polite">
+    <div ref={root} aria-label="消息列表" role="log" aria-live="polite">
       {messages.length === 0 ? (
         <div style={{ padding: 40, textAlign: 'center' }}>
           <Text type="secondary">开始新对话</Text>
@@ -113,6 +150,7 @@ export const MessageList = memo(function MessageList({
             const senderRole = message.senderRole as SenderRole
             const side = messageSide(senderRole, viewRole)
             const failure = failedKeys[message.messageId]
+            if (senderRole === 'system') return <div key={message.messageId} className="chat-system-message">{message.body}</div>
 
             return (
               <div key={message.messageId} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -187,6 +225,7 @@ export const MessageList = memo(function MessageList({
           })}
         </div>
       )}
+      {unread > 0 && <div className="chat-new-messages"><Button size="small" onClick={bottom}>{unread} 条新消息</Button></div>}
     </div>
   )
 })

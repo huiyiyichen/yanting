@@ -764,3 +764,8 @@ body {
   .desk-filterbar > .ant-input-affix-wrapper { width: 100%; }
   .chat-order-strip .ant-tag { max-width: 90px; overflow-wrap: anywhere; white-space: normal; }
 }
+/* Conversation scrolling and system events share the existing chat surface. */
+.chat-system-message { align-self: center; max-width: 90%; padding: 4px 10px; color: #777; font-size: 12px; text-align: center; }
+.chat-new-messages { position: sticky; bottom: 12px; text-align: center; z-index: 1; }
+.table-cell-stack > strong, .chat-buyer { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ant-drawer-content-wrapper { max-width: 100vw; }

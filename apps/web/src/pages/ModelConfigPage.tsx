@@ -58,6 +58,9 @@ interface ConfigForm {
   apiKey: string
   model: string
   visionModel: string
+  visionBaseUrl: string
+  visionApiKey: string
+  fastModel: string
   embeddingBackend: string
   embeddingModel: string
   embeddingPath: string
@@ -140,6 +143,9 @@ export function ModelConfigPage() {
       apiKey: '',
       model: config?.textModel ?? '',
       visionModel: config?.visionModel ?? '',
+      visionBaseUrl: config?.visionBaseUrl ?? '',
+      visionApiKey: '',
+      fastModel: config?.fastModel ?? '',
       embeddingBackend: config?.embeddingBackend ?? 'onnx-local',
       embeddingModel: config?.embeddingModel ?? '',
       embeddingPath: config?.embeddingPath ?? '',
@@ -163,9 +169,9 @@ export function ModelConfigPage() {
       // 只提交当前能力相关的字段：避免在「多模态」抽屉里误改 LLM 的地址
       const payload =
         editing.key === 'llm'
-          ? { baseUrl: values.baseUrl, apiKey: values.apiKey, model: values.model }
+          ? { baseUrl: values.baseUrl, apiKey: values.apiKey, model: values.model, fastModel: values.fastModel }
           : editing.key === 'vision'
-            ? { visionModel: values.visionModel }
+            ? { visionModel: values.visionModel, visionBaseUrl: values.visionBaseUrl, visionApiKey: values.visionApiKey }
             : editing.key === 'embedding'
               ? {
                   embeddingBackend: values.embeddingBackend,
@@ -418,6 +424,7 @@ export function ModelConfigPage() {
             >
               <ModelSelect options={modelOptions} placeholder="选择或输入模型名" />
             </Form.Item>
+            <Form.Item name="fastModel" label="快速模型"><ModelSelect options={modelOptions} /></Form.Item>
             {/* 网关可用模型放在这里才有用：选模型的人就在这个抽屉里 */}
             <Form.Item label="网关可用模型">
               {(config?.availableModels?.length ?? 0) > 0 ? (
@@ -440,6 +447,10 @@ export function ModelConfigPage() {
 
         {editing?.key === 'vision' ? (
           <Form form={form} layout="vertical">
+            <Form.Item name="visionBaseUrl" label="视觉服务地址"><Input placeholder="留空复用文本服务" /></Form.Item>
+            <Form.Item name="visionApiKey" label={`视觉 API Key（${config?.visionApiKeyMasked || '复用文本服务'}）`}>
+              <Input.Password autoComplete="new-password" />
+            </Form.Item>
             <Form.Item
               name="visionModel"
               label="多模态模型"

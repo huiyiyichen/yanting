@@ -52,6 +52,7 @@ class ChatResult:
     latency_seconds: float
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
+    cached_tokens: int | None = None
     finish_reason: str | None = None
     is_mock: bool = False
 
@@ -87,12 +88,18 @@ class OpenAICompatibleModelProvider:
         api_key: str,
         model: str,
         vision_model: str = "",
+        vision_base_url: str = "",
+        vision_api_key: str = "",
+        fast_model: str = "",
         timeout_seconds: float = 60.0,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._model = model
         self._vision_model = vision_model
+        self._vision_base_url = vision_base_url.rstrip("/")
+        self._vision_api_key = vision_api_key
+        self._fast_model = fast_model
         self._timeout = timeout_seconds
 
     @classmethod
@@ -102,6 +109,9 @@ class OpenAICompatibleModelProvider:
             api_key=settings.llm_api_key,
             model=settings.llm_model,
             vision_model=settings.llm_vision_model,
+            vision_base_url=settings.llm_vision_base_url,
+            vision_api_key=settings.llm_vision_api_key,
+            fast_model=settings.llm_fast_model,
             timeout_seconds=settings.llm_timeout_seconds,
         )
 
@@ -113,6 +123,14 @@ class OpenAICompatibleModelProvider:
     def vision_model_id(self) -> str:
         return self._vision_model
 
+    @property
+    def fast_model_id(self) -> str:
+        return self._fast_model or self._model
+
+    @staticmethod
+    def _endpoint(base: str, resource: str) -> str:
+        return f"{base.rstrip('/')}{'' if base.rstrip('/').endswith('/v1') else '/v1'}/{resource}"
+
     def configure(
         self,
         *,
@@ -120,6 +138,9 @@ class OpenAICompatibleModelProvider:
         api_key: str | None = None,
         model: str | None = None,
         vision_model: str | None = None,
+        vision_base_url: str | None = None,
+        vision_api_key: str | None = None,
+        fast_model: str | None = None,
     ) -> None:
         """运行时改配置（模型配置页的保存动作）。
 
@@ -138,6 +159,12 @@ class OpenAICompatibleModelProvider:
             self._model = model.strip()
         if vision_model is not None:
             self._vision_model = vision_model.strip()
+        if vision_base_url is not None:
+            self._vision_base_url = vision_base_url.strip().rstrip("/")
+        if vision_api_key:
+            self._vision_api_key = "" if vision_api_key == "-" else vision_api_key.strip()
+        if fast_model is not None:
+            self._fast_model = fast_model.strip()
 
     def set_active_model(self, model: str) -> None:
         """把「生效的文本模型」换成另一个（模型配置页的切换动作）。
@@ -168,7 +195,7 @@ class OpenAICompatibleModelProvider:
         if not (self._base_url and self._api_key):
             return []
         request = urllib.request.Request(
-            f"{self._base_url}/v1/models",
+            self._endpoint(self._base_url, "models"),
             headers={"Authorization": f"Bearer {self._api_key}"},
             method="GET",
         )
@@ -189,16 +216,18 @@ class OpenAICompatibleModelProvider:
         领域错误抛出，由路由转成如实的状态，而不是在本方法里吞掉。
         """
 
-        original = self._model
-        self._model = model
-        try:
-            return self.complete(
-                [ChatMessage(role="user", content="只回复两个字：可用")],
-                temperature=0.0,
-                max_tokens=8,
-            )
-        finally:
-            self._model = original
+        vision = model == self._vision_model and model != self._model
+        probe = OpenAICompatibleModelProvider(
+            base_url=(self._vision_base_url or self._base_url) if vision else self._base_url,
+            api_key=(self._vision_api_key or self._api_key) if vision else self._api_key,
+            model=model,
+            timeout_seconds=self._timeout,
+        )
+        return probe.complete(
+            [ChatMessage(role="user", content="只回复两个字：可用")],
+            temperature=0.0,
+            max_tokens=16,
+        )
 
     def complete(
         self,
@@ -209,14 +238,9 @@ class OpenAICompatibleModelProvider:
         json_mode: bool = False,
         timeout_seconds: float | None = None,
     ) -> ChatResult:
-        if not self.available():
-            raise ProviderNotConfigured(
-                "文本模型未配置",
-                detail="缺少 ANKER_AGENT_LLM_BASE_URL / ANKER_AGENT_LLM_API_KEY / ANKER_AGENT_LLM_MODEL",
-            )
-
         wants_vision = any(message.image_data_urls for message in messages)
         model = self._model
+        base_url, api_key = self._base_url, self._api_key
         if wants_vision:
             if not self.supports_vision:
                 raise ProviderNotConfigured(
@@ -224,6 +248,11 @@ class OpenAICompatibleModelProvider:
                     detail="请求包含图片，但未设置 ANKER_AGENT_LLM_VISION_MODEL",
                 )
             model = self._vision_model
+            base_url = self._vision_base_url or base_url
+            api_key = self._vision_api_key or api_key
+
+        if not (base_url and api_key and model):
+            raise ProviderNotConfigured("请配置模型服务地址、密钥和型号")
 
         payload: dict[str, Any] = {
             "model": model,
@@ -234,8 +263,12 @@ class OpenAICompatibleModelProvider:
         }
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
-        if urlparse(self._base_url).hostname == "api.deepseek.com":
+        hostname = urlparse(base_url).hostname or ""
+        if hostname == "api.deepseek.com":
             payload["thinking"] = {"type": "disabled"}
+        elif ("qwen3" in model.lower() and "-vl-" not in model.lower()
+              and any(domain in hostname for domain in ("siliconflow", "aliyuncs"))):
+            payload["enable_thinking"] = False
 
         started = time.perf_counter()
         timeout = (
@@ -247,8 +280,8 @@ class OpenAICompatibleModelProvider:
             with (
                 httpx.Client(timeout=timeout, trust_env=False) as client,
                 client.stream(
-                    "POST", f"{self._base_url}/v1/chat/completions", json=payload,
-                    headers={"Authorization": f"Bearer {self._api_key}",
+                    "POST", self._endpoint(base_url, "chat/completions"), json=payload,
+                    headers={"Authorization": f"Bearer {api_key}",
                              "Accept": "application/json",
                              "User-Agent": "loreal-consumer-service/0.1"},
                 ) as response,
@@ -295,6 +328,7 @@ class OpenAICompatibleModelProvider:
             latency_seconds=latency,
             prompt_tokens=usage.get("prompt_tokens"),
             completion_tokens=usage.get("completion_tokens"),
+            cached_tokens=usage.get("prompt_cache_hit_tokens", (usage.get("prompt_tokens_details") or {}).get("cached_tokens")),
             finish_reason=choice.get("finish_reason"),
         )
 

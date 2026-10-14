@@ -248,6 +248,15 @@ class ConsumerServiceAssistant:
                 detail={**call, "deliveryMode": "automatic" if automatic else "draft"},
             )
         usage = usage_for(state["calls"])
+        dropped = state.get("segments_dropped", 0)
+        verification_status = "partial" if dropped else "verified"
+        usage.update({
+            "verifyInvoked": state.get("verify_invoked", False),
+            "blockedCategories": sorted({item.category for item in state.get("verification_issues", [])}),
+            "segmentsDropped": dropped,
+            "verificationFormatErrors": state.get("verification_format_errors", 0),
+            "styleIssues": state.get("style_issues", []),
+        })
         from app.domain.consumer_service.image_evidence import save_image_observations
 
         save_image_observations(self._session, state["images"], provider=self._provider)
@@ -255,7 +264,7 @@ class ConsumerServiceAssistant:
         self._session.add(AssistantRunRow(
             run_id=observation_id, conversation_id=conversation_id, input_hash=input_hash,
             model_id=result.model, is_mock=any(c["isMock"] for c in state["calls"]),
-            status="verified", trace_json=json.dumps([s.dump() for s in state["steps"]], ensure_ascii=False),
+            status=verification_status, trace_json=json.dumps([s.dump() for s in state["steps"]], ensure_ascii=False),
             usage_json=json.dumps(usage),
         ))
         from app.domain.consumer_service.service_breakpoints import save_assessment
@@ -350,11 +359,11 @@ class ConsumerServiceAssistant:
             knowledge_status=knowledge_status,
             knowledge_evidence=evidence,
             handoff_required=parsed.handoff_required,
-            delivery_mode="automatic" if automatic else "draft",
+            delivery_mode="automatic" if automatic and not dropped else "draft",
             intent=parsed.intent,
             memory_items=parsed.memory,
             grounding_sources=state["sources"],
-            verification_status="verified",
+            verification_status=verification_status,
             workflow_steps=state["steps"],
             model_usage=usage,
             service_breakpoints=state.get("service_findings"),
@@ -423,7 +432,7 @@ def record_suggestion_action(
     view = read_assistant(session, conversation_id)
     if view is None:
         raise NotFoundError("暂无建议")
-    if view.verification_status != "verified":
+    if view.verification_status not in {"verified", "partial"}:
         raise ConflictError("回复尚未完成依据核验")
     if view.stale or view.input_hash != payload.input_hash:
         raise ConflictError("建议已过期")

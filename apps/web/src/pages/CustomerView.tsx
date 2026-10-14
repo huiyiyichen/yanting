@@ -173,17 +173,23 @@ export function CustomerView() {
     let disposed = false
     let pending = false
     const sync = async () => {
-      if (pending) return
+      if (pending || document.visibilityState === 'hidden') return
       pending = true
       try {
         const list = await customerApi.listConversations(CUSTOMER_ID)
         if (!disposed) setConversations(list)
         const origin = activeIdRef.current
         if (origin) {
-          const rows = await customerApi.listMessages(origin)
+          const [rows, currentRating] = await Promise.all([
+            customerApi.listMessages(origin), customerApi.getRating(origin),
+          ])
           if (!disposed && activeIdRef.current === origin) {
             setMessages(rows)
             setMessageError(null)
+            if (currentRating) {
+              setRating({ status: currentRating.ratingStatus, value: currentRating.userRating ?? null })
+              if (currentRating.ratingStatus === 'pending') setRatingOpen(true)
+            }
           }
         }
       } catch (err) {
@@ -430,7 +436,7 @@ export function CustomerView() {
             </div>
           ) : (
             <>
-              <MessageList messages={messages} viewRole="customer" />
+              <MessageList messages={messages} conversationId={activeId} viewRole="customer" />
               {/* 开场白之后、客户还没说话时给快捷入口；用户直接打字则自然消失 */}
               {showQuickReplies ? (
                 <QuickReplies

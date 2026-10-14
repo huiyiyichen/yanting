@@ -83,8 +83,9 @@ def main() -> int:
                 if result.is_mock:
                     raise ValueError("Live evaluation cannot accept mock verification")
                 verdict = Verification.model_validate_json(result.text)
-                supported = verdict.supported and not verdict.issues
-                live_rows.append({**case, "predicted": supported, "issues": verdict.issues,
+                supported = not verdict.blocking_issues
+                live_rows.append({**case, "predicted": supported,
+                                  "issues": [issue.model_dump(by_alias=True) for issue in verdict.issues],
                                   "model": result.model, "promptTokens": result.prompt_tokens,
                                   "completionTokens": result.completion_tokens, "latencySeconds": result.latency_seconds})
             except Exception as exc:

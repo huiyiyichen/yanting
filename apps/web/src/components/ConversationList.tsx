@@ -171,7 +171,7 @@ function ConversationRow({
       {onDelete ? (
         <Popconfirm
           title="删除这个会话？"
-          description="消息、附件、案件与申请会一并删除且不可恢复；审计记录保留。"
+          description="消息与附件会一并删除"
           okText="删除"
           okButtonProps={{ danger: true }}
           cancelText="取消"
@@ -317,7 +317,7 @@ export const ConversationList = memo(function ConversationList({
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             prefix={<SearchOutlined style={{ color: 'var(--anker-muted)' }} />}
-            placeholder="搜索会话、型号、问题…"
+            placeholder="客户、订单号、聊天记录"
             aria-label="搜索会话"
             style={{ padding: 0, marginTop: 2 }}
           />

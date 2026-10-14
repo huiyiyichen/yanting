@@ -10,6 +10,38 @@ from app.domain.consumer_service.grounding import (
 from app.schemas.grounding import GroundingClaim, GroundingSource, MemoryItem
 
 
+@pytest.mark.parametrize("category,blocked", [
+    ("fact", True), ("citation", True), ("safety", True), ("style", False), ("unexpected", True),
+])
+def test_verification_categories_control_blocking(category, blocked):
+    from app.schemas.grounding import Verification
+
+    result = Verification.model_validate({"supported": False, "issues": [
+        {"category": category, "detail": "回复建议中的金额与来源不一致"},
+    ]})
+    assert bool(result.blocking_issues) is blocked
+    assert result.issues[0].format_error is (category == "unexpected")
+
+
+def test_partial_reply_preserves_reviewed_segments_and_rejects_ambiguous_locations():
+    from app.domain.consumer_service.grounded_workflow import partial_verified_draft
+    from app.schemas.grounding import VerificationIssue
+
+    draft = GroundedDraft.model_validate({"reply_suggestions": [{
+        "style": "recommended", "segments": [
+            {"text": "亲，理解您着急的心情。"},
+            {"text": "已经到账。", "source_refs": ["order:111111"]},
+            {"text": "麻烦发一下订单号。"},
+        ],
+    }]})
+    issue = VerificationIssue(category="fact", replyIndex=0, segmentIndex=1, detail="到账状态错误")
+    result, dropped = partial_verified_draft(draft, [issue], {"order:111111": order()}, "退款呢")
+    assert dropped == 1
+    assert result.reply_suggestions[0].body == "亲，理解您着急的心情。麻烦发一下订单号。"
+    assert result.reply_suggestions[0].claims == []
+    assert partial_verified_draft(draft, [issue.model_copy(update={"reply_index": None})], {}, "") is None
+
+
 def order(identifier="111111", amount="10", status="已发货"):
     return GroundingSource(
         source_id=f"order:{identifier}", kind="order", subject_id=identifier, label="订单",

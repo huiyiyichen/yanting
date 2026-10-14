@@ -37,6 +37,9 @@
 | `ANKER_AGENT_LLM_API_KEY` | 密钥，只放后端，前端不持有 |
 | `ANKER_AGENT_LLM_MODEL` | 文本模型 ID |
 | `ANKER_AGENT_LLM_VISION_MODEL` | 多模态模型 ID；**为空则图片链路报告 unavailable** |
+| `ANKER_AGENT_LLM_VISION_BASE_URL` | 独立视觉服务地址，留空复用文本服务 |
+| `ANKER_AGENT_LLM_VISION_API_KEY` | 独立视觉凭证，留空复用文本凭证 |
+| `ANKER_AGENT_LLM_FAST_MODEL` | 快速模型 ID，留空复用主模型 |
 | `ANKER_AGENT_LLM_TIMEOUT_SECONDS` | 默认 60 |
 
 行为约定：
@@ -49,6 +52,8 @@
   本期不设人工处理时限与超时升级。
 
 ## 4. 编码模型
+
+模型请求在 DeepSeek 官方端点传 `thinking.type=disabled`，Qwen3 文本模型在硅基流动及百炼端点传 `enable_thinking=false`。Qwen3-VL-Instruct 采用直接输出；硅基流动此型号拒绝 `enable_thinking` 参数，视觉请求省略该字段。调用记录保留供应方响应中的实际型号与缓存命中 Token；视觉请求使用视觉服务自己的端点和凭证。
 
 | 变量 | 取值 | 默认 |
 |---|---|---|
@@ -118,3 +123,11 @@ CPython 解释器关闭阶段 portalocker 会尝试 `import msvcrt` 并失败，
 | `ANKER_AGENT_PROMPT_VERSION` | `s0-bootstrap` |
 
 审计记录会带上这两个版本，便于复盘。
+
+## 9. 模型配置端到端验收
+
+失败场景与预期（先于后续适配实现记录）：视觉配置指向文本网关时应从请求目标识别；视觉独立凭证与文本凭证混用时请求应失败并显示该能力错误；连接检查改变并发接待模型时应保持接待模型原值；保存空密钥时保留原值；返回配置中应只含密钥掩码；模型别名与服务实际响应名应分别保留；缓存Token缺省时统计按零处理；服务地址已有`/v1`时请求路径只包含一次版本号。
+
+复现：启动前后端，在模型配置页分别保存文本与视觉配置，重新打开抽屉核对持久化字段；通过客户页发送真实商品图片，读取对应回复与运行记录的模型名。产物记录执行时间、源码提交、实际模型、HTTP结果和脱敏截图，保存到`evals/results/`与`output/playwright/model-config/`。验收数据使用`data/runtime/validation/model-config/`。
+
+2026-10-14 本批记录：模型配置页面实际点击文本连接检查，HTTP 200，返回`deepseek-flash`，0.772秒；视觉抽屉显示独立地址与密钥字段。截图`output/playwright/model-config/models-page.png`。供应方调用记录`evals/results/model-provider-qwen-20261014.json`包含文本/快速模型成功和首次视觉参数错误；修正后的视觉记录为`evals/results/model-provider-vision-20261014.json`，返回`Qwen/Qwen3-VL-8B-Instruct`，23.505秒，图片回答为“欧莱雅复颜气垫粉底液”。官方图片对应“黑胖子气垫200中性象牙白”，此结果证明图片请求通路，商品识别准确性与完整接待仍待后续评测。各JSON包含直接复现命令、输入图片哈希、实际响应模型及Token。

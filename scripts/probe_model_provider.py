@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import base64
+import argparse
 import json
 import os
 import struct
@@ -82,7 +83,15 @@ def png_1x1() -> str:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--qwen', action='store_true')
+    parser.add_argument('--image', type=Path)
+    parser.add_argument('--output', type=Path)
+    parser.add_argument('--vision-only', action='store_true')
+    args = parser.parse_args()
     load_dotenv(Path(__file__).resolve().parents[1] / "services" / "api" / ".env")
+    if args.qwen:
+        return probe_qwen(args)
     base = os.environ.get("ANKER_AGENT_LLM_BASE_URL", "").rstrip("/")
     key = os.environ.get("ANKER_AGENT_LLM_API_KEY", "")
     model = os.environ.get("ANKER_AGENT_LLM_MODEL", "")
@@ -162,6 +171,65 @@ def main() -> int:
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0
+
+
+def probe_qwen(args: argparse.Namespace) -> int:
+    from datetime import datetime, timezone
+    import hashlib
+    import mimetypes
+    import subprocess
+
+    repo = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(repo / 'services/api'))
+    from app.config import Settings
+    from app.integrations.model_provider import ChatMessage, OpenAICompatibleModelProvider
+
+    settings = Settings()
+    provider = OpenAICompatibleModelProvider(
+        base_url=settings.rerank_base_url, api_key=settings.rerank_api_key,
+        model='Qwen/Qwen3-30B-A3B-Instruct-2507', fast_model='Qwen/Qwen3-8B',
+        vision_model='Qwen/Qwen3-VL-8B-Instruct',
+        vision_base_url=settings.rerank_base_url, vision_api_key=settings.rerank_api_key,
+    )
+    report = {
+        'occurredAt': datetime.now(timezone.utc).isoformat(),
+        'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=repo, text=True).strip(),
+        'command': ['services/api/.venv/Scripts/python.exe', 'scripts/probe_model_provider.py', *sys.argv[1:]],
+        'scope': 'live provider roundtrip', 'checks': [],
+    }
+    checks = [] if args.vision_only else [('text', provider.model_id), ('fast', provider.fast_model_id)]
+    if args.image:
+        raw = args.image.read_bytes()
+        mime = mimetypes.guess_type(args.image.name)[0] or 'image/jpeg'
+        image_url = f'data:{mime};base64,{base64.b64encode(raw).decode("ascii")}'
+        report['image'] = {'name': args.image.name, 'sha256': hashlib.sha256(raw).hexdigest()}
+        checks.append(('vision', provider.vision_model_id))
+    for capability, model in checks:
+        row = {'capability': capability, 'requestedModel': model}
+        try:
+            result = provider.complete(
+                [ChatMessage(role='user', content='图片里是什么商品？用一句中文回答。', image_data_urls=[image_url])],
+                max_tokens=128,
+            ) if capability == 'vision' else provider.test_model(model)
+            row.update({
+                'ok': bool(result.text.strip()), 'returnedModel': result.model,
+                'reply': result.text, 'latencySeconds': round(result.latency_seconds, 3),
+                'promptTokens': result.prompt_tokens, 'completionTokens': result.completion_tokens,
+                'cachedTokens': result.cached_tokens,
+            })
+        except Exception as exc:
+            detail = str(getattr(exc, 'detail', '') or '')
+            for secret in (settings.rerank_api_key, settings.llm_api_key, settings.llm_vision_api_key):
+                if secret:
+                    detail = detail.replace(secret, '[redacted]')
+            row.update({'ok': False, 'errorType': type(exc).__name__, 'error': str(exc)[:240], 'detail': detail[:400]})
+        report['checks'].append(row)
+    serialized = json.dumps(report, ensure_ascii=False, indent=2) + '\n'
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(serialized, encoding='utf-8')
+    print(serialized)
+    return 0 if all(row['ok'] for row in report['checks']) else 1
 
 
 if __name__ == "__main__":

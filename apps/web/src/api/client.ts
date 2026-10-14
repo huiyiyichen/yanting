@@ -497,6 +497,9 @@ export const platformApi = {
     apiKey?: string
     model?: string
     visionModel?: string
+    visionBaseUrl?: string
+    visionApiKey?: string
+    fastModel?: string
     /** 向量：本地 ONNX 或远端 OpenAI 兼容服务 */
     embeddingBackend?: string
     embeddingModel?: string

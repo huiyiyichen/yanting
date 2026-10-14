@@ -20,7 +20,7 @@ from app.errors import ModelOutputInvalid, NotFoundError
 from app.repositories.consumer_service import ConsumerServiceRepository
 from app.schemas.grounding import GroundingClaim, GroundingSource, MemoryItem, ServiceMemoryView
 
-WORKFLOW_VERSION = "loreal-grounded-v2.42"
+WORKFLOW_VERSION = "loreal-grounded-v2.43"
 GENERAL_KNOWLEDGE_MARKER = "非具体商品依据"
 MONEY = re.compile(r"[¥￥]\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*元")
 IDENTIFIER = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]*\d{6,}(?![A-Za-z0-9])")
@@ -623,6 +623,7 @@ def validate_sources_budget(sources: list[GroundingSource]) -> None:
 def usage_for(calls: list[dict]) -> dict:
     return {
         "calls": len(calls),
+        "cachedTokens": sum(c.get("cachedTokens") or 0 for c in calls),
         "promptTokens": sum(c["promptTokens"] for c in calls)
         if calls and all(c.get("promptTokens") is not None for c in calls) else None,
         "completionTokens": sum(c["completionTokens"] for c in calls)

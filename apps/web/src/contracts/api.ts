@@ -1,6 +1,6 @@
 /**
  * 本文件由 scripts/generateContracts.mjs 自动生成，请勿手工修改。
- * 来源：../../data/runtime/contracts-export/openapi.json
+ * 来源：data/runtime/contracts-export/openapi.json
  * 字段命名为 camelCase，与后端 Pydantic 序列化别名一致。
  */
 
@@ -2376,6 +2376,21 @@ export interface components {
             /** Visionmodel */
             visionModel?: string | null;
             /**
+             * Visionbaseurl
+             * @default
+             */
+            visionBaseUrl: string;
+            /**
+             * Visionapikeymasked
+             * @default
+             */
+            visionApiKeyMasked: string;
+            /**
+             * Fastmodel
+             * @default
+             */
+            fastModel: string;
+            /**
              * Embeddingbackend
              * @default onnx-local
              */
@@ -3374,6 +3389,12 @@ export interface components {
             model?: string | null;
             /** Visionmodel */
             visionModel?: string | null;
+            /** Visionbaseurl */
+            visionBaseUrl?: string | null;
+            /** Visionapikey */
+            visionApiKey?: string | null;
+            /** Fastmodel */
+            fastModel?: string | null;
             /** Embeddingbackend */
             embeddingBackend?: string | null;
             /** Embeddingmodel */

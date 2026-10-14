@@ -60,6 +60,9 @@ class _StubProvider:
         api_key: str | None = None,
         model: str | None = None,
         vision_model: str | None = None,
+        vision_base_url: str | None = None,
+        vision_api_key: str | None = None,
+        fast_model: str | None = None,
     ) -> None:
         """运行时改配置。真实提供者会重建 httpx 客户端，这里只记录并切换模型。"""
 

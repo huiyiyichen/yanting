@@ -83,9 +83,6 @@ export function RatingCard({ busy = false, onSubmit, onSkip }: RatingCardProps) 
         <Button size="small" disabled={busy} onClick={onSkip}>
           跳过
         </Button>
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          评分只用于改进服务；跳过不会影响本次处理结果
-        </Text>
       </Space>
     </section>
   )

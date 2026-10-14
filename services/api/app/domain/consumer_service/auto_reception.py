@@ -373,6 +373,10 @@ def process_job(runtime: Any, job_id: str) -> None:
                         timeout_seconds=remaining_job_seconds(runtime, job))
                 if assistant.is_mock and runtime.settings.run_mode != "mock":
                     raise ModelOutputInvalid("真实接待禁止发送Mock结果")
+                if assistant.verification_status == "partial":
+                    generation_session.commit()
+                    _finish_handoff(runtime, job_id, "invalid_reply")
+                    return
                 reply = next(
                     (r for r in assistant.reply_suggestions if r.style == "recommended"),
                     assistant.reply_suggestions[0],

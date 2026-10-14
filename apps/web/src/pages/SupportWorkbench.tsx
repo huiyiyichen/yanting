@@ -266,13 +266,18 @@ export function SupportWorkbench() {
           {assistant ? <Tag color="success">已采用 {assistant.adoptedCount ?? 0} 条</Tag> : null}
         </div>
           {assistant?.stale && <Tag color="warning">待更新</Tag>}
+          {assistant?.verificationStatus === 'partial' && <Tag color="warning">
+            已移除 {Number(assistant.modelUsage?.segmentsDropped ?? 0)} 段
+          </Tag>}
           {assistant && !assistant.stale ? assistant.replySuggestions.map((item) => <article className="reply-candidate" key={item.style}>
             <div className="reply-candidate-head"><Tag>{styles[item.style] ?? item.style}</Tag>
               <Space size={4} wrap>{item.empathyDimensions?.map((dimension) => <Tag
                 key={dimension.key} color={dimension.status === 'present' ? 'success' : 'default'}
                 title={dimension.reason}>{dimension.label}</Tag>)}</Space>
             </div><p>{item.body}</p><Space>
-              <Button size="small" icon={<CheckOutlined />} disabled={automatic || assistant.verificationStatus !== 'verified'} onClick={() => void adopt(item.style, item.body, 'adopt')}>采用</Button>
+              <Tooltip title={automatic ? 'AI 接待中' : !['verified', 'partial'].includes(assistant.verificationStatus ?? '') ? '待核验' : undefined}>
+                <span><Button size="small" icon={<CheckOutlined />} disabled={automatic || !['verified', 'partial'].includes(assistant.verificationStatus ?? '')} onClick={() => void adopt(item.style, item.body, 'adopt')}>采用</Button></span>
+              </Tooltip>
               <Button size="small" icon={<CloseOutlined />} onClick={() => void adopt(item.style, item.body, 'ignore')}>忽略</Button>
             </Space>
           </article>) : <Tag>{generating ? '生成中' : '待生成'}</Tag>}
@@ -286,9 +291,6 @@ export function SupportWorkbench() {
               查看完整轨迹
             </Button>
           </div>
-          {assistant && (assistant.adoptedCount ?? 0) > 0
-            ? <Tag color="success">本次已采用 {assistant.adoptedCount} 条 AI 建议</Tag>
-            : null}
           <div className="consumer-history-card">
             <div className="consumer-history-summary">
               <strong>{context.historyServices.length} 次历史进线</strong>
@@ -341,7 +343,7 @@ export function SupportWorkbench() {
           </div>) : <Tag>{assistant.knowledgeStatus === 'failed' ? '检索失败' : '依据不足'}</Tag>}</section>
         </> }]} /> : null}
       </> },
-      { key: 'memory', label: '服务记忆', children: <>
+      { key: 'profile', label: '档案', children: <>
         {memory?.stale && <Tag color="warning">待更新</Tag>}
         {Object.entries(memoryLabels).map(([category, label]) => <section className="service-section" key={category}>
           <h3>{label}</h3>{memory?.items?.filter((item) => item.category === category).map((item, index) => {
@@ -353,9 +355,8 @@ export function SupportWorkbench() {
           })}
           {!memory?.items?.some((item) => item.category === category) && <Tag>暂无记录</Tag>}
         </section>)}
-      </> },
-      { key: 'orders', label: `订单 ${context?.orders.length ?? 0}`, children: <OrderFacts context={context} /> },
-      { key: 'tickets', label: `工单 ${tickets.length}`, children: <>
+        <OrderFacts context={context} />
+        <h3>工单 {tickets.length}</h3>
         <Button icon={<FileTextOutlined />} disabled={!id} onClick={() => navigate(`/platform/work-orders?conversation=${id}&create=1`)}>新建工单</Button>
         {tickets.map((t) => <section className="service-section" key={t.ticketId}><div className="section-title-row"><strong>{ticketTypes[t.workOrderType]}</strong><TicketStatus status={t.status} /></div>
           <p>{t.ticketId}</p><p>{t.assignee || '待分配'}</p><Button size="small" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看详情</Button>
@@ -383,7 +384,7 @@ export function SupportWorkbench() {
     <QianniuTopbar title="客服工作台" stats={[
       { label: '会话', value: snapshot?.items.length ?? 0 }, { label: '未读', value: snapshot?.unreadTotal ?? 0, warning: true },
       { label: '人工会话', value: snapshot?.items.filter((c) => c.dataSource === 'live' && c.serviceMode === 'operator_assisted').length ?? 0 },
-      { label: '未结工单', value: tickets.filter((t) => t.status !== 'resolved').length },
+      { label: '本会话工单', value: tickets.filter((t) => t.status !== 'resolved').length },
     ]} />
     <div className="reception-workspace">
       {!mobile && queue}
@@ -415,12 +416,12 @@ export function SupportWorkbench() {
             <Tag color="processing">待复核 · {serviceRiskTypeLabels[risk]}</Tag>
           </Link>)}
         </div> : null}
-        {context?.orders[0] && <button className="chat-order-strip" onClick={() => { setPluginTab('orders'); if (compact) setPluginOpen(true) }}>
+        {context?.orders[0] && <button className="chat-order-strip" onClick={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }}>
           <FileTextOutlined /><span>{context.orders[0].productName}</span><Tag>{context.orders[0].sourceStatus}</Tag>
         </button>}
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
-        <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} viewRole="support" />}</div>
+        <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support" />}</div>
         <div className="anker-composer anker-hairline-top">
           {imageUpload.image?.error && <Alert type="error" showIcon title={imageUpload.image.error}
             closable={{ onClose: () => imageUpload.clear() }} />}

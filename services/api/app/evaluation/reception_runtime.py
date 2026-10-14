@@ -104,6 +104,9 @@ def configured_settings(base: Settings) -> Settings:
                 platform_settings.API_KEY_KEY: "llm_api_key",
                 platform_settings.MODEL_KEY: "llm_model",
                 platform_settings.VISION_MODEL_KEY: "llm_vision_model",
+                platform_settings.VISION_BASE_URL_KEY: "llm_vision_base_url",
+                platform_settings.VISION_API_KEY_KEY: "llm_vision_api_key",
+                platform_settings.FAST_MODEL_KEY: "llm_fast_model",
             }
             for key, field in mapping.items():
                 value = platform_settings.get_setting(session, key)

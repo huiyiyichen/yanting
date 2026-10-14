@@ -27,6 +27,52 @@ def make_provider(provider, draft_builder, verifier=None):
     provider.complete = complete
 
 
+@pytest.mark.parametrize("category,status", [("fact", 502), ("style", 200)])
+def test_verifier_reply_wording_does_not_hide_fact_errors(workspace, category, status):
+    client, _, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "帮我看看订单")
+    make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "order_status"},
+                  lambda _: {"supported": False, "issues": [
+                      {"category": category, "detail": "回复建议里的订单状态错误"},
+                  ]})
+    response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
+    if status == 200:
+        assert response.status_code == 200, response.text
+        assert response.json()["modelUsage"]["styleIssues"]
+    else:
+        assert response.status_code >= 400
+        assert "回复建议里的订单状态错误" in response.text
+
+
+def test_partial_generation_is_cached_for_human_and_never_auto_sent(workspace):
+    from app.domain.consumer_service.auto_reception import process_job
+    from app.domain.consumer_service.models import AutoReplyJobRow
+
+    client, factory, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "帮我看看订单")
+    make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "reply_suggestions": [{
+        "style": "recommended", "segments": [
+            {"text": "亲，理解您着急的心情。"}, {"text": "请再等两天。"},
+            {"text": "麻烦发一下订单号。"},
+        ],
+    }]}, lambda _: {"supported": False, "issues": [{
+        "category": "safety", "replyIndex": 0, "segmentIndex": 1, "detail": "等待期限缺少依据",
+    }]})
+    with factory() as session:
+        job = session.scalar(select(AutoReplyJobRow).where(AutoReplyJobRow.conversation_id == cid))
+        job_id = job.job_id
+    process_job(client.app.state.runtime, job_id)
+    with factory() as session:
+        assert session.get(AutoReplyJobRow, job_id).status == "handoff"
+    response = client.get(f"/api/support/conversations/{cid}/assistant", headers=SUPPORT)
+    assert response.status_code == 200
+    assert response.json()["verificationStatus"] == "partial"
+    assert response.json()["modelUsage"]["segmentsDropped"] == 1
+    assert "请再等两天" not in response.json()["replySuggestions"][0]["body"]
+
+
 @pytest.mark.parametrize("automatic", [False, True])
 def test_customer_language_policy_applies_after_saved_prompts_in_both_modes(workspace, automatic):
     from app.domain.consumer_service.grounded_workflow import run_grounded_workflow

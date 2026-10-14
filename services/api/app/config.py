@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = ""
     llm_vision_model: str = ""
+    llm_vision_base_url: str = ""
+    llm_vision_api_key: str = ""
+    llm_fast_model: str = ""
     llm_timeout_seconds: float = 60.0
     auto_reply_timeout_seconds: float = Field(default=45.0, ge=5, le=120)
     risk_repeat_contact_hours: int = Field(default=72, ge=1, le=720)

@@ -35,7 +35,7 @@ export const OVERLAY_LAYOUT = {
   /** 浮层顶部起点：顶部状态横幅已移除，只剩外壳内边距 10 */
   bannerHeight: 10,
   /** 浮层左侧起点：外壳内边距 10 + 窄屏图标栏 72 + 缝隙 10 */
-  navRailWidth: 92,
+  navRailWidth: 64,
   /** 会话队列 / 列表宽度 */
   panelWidth: 248,
 } as const

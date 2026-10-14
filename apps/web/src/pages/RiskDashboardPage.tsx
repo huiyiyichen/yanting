@@ -1,5 +1,5 @@
 import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { Alert, Button, Collapse, Drawer, Dropdown, Empty, Input, Modal, Select, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
+import { Alert, Button, Collapse, Drawer, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, deskApi, supportApi, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView } from '../api/client'
@@ -311,6 +311,7 @@ export function RiskDashboardPage() {
         ]} />}
     </div>
     <Drawer title="风险详情" size={640} open={Boolean(selectedId)} onClose={closeDetail}>
+      {selectedId && !selected && <Skeleton active paragraph={{ rows: 8 }} />}
       {selected && incident && <>
         <div className="section-title-row"><h2>{incident.buyerAlias}</h2><Space wrap>
           <Tag color={incident.riskLevel === 'high' ? 'error' : incident.riskLevel === 'medium' ? 'warning' : 'default'}>{levelLabels[incident.riskLevel]}</Tag>

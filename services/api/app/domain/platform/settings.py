@@ -19,6 +19,9 @@ BASE_URL_KEY = "llm.base_url"
 API_KEY_KEY = "llm.api_key"
 MODEL_KEY = "llm.model"
 VISION_MODEL_KEY = "llm.vision_model"
+VISION_BASE_URL_KEY = "llm.vision_base_url"
+VISION_API_KEY_KEY = "llm.vision_api_key"
+FAST_MODEL_KEY = "llm.fast_model"
 
 #: 向量模型（本地 ONNX 或**远端 OpenAI 兼容服务**）：本地需重启生效，远端同样在启动时构建
 EMBEDDING_MODEL_KEY = "embedding.model_id"
@@ -40,6 +43,9 @@ WRITABLE_CONFIG_KEYS = (
     API_KEY_KEY,
     MODEL_KEY,
     VISION_MODEL_KEY,
+    VISION_BASE_URL_KEY,
+    VISION_API_KEY_KEY,
+    FAST_MODEL_KEY,
     EMBEDDING_MODEL_KEY,
     EMBEDDING_PATH_KEY,
     EMBEDDING_BACKEND_KEY,
