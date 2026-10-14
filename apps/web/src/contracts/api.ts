@@ -965,6 +965,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Model Usage
+         * @description 模型调用次数、Token、缓存命中与估算费用；Mock 与 live 分开。
+         */
+        get: operations["model_usage_api_platform_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/reception/queue": {
         parameters: {
             query?: never;
@@ -2667,6 +2687,21 @@ export interface components {
              */
             note: string;
         };
+        /** ModelUsage */
+        ModelUsage: {
+            /** Model */
+            model: string;
+            /** Calls */
+            calls: number;
+            /** Prompttokens */
+            promptTokens: number;
+            /** Completiontokens */
+            completionTokens: number;
+            /** Cachedtokens */
+            cachedTokens: number;
+            /** Estimatedcost */
+            estimatedCost: number | null;
+        };
         /**
          * OnboardingView
          * @description 新会话开场白的固定文案与快捷入口（唯一来源在后端）。
@@ -4066,6 +4101,21 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** StageUsage */
+        StageUsage: {
+            /** Stage */
+            stage: string;
+            /** Calls */
+            calls: number;
+            /** Prompttokens */
+            promptTokens: number;
+            /** Completiontokens */
+            completionTokens: number;
+            /** Cachedtokens */
+            cachedTokens: number;
+            /** Latencyseconds */
+            latencySeconds: number;
+        };
         /**
          * SuggestionActionRequest
          * @description 采用或忽略候选。**采用只写草稿，不发送**。
@@ -4285,6 +4335,44 @@ export interface components {
             content?: string | null;
             /** Expectedrevision */
             expectedRevision?: number | null;
+        };
+        /** UsageBucket */
+        UsageBucket: {
+            /** Calls */
+            calls: number;
+            /** Prompttokens */
+            promptTokens: number;
+            /** Completiontokens */
+            completionTokens: number;
+            /** Cachedtokens */
+            cachedTokens: number;
+            /** Cachehitrate */
+            cacheHitRate: number | null;
+            /** Callsmissingtokens */
+            callsMissingTokens: number;
+            /** Estimatedcost */
+            estimatedCost: number | null;
+            /** Replyruns */
+            replyRuns: number;
+            /** Callsperreply */
+            callsPerReply: number | null;
+            /** Costperreply */
+            costPerReply: number | null;
+            /** Bystage */
+            byStage: components["schemas"]["StageUsage"][];
+            /** Bymodel */
+            byModel: components["schemas"]["ModelUsage"][];
+            /** Byday */
+            byDay: {
+                [key: string]: number;
+            };
+        };
+        /** UsageView */
+        UsageView: {
+            live: components["schemas"]["UsageBucket"];
+            mock: components["schemas"]["UsageBucket"];
+            /** Pricedmodels */
+            pricedModels: string[];
         };
         /** ValidationError */
         ValidationError: {
@@ -6105,6 +6193,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KnowledgeBaseItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    model_usage_api_platform_usage_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageView"];
                 };
             };
             /** @description Validation Error */

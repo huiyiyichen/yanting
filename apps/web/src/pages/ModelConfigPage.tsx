@@ -41,7 +41,8 @@ import {
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
-import { ApiError, platformApi, type ModelConfigView, type ModelProviderView } from '../api/client'
+import { ApiError, platformApi, type ModelConfigView, type ModelProviderView, type UsageView } from '../api/client'
+import { UsagePanel } from '../features/platform/UsagePanel'
 
 const { Text } = Typography
 
@@ -107,6 +108,7 @@ function ModelSelect({
 
 export function ModelConfigPage() {
   const [config, setConfig] = useState<ModelConfigView | null>(null)
+  const [usage, setUsage] = useState<UsageView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState<string | null>(null)
@@ -121,6 +123,7 @@ export function ModelConfigPage() {
     try {
       const loaded = await platformApi.models()
       setConfig(loaded)
+      setUsage(await platformApi.usage().catch(() => null))
       setError(null)
     } catch (err) {
       setError((err as ApiError).message)
@@ -573,6 +576,7 @@ export function ModelConfigPage() {
           </Space>
         ) : null}
       </Drawer>
+      {usage && <section className="yt-usage-section"><h2 className="anker-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
     </div>
   )
 }

@@ -12,13 +12,15 @@ from __future__ import annotations
 
 import contextlib
 import time
+from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import Field
 
 from app.deps import get_context, get_session, require_support
 from app.domain.enums import ViewRole
+from app.domain.platform.usage import UsageView, parse_price_table, usage_summary
 from app.errors import NotFoundError, ValidationRejected
 from app.routes.commit import CommitBeforeResponseRoute
 from app.runtime import RuntimeContext
@@ -1186,3 +1188,19 @@ async def knowledge_bases(
         )
         for row in rows
     ]
+
+
+@router.get("/usage", response_model=UsageView)
+def model_usage(
+    start: date | None = Query(default=None, alias="from"),
+    end: date | None = Query(default=None, alias="to"),
+    session: Any = Depends(get_session),
+    context: RuntimeContext = Depends(get_context),
+    _role=Depends(require_support),
+):
+    """模型调用次数、Token、缓存命中与估算费用；Mock 与 live 分开。"""
+    try:
+        prices = parse_price_table(context.settings.model_prices_json)
+    except ValueError as exc:
+        raise ValidationRejected(str(exc)) from exc
+    return usage_summary(session, prices, start=start, end=end)

@@ -15,6 +15,7 @@ export type ConsumerProfileView = components['schemas']['ConsumerProfileView']
 export type DraftFinding = components['schemas']['DraftFinding']
 export type RiskOverviewView = components['schemas']['RiskOverviewView']
 export type ProductClueView = components['schemas']['ProductClueView']
+export type UsageView = components['schemas']['UsageView']
 export type MessageView = components['schemas']['MessageView']
 export type SendMessageResponse = components['schemas']['SendMessageResponse']
 export type QueueItem = components['schemas']['QueueItem']
@@ -498,6 +499,7 @@ export const healthApi = {
  */
 export const platformApi = {
   models: () => request<ModelConfigView>('/api/platform/models', { role: 'support' }),
+  usage: () => request<UsageView>('/api/platform/usage', { role: 'support' }),
   knowledge: () => request<KnowledgeOverviewView>('/api/platform/knowledge', { role: 'support' }),
   knowledgeBases: () =>
     request<KnowledgeBaseItem[]>('/api/platform/knowledge-bases', { role: 'support' }),
