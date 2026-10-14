@@ -14,7 +14,9 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "services" / "api"))
 
 from app.domain.consumer_service.grounded_workflow import (  # noqa: E402
-    GroundedDraft, VERIFIER_PROMPT, Verification,
+    VERIFIER_PROMPT,
+    GroundedDraft,
+    Verification,
 )
 from app.domain.consumer_service.grounding import validate_claims  # noqa: E402
 from app.evaluation.loreal import binary_metrics  # noqa: E402
@@ -27,8 +29,10 @@ def model_runtime():
     from app.integrations.embedding_provider import MockEmbeddingProvider
     from app.integrations.model_provider import OpenAICompatibleModelProvider
     from app.runtime import RuntimeContext
+    from app.runtime_guard import require_isolated_database
 
     settings = get_settings()
+    require_isolated_database(settings)
     engine = build_engine(settings)
     runtime = RuntimeContext(
         settings=settings, engine=engine, session_factory=build_session_factory(engine),

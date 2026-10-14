@@ -121,7 +121,7 @@ Excel 包含聊天、订单、补发换货、线下打款、物流、不良反�
 ### 4. 启动
 
 ```powershell
-.\start-demo.cmd
+.\start-demo.cmd                 # 路演用 .\start-demo.cmd -Profile demo，见 docs/runbook/演示库.md
 ```
 
 启动入口安装或复用前后端依赖，并打开客服工作台。

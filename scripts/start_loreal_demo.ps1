@@ -1,13 +1,33 @@
 [CmdletBinding()]
-param([switch]$OpenBrowser)
+param(
+    [switch]$OpenBrowser,
+    # demo：路演用 data/runtime/demo.sqlite3（由 build_demo_database.py + reset_demo.ps1 准备）
+    # dev：日常开发用默认运行库
+    [ValidateSet('demo', 'dev')][string]$Profile = 'dev',
+    [switch]$Restart
+)
 
 $ErrorActionPreference = 'Stop'
 
 $originalLocation = Get-Location
 $logRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\data\runtime\logs'))
 try {
-    Write-Host "Starting L'Oreal service demo..."
-    & (Join-Path $PSScriptRoot 'start_loreal_backend.ps1') -Background
+    Write-Host "Starting Yanting ($Profile profile)..."
+    if ($Profile -eq 'demo') {
+        $demoDb = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\data\runtime\demo.sqlite3'))
+        if (-not (Test-Path -LiteralPath $demoDb -PathType Leaf)) {
+            throw 'demo.sqlite3 is missing. Run scripts\build_demo_database.py, then scripts\reset_demo.ps1.'
+        }
+        $env:ANKER_AGENT_DATABASE_URL = 'sqlite+pysqlite:///data/runtime/demo.sqlite3'
+        $env:ANKER_AGENT_QDRANT_PATH = 'data/runtime/demo-qdrant'
+        $storylines = Get-Content -Raw -Encoding UTF8 (Join-Path $PSScriptRoot '..\data\demo\storylines.json') | ConvertFrom-Json
+        $env:VITE_DEMO_CUSTOMER_ID = $storylines.customerViewId
+    }
+    if ($Restart) {
+        & (Join-Path $PSScriptRoot 'start_loreal_backend.ps1') -Background -Restart
+    } else {
+        & (Join-Path $PSScriptRoot 'start_loreal_backend.ps1') -Background
+    }
     & (Join-Path $PSScriptRoot 'start_loreal_frontend.ps1') -Background
 
     $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 5

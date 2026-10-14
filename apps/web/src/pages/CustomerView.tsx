@@ -28,7 +28,14 @@ import { CUSTOMER_LAYOUT, OVERLAY_LAYOUT } from '../styles/layout'
 
 const { Text } = Typography
 
-const CUSTOMER_ID = 'CUST-DEMO-01'
+/** 演示身份：地址参数 ?customer= 优先，其次启动时注入的 VITE_DEMO_CUSTOMER_ID。 */
+function demoCustomerId(): string {
+  const fromQuery = new URLSearchParams(window.location.search).get('customer')?.trim()
+  const fromEnv = (import.meta.env.VITE_DEMO_CUSTOMER_ID as string | undefined)?.trim()
+  return fromQuery || fromEnv || 'CUST-DEMO-01'
+}
+
+const CUSTOMER_ID = demoCustomerId()
 
 /** 输入控件的可访问名：e2e 与屏幕阅读器共用同一个名字。 */
 const CUSTOMER_COMPOSER_INPUT = makeSenderInput('客户消息输入框')

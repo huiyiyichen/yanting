@@ -1,0 +1,49 @@
+{
+  "version": "demo-storylines-v1",
+  "customerViewId": "林**",
+  "official": [
+    {"story": "A", "conversationIds": ["S00005", "S00059"], "focus": "承诺未兑现 + 空包裹投诉"},
+    {"story": "D", "conversationIds": ["S00010", "S00015", "S00058"], "focus": "B5 多效修护面膜不良反应"}
+  ],
+  "local": [
+    {
+      "story": "B",
+      "conversationId": "conv-demo-b-skin",
+      "customerId": "林**",
+      "title": "肤质咨询",
+      "minutesAgo": 42,
+      "messages": [
+        {"role": "customer", "at": 0, "body": "你好，我是混干皮，两颊冬天会起皮，T区下午出油，想问下怎么搭配"},
+        {"role": "assistant", "at": 1, "body": "亲，收到~两颊起皮、T区出油的情况我记下了，平时早晚是怎么护肤的呀？"},
+        {"role": "customer", "at": 4, "body": "早上水乳，晚上会再叠一层面霜，但是叠面霜T区会闷，不想再叠面霜了"},
+        {"role": "assistant", "at": 5, "body": "明白，不叠面霜这点我记下了。T区闷大概是用完多久出现的呢？"},
+        {"role": "customer", "at": 9, "body": "更正一下，我其实更接近混合皮，两颊干但不算特别干"}
+      ]
+    },
+    {
+      "story": "C",
+      "conversationId": "conv-demo-c-logistics",
+      "customerId": "周**",
+      "title": "物流延迟",
+      "minutesAgo": 25,
+      "messages": [
+        {"role": "customer", "at": 0, "body": "我买的小蜜罐水乳一直没到，物流好几天没动了"},
+        {"role": "assistant", "at": 1, "body": "亲，抱歉让您久等了，方便提供一下订单号吗？我帮您看看"},
+        {"role": "customer", "at": 6, "body": "订单号上次就发过了，怎么又要问？已经等了一个星期了"},
+        {"role": "assistant", "at": 7, "body": "亲，理解您的着急，给您添麻烦了，我这边马上帮您核对"},
+        {"role": "customer", "at": 15, "body": "核对核对，每次都说核对，到底什么时候能到？"}
+      ]
+    },
+    {
+      "story": "D",
+      "conversationId": "conv-demo-d-reaction",
+      "customerId": "陈**",
+      "title": "面膜使用后泛红",
+      "minutesAgo": 12,
+      "messages": [
+        {"role": "customer", "at": 0, "body": "前天用了B5多效修护面膜，敷完脸有点红"},
+        {"role": "assistant", "at": 1, "body": "亲，辛苦您说明情况，建议先暂停使用这款面膜，泛红是在哪些部位呢？"}
+      ]
+    }
+  ]
+}

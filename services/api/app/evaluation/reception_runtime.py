@@ -184,9 +184,11 @@ def prepare_runtime(
 ) -> tuple[RuntimeContext, dict]:
     from app.domain.consumer_service.importer import import_business_workbook
     from app.knowledge.ingest import ingest_manifest
+    from app.runtime_guard import require_isolated_database
 
     if settings.run_mode != "live":
         raise ValueError("Isolated reception requires live configuration")
+    require_isolated_database(settings)
     if hashlib.sha256(SOURCE_PATH.read_bytes()).hexdigest() != SOURCE_SHA256:
         raise ValueError("Official source fingerprint mismatch")
     context = build_runtime(settings)
