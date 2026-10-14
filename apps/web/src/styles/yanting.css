@@ -207,3 +207,15 @@
 mark.yt-trigger { background: none; color: inherit; text-decoration: underline 2px; text-underline-offset: 3px; }
 mark.yt-trigger.is-angry, mark.yt-trigger.is-complaint { text-decoration-color: var(--yt-fury); }
 mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-amber, #d9822b); }
+
+/* 商品卡（P1-4）：白底圆角 14，左侧 52px 商品图 */
+.yt-product-card, .yt-desk-product { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 8px 10px; text-align: left; }
+.yt-product-card img, .yt-desk-product img, .yt-product-card-ph { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; flex: none; background: #f4f2f7; display: inline-flex; align-items: center; justify-content: center; }
+.yt-product-card-text, .yt-desk-product-main { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.yt-product-card-text strong, .yt-desk-product-main strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-product-card-text small { color: #8a8494; font-size: 12px; }
+.yt-desk-product { width: 100%; border: 1px solid #ece8f2; cursor: pointer; margin-bottom: 8px; }
+.yt-desk-product-facts { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: #6b6576; }
+.yt-product-picker { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; width: 280px; }
+.yt-product-picker button { border: 0; background: none; padding: 0; cursor: pointer; }
+.yt-product-picker button:hover .yt-product-card { background: #f7f5fa; }

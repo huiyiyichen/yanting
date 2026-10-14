@@ -87,6 +87,7 @@ class ConversationRepository:
         body: str,
         client_message_key: str,
         attachments: list[dict[str, object]] | None = None,
+        product_card: dict[str, object] | None = None,
     ) -> tuple[MessageRow, bool]:
         """追加消息。返回 (消息, 是否新建)。
 
@@ -120,6 +121,7 @@ class ConversationRepository:
             applies_to_message_revision=conversation.message_revision,
             client_message_key=client_message_key,
             attachments_json=json.dumps(attachments or [], ensure_ascii=False),
+            product_card_json=json.dumps(product_card, ensure_ascii=False) if product_card else None,
         )
         self._session.add(row)
         conversation.updated_at = _now()
@@ -127,6 +129,8 @@ class ConversationRepository:
         # 首条客户消息可作为标题（前端规范：暂取前 16 个字符）
         if sender_role is SenderRole.CUSTOMER and conversation.title == "新会话" and body.strip():
             conversation.title = body.strip()[:16]
+        elif sender_role is SenderRole.CUSTOMER and conversation.title == "新会话" and product_card:
+            conversation.title = str(product_card.get("name") or "")[:16] or conversation.title
 
         # 注意：这里不能对 flush 做「撞锁重试」。flush 失败后 SQLAlchemy 会把
         # 会话标记为必须回滚，继续使用会抛 PendingRollbackError（已实测）。

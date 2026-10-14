@@ -11,8 +11,9 @@ import { Sender } from '@ant-design/x'
 import { Alert, Avatar, Button, Spin, Typography } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { ApiError, customerApi, type ConversationSummary, type MessageView } from '../api/client'
+import { ApiError, customerApi, type ConversationSummary, type MessageView, type ProductRef } from '../api/client'
 import { ConversationList } from '../components/ConversationList'
+import { ProductPicker } from '../components/ProductCard'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
 import { MessageList } from '../components/MessageList'
 import { QuickReplies } from '../components/QuickReplies'
@@ -284,6 +285,22 @@ export function CustomerView() {
     }
   }, [drafts, loadConversations, loadMessages, sending, uploadedImage, uploading, imageUpload])
 
+  const handleSendProduct = useCallback(async (product: ProductRef) => {
+    const conversationId = activeIdRef.current
+    if (!conversationId || sending) return
+    setSending(true)
+    setSendError(null)
+    try {
+      await customerApi.sendMessage(conversationId, '', newClientMessageKey(), [], product)
+      await loadMessages(conversationId)
+      await loadConversations()
+    } catch (error) {
+      setSendError(error as ApiError)
+    } finally {
+      setSending(false)
+    }
+  }, [loadConversations, loadMessages, sending])
+
   const handleSubmitRating = useCallback(async (value: number | null) => {
     const conversationId = activeIdRef.current
     if (!conversationId || ratingBusy) {
@@ -501,6 +518,8 @@ export function CustomerView() {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
             <ChatImageButton upload={imageUpload.upload} disabled={!activeId || sending || uploading}
               uploading={uploading} />
+            <ProductPicker conversationId={activeId} disabled={sending || uploading}
+              onPick={(product) => void handleSendProduct(product)} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <Sender
                 value={draft}

@@ -194,11 +194,13 @@ class RuntimeContext:
         """建表。会话/案件表与知识表分属两个 Base，都要创建。"""
 
         from app.domain.case_state.models import Base as CaseBase
+        from app.domain.case_state.models import migrate_message_table
         from app.domain.consumer_service import models as _consumer_service_models  # noqa: F401
         from app.domain.consumer_service.models import migrate_risk_alert_table
         from app.knowledge.models import Base as KnowledgeBase
 
         migrate_risk_alert_table(self.engine)
+        migrate_message_table(self.engine)
         CaseBase.metadata.create_all(self.engine)
         KnowledgeBase.metadata.create_all(self.engine)
 

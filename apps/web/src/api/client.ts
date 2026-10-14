@@ -18,6 +18,9 @@ export type ProductClueView = components['schemas']['ProductClueView']
 export type UsageView = components['schemas']['UsageView']
 export type TicketDraftView = components['schemas']['TicketDraftView']
 export type MessageView = components['schemas']['MessageView']
+export type ProductCardView = components['schemas']['ProductCardView']
+export type DeskProductCardView = components['schemas']['DeskProductCardView']
+export type ProductRef = components['schemas']['ProductRef']
 export type SendMessageResponse = components['schemas']['SendMessageResponse']
 export type QueueItem = components['schemas']['QueueItem']
 export type CaseView = components['schemas']['CaseView']
@@ -288,15 +291,21 @@ export const customerApi = {
       role: 'customer',
     }),
 
+  productOptions: (conversationId: string) =>
+    request<ProductCardView[]>(`/api/customer/conversations/${conversationId}/product-options`, {
+      role: 'customer',
+    }),
+
   sendMessage: (
     conversationId: string,
     body: string,
     clientMessageKey: string,
     attachmentIds: string[] = [],
+    product?: ProductRef,
   ) =>
     request<SendMessageResponse>(`/api/customer/conversations/${conversationId}/messages`, {
       method: 'POST',
-      body: { body, clientMessageKey, attachmentIds },
+      body: product ? { body, clientMessageKey, attachmentIds, product } : { body, clientMessageKey, attachmentIds },
       role: 'customer',
     }),
 
@@ -359,6 +368,8 @@ export const supportApi = {
     }),
   profile: (conversationId: string) =>
     request<ConsumerProfileView>(`/api/support/reception/${conversationId}/profile`, { role: 'support' }),
+  productCard: (conversationId: string) =>
+    request<DeskProductCardView | null>(`/api/support/reception/${conversationId}/product-card`, { role: 'support' }),
   reception: () => request<ReceptionSnapshot>('/api/support/reception/queue', { role: 'support' }),
   receptionMessages: (id: string) =>
     request<MessageView[]>(`/api/support/reception/${id}/messages`, { role: 'support' }),

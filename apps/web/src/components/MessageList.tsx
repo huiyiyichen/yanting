@@ -12,6 +12,7 @@ import { RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
 import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
 import { memo, useLayoutEffect, useRef, useState } from 'react'
+import { ProductCardBubble } from './ProductCard'
 
 import type { MessageView } from '../api/client'
 import {
@@ -209,7 +210,8 @@ export const MessageList = memo(function MessageList({
                             />
                           ))
                         : null}
-                      {message.body || !message.attachments?.length ? message.body : null}
+                      {message.productCard ? <ProductCardBubble card={message.productCard} /> : null}
+                      {message.body || (!message.attachments?.length && !message.productCard) ? message.body : null}
                     </span>
                   }
                 />

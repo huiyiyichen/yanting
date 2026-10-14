@@ -15,6 +15,7 @@ import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
+import { DeskProductCard } from '../features/service-desk/DeskProductCard'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
@@ -446,9 +447,8 @@ export function SupportWorkbench() {
             <Tag color="processing">待复核 · {serviceRiskTypeLabels[risk]}</Tag>
           </Link>)}
         </div> : null}
-        {context?.orders[0] && <button className="chat-order-strip" onClick={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }}>
-          <FileTextOutlined /><span>{context.orders[0].productName}</span><Tag>{context.orders[0].sourceStatus}</Tag>
-        </button>}
+        {id && <DeskProductCard conversationId={id} refreshKey={messages.length}
+          onOpenOrder={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }} />}
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
         <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support" />}</div>

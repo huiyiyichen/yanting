@@ -79,9 +79,20 @@ class MessageRow(Base):
     applies_to_message_revision: Mapped[int] = mapped_column(Integer, default=0)
     client_message_key: Mapped[str] = mapped_column(String(80), default="")
     attachments_json: Mapped[str] = mapped_column(Text, default="[]")
+    # 客户发送的商品卡：服务端按 SKU/订单号解析后的快照，不接收客户端自带的名称或图片
+    product_card_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     conversation: Mapped[ConversationRow] = relationship(back_populates="messages")
+
+
+def migrate_message_table(engine) -> None:
+    """旧库的消息表没有商品卡列；SQLite 直接补列，已有消息保持不变。"""
+
+    with engine.begin() as connection:
+        columns = [row[1] for row in connection.exec_driver_sql("PRAGMA table_info(message)")]
+        if columns and "product_card_json" not in columns:
+            connection.exec_driver_sql("ALTER TABLE message ADD COLUMN product_card_json TEXT")
 
 
 class AttachmentRow(Base):

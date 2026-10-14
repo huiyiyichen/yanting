@@ -7,6 +7,7 @@ from app.deps import get_context, get_session, require_support
 from app.domain.consumer_service.cited_text import ReplyStyle
 from app.domain.consumer_service.consumer_profile import ConsumerProfileView
 from app.domain.consumer_service.draft_review import DraftFinding
+from app.domain.consumer_service.product_cards import DeskProductCardView
 from app.domain.consumer_service.rewrite import RewriteRequest, RewriteView
 from app.domain.consumer_service.workspace import (
     conversation_messages,
@@ -154,6 +155,14 @@ def set_mode(
     from app.domain.consumer_service.auto_reception import change_mode
 
     return change_mode(session, conversation_id, payload.mode, actor="operator")
+
+
+@router.get("/{conversation_id}/product-card", response_model=DeskProductCardView | None)
+def product_card(conversation_id: str, session: Session = Depends(get_session)):
+    """聊天区顶部商品卡：最新商品卡消息 → 本会话关联订单 → 无则为空。"""
+    from app.domain.consumer_service.product_cards import desk_card
+
+    return desk_card(session, conversation_id)
 
 
 @router.get("/{conversation_id}/profile", response_model=ConsumerProfileView)

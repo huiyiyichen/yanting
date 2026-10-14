@@ -267,6 +267,7 @@ class ConsumerServiceRepository:
 
     def _local_context(self, local: Any, batch_id: str | None) -> ConsumerServiceContextView:
         from app.domain.case_state.models import MessageRow
+        from app.domain.consumer_service.product_cards import card_text
 
         messages = list(
             self._session.scalars(
@@ -299,8 +300,10 @@ class ConsumerServiceRepository:
                         message_id=row.message_id,
                         conversation_id=row.conversation_id,
                         sender_role=row.sender_role,
-                        body=row.body,
-                        content_type="image" if json.loads(row.attachments_json) else "text",
+                        body=card_text(json.loads(row.product_card_json)) if row.product_card_json
+                        else row.body,
+                        content_type="product_card" if row.product_card_json
+                        else "image" if json.loads(row.attachments_json) else "text",
                     ),
                 )
                 for row in messages

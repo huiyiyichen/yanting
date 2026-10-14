@@ -77,6 +77,7 @@ def message_view(row: Any) -> MessageView:
         body=row.body,
         message_revision=row.applies_to_message_revision,
         attachments=json.loads(row.attachments_json or "[]"),
+        product_card=json.loads(row.product_card_json) if getattr(row, "product_card_json", None) else None,
         created_at=(
             row.created_at.replace(tzinfo=UTC) if row.created_at.tzinfo is None else row.created_at
         ).isoformat(),

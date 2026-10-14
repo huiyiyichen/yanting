@@ -122,6 +122,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/customer/conversations/{conversation_id}/product-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Product Options
+         * @description 客户可发送的商品：本会话自己报过的订单 + 公开商品目录，只含商品身份。
+         */
+        get: operations["product_options_api_customer_conversations__conversation_id__product_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/customer/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -1142,6 +1162,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/reception/{conversation_id}/product-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Product Card
+         * @description 聊天区顶部商品卡：最新商品卡消息 → 本会话关联订单 → 无则为空。
+         */
+        get: operations["product_card_api_support_reception__conversation_id__product_card_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/reception/{conversation_id}/profile": {
         parameters: {
             query?: never;
@@ -2134,6 +2174,32 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * DeskProductCardView
+         * @description 客服聊天区顶部商品卡。source=message 表示来自消费者最新发送的商品卡。
+         */
+        DeskProductCardView: {
+            /** Source */
+            source: string;
+            /** Sku */
+            sku?: string | null;
+            /** Name */
+            name: string;
+            /** Imageurl */
+            imageUrl?: string | null;
+            /** Orderid */
+            orderId?: string | null;
+            /** Paidamountminor */
+            paidAmountMinor?: number | null;
+            /** Currency */
+            currency?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Carrier */
+            carrier?: string | null;
+            /** City */
+            city?: string | null;
+        };
         /** DocumentMetadata */
         DocumentMetadata: {
             /**
@@ -2639,6 +2705,7 @@ export interface components {
             attachments?: {
                 [key: string]: unknown;
             }[];
+            productCard?: components["schemas"]["ProductCardView"] | null;
             /** Createdat */
             createdAt: string;
         };
@@ -2888,6 +2955,25 @@ export interface components {
             /** Claims */
             claims?: components["schemas"]["GroundingClaim"][];
         };
+        /**
+         * ProductCardView
+         * @description 消息里的商品卡：只含商品身份，不含实付、状态、物流等内部信息。
+         */
+        ProductCardView: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "catalog" | "order";
+            /** Sku */
+            sku?: string | null;
+            /** Name */
+            name: string;
+            /** Imageurl */
+            imageUrl?: string | null;
+            /** Orderid */
+            orderId?: string | null;
+        };
         /** ProductClueView */
         ProductClueView: {
             /** Productname */
@@ -2908,6 +2994,16 @@ export interface components {
             score: number;
             /** Workorderids */
             workOrderIds: string[];
+        };
+        /**
+         * ProductRef
+         * @description 客户选择的商品：只给 SKU 或订单号，名称与图片由服务端解析。
+         */
+        ProductRef: {
+            /** Sku */
+            sku?: string | null;
+            /** Orderid */
+            orderId?: string | null;
         };
         /** ProfileContacts */
         ProfileContacts: {
@@ -3934,6 +4030,7 @@ export interface components {
             clientMessageKey: string;
             /** Attachmentids */
             attachmentIds?: string[];
+            product?: components["schemas"]["ProductRef"] | null;
         };
         /** SendMessageResponse */
         SendMessageResponse: {
@@ -4791,6 +4888,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OnboardingView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    product_options_api_customer_conversations__conversation_id__product_options_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductCardView"][];
                 };
             };
             /** @description Validation Error */
@@ -6704,6 +6834,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceModeView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    product_card_api_support_reception__conversation_id__product_card_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeskProductCardView"] | null;
                 };
             };
             /** @description Validation Error */

@@ -26,6 +26,7 @@ from app.schemas.conversation import (
     ConversationSummary,
     CreateConversationRequest,
     MessageView,
+    ProductCardView,
     RatingRequest,
     RatingView,
     SendMessageRequest,
@@ -131,6 +132,22 @@ async def onboarding(_role: ViewRole = Depends(require_customer)) -> OnboardingV
     )
 
 
+@router.get("/conversations/{conversation_id}/product-options", response_model=list[ProductCardView])
+async def product_options(
+    conversation_id: str,
+    session: Session = Depends(get_session),
+    _role: ViewRole = Depends(require_customer),
+) -> list[ProductCardView]:
+    """客户可发送的商品：本会话自己报过的订单 + 公开商品目录，只含商品身份。"""
+    from app.domain.consumer_service.product_cards import customer_options
+
+    if ConversationRepository(session).get_conversation(conversation_id) is None:
+        from app.errors import NotFoundError
+
+        raise NotFoundError(f"会话不存在：{conversation_id}")
+    return customer_options(session, conversation_id)
+
+
 @router.get("/conversations/{conversation_id}/messages", response_model=list[MessageView])
 async def list_messages(
     conversation_id: str,
@@ -182,7 +199,12 @@ async def send_message(
     from app.domain.enums import SenderRole
     from app.errors import ValidationRejected
 
-    if not payload.body.strip() and not attachments:
+    product_card = None
+    if payload.product is not None:
+        from app.domain.consumer_service.product_cards import resolve
+
+        product_card = resolve(session, conversation_id, payload.product).dump()
+    if not payload.body.strip() and not attachments and product_card is None:
         raise ValidationRejected("消息不能为空")
     customer_message, created = repo.append_message(
         conversation,
@@ -200,6 +222,7 @@ async def send_message(
             }
             for item in attachments
         ],
+        product_card=product_card,
     )
 
     # 建立附件与消息的关联：不关联的话图片永远只是孤儿附件，
@@ -222,7 +245,9 @@ async def send_message(
         evaluate_risks(session)
         from app.domain.consumer_service.auto_reception import enqueue_reply
 
-        enqueue_reply(session, conversation, customer_message)
+        # 只发商品卡没有可回答的问题，等消费者开口再回复。
+        if payload.body.strip() or attachments:
+            enqueue_reply(session, conversation, customer_message)
     del request
     return SendMessageResponse(
         message=message_view(customer_message),

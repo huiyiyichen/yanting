@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -52,7 +52,25 @@ class MessageView(ApiModel):
     body: str
     message_revision: int
     attachments: list[dict[str, Any]] = Field(default_factory=list)
+    product_card: ProductCardView | None = None
     created_at: str
+
+
+class ProductCardView(ApiModel):
+    """消息里的商品卡：只含商品身份，不含实付、状态、物流等内部信息。"""
+
+    source: Literal["catalog", "order"]
+    sku: str | None = None
+    name: str
+    image_url: str | None = None
+    order_id: str | None = None
+
+
+class ProductRef(ApiModel):
+    """客户选择的商品：只给 SKU 或订单号，名称与图片由服务端解析。"""
+
+    sku: str | None = Field(default=None, max_length=80)
+    order_id: str | None = Field(default=None, max_length=80)
 
 
 class SendMessageRequest(ApiModel):
@@ -60,6 +78,7 @@ class SendMessageRequest(ApiModel):
     # 幂等键由客户端生成：重复提交不追加第二条消息
     client_message_key: str = Field(min_length=1, max_length=80)
     attachment_ids: list[str] = Field(default_factory=list)
+    product: ProductRef | None = None
 
 
 class SendMessageResponse(ApiModel):
