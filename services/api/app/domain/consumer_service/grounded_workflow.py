@@ -11,6 +11,7 @@ from typing import Any, Literal, TypedDict, get_args
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domain.consumer_service.cited_text import (
@@ -51,6 +52,7 @@ from app.domain.consumer_service.reply_policy import (
     normalize_customer_terms,
     validate_customer_reply,
 )
+from app.domain.consumer_service.verification_policy import verification_reasons
 from app.errors import ConflictError, ModelOutputInvalid, ProviderNotConfigured, ProviderTimeout
 from app.integrations.model_provider import ChatMessage, ModelProvider
 from app.repositories.consumer_service import ConsumerServiceRepository
@@ -311,9 +313,22 @@ class FlowState(TypedDict, total=False):
     images: list
     verification_issues: list[VerificationIssue]
     verify_invoked: bool
+    verify_reasons: list[str]
+    risk_level: str
     segments_dropped: int
     verification_format_errors: int
     style_issues: list[str]
+
+
+def _active_risk_level(session: Session, conversation_id: str) -> str:
+    """只读当前已落库的有效风险，不在生成链路里触发风险扫描。"""
+    from app.domain.consumer_service.models import ServiceRiskAlertRow
+
+    levels = set(session.scalars(select(ServiceRiskAlertRow.risk_level).where(
+        ServiceRiskAlertRow.conversation_id == conversation_id,
+        ServiceRiskAlertRow.risk_status.in_(("pending", "in_progress")),
+    )))
+    return "high" if "high" in levels else "medium" if "medium" in levels else "none"
 
 
 def run_grounded_workflow(
@@ -403,6 +418,7 @@ def run_grounded_workflow(
             "prompt_version": prompt_version, "system_prompt": system, "calls": [], "attempt": 0,
             "service_statements": statements,
             "service_rules": {"repeatWindowHours": get_settings().risk_repeat_contact_hours},
+            "risk_level": _active_risk_level(session, conversation_id),
         }
 
     def retrieve(state: FlowState):
@@ -739,7 +755,15 @@ def run_grounded_workflow(
                 draft = draft.model_copy(update={"service_breakpoints": []})
             else:
                 issues.extend(service_issues)
-        return {"draft": draft, "issues": list(dict.fromkeys(issues)), "service_findings": findings}
+        from app.config import get_settings
+        reasons = verification_reasons(
+            draft.reply_suggestions, has_advice=bool(draft.personalized_advice),
+            has_breakpoints=bool(draft.service_breakpoints), has_images=bool(state["images"]),
+            risk_level=state.get("risk_level", "none"), intent=draft.intent,
+            enabled=(settings or get_settings()).verify_on_demand,
+        )
+        return {"draft": draft, "issues": list(dict.fromkeys(issues)), "service_findings": findings,
+                "verify_reasons": reasons}
 
     def verify(state: FlowState):
         draft = state["draft"]
@@ -822,7 +846,7 @@ def run_grounded_workflow(
     graph.add_edge("retrieve", "compose")
     graph.add_edge("compose", "check")
     graph.add_conditional_edges("check", lambda s: "compose" if s["issues"] and s["attempt"] < 2
-                               else "accepted" if s["issues"] else "verify")
+                               else "accepted" if s["issues"] or not s.get("verify_reasons") else "verify")
     graph.add_conditional_edges("verify", lambda s: "compose" if s["issues"] and s["attempt"] < 2 else "accepted")
     graph.add_edge("accepted", END)
     return graph.compile().invoke({"steps": [], "issues": [], "calls": []})

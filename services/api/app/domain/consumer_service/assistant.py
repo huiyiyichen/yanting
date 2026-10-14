@@ -252,6 +252,7 @@ class ConsumerServiceAssistant:
         verification_status = "partial" if dropped else "verified"
         usage.update({
             "verifyInvoked": state.get("verify_invoked", False),
+            "verifyReasons": state.get("verify_reasons", []),
             "blockedCategories": sorted({item.category for item in state.get("verification_issues", [])}),
             "segmentsDropped": dropped,
             "verificationFormatErrors": state.get("verification_format_errors", 0),

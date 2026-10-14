@@ -69,6 +69,7 @@ addopts = "-q --strict-markers"
 markers = [
   "live: 需要真实模型/索引服务的用例（无凭证时跳过并记录）",
   "slow: 耗时用例",
+  "on_demand_verification: 打开按需核验（P0-2）的集成用例",
 ]
 asyncio_mode = "auto"
 

@@ -60,6 +60,7 @@
 | `ANKER_AGENT_RISK_FOLLOWUP_WARNING_MINUTES` | `30` | 跟进未完成的预警提前量（分钟），`0` 停用 |
 | `ANKER_AGENT_RISK_MONITOR_INTERVAL_SECONDS` | `15` | 风险监控轮询间隔（秒），范围 5–300 |
 | `ANKER_AGENT_RISK_REPEAT_CONTACT_HOURS` | `72` | 重复进线的回溯窗口（小时） |
+| `ANKER_AGENT_VERIFY_ON_DEMAND` | `true` | 回复不含编号、金额、日期、状态、商品身份、成分功效断言，且无高风险、个性化建议、服务断点或图片时，只做程序校验，不调用模型核验；`false` 恢复每次核验 |
 | `ANKER_AGENT_RISK_SOURCE_TICKET_HOURS` | `48` | 由工单触发风险的窗口（小时） |
 
 这些是演示阈值，不代表生产 SLA。风险状态只由程序规则和客服操作改变，

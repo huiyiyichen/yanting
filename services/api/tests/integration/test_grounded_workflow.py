@@ -45,6 +45,44 @@ def test_verifier_reply_wording_does_not_hide_fact_errors(workspace, category, s
         assert "回复建议里的订单状态错误" in response.text
 
 
+@pytest.mark.on_demand_verification
+def test_reply_without_hard_facts_skips_model_verification_but_keeps_program_checks(workspace):
+    """P0-2 按需核验。失败方式：
+    S1 只有共情和补问的回复仍调用核验模型（多一次调用）；
+    S2 跳过核验后审计里看不出跳过（verifyInvoked/verifyReasons 缺失）；
+    S3 跳过核验时程序校验也被跳过（伪造编号的回复被放行）；
+    S4 含状态词的回复被误判为无事实而跳过核验。
+    """
+    client, _, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "你好，在吗")
+    verify_calls = []
+    make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "other",
+                                       "reply_suggestions": [{"style": "recommended",
+                                                              "body": "亲，在的呢，您想了解哪款产品呀？"}]},
+                  lambda payload: verify_calls.append(payload) or {"supported": True, "issues": []})
+    response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
+    assert response.status_code == 200, response.text
+    usage = response.json()["modelUsage"]
+    assert verify_calls == []
+    assert usage["verifyInvoked"] is False and usage["verifyReasons"] == []
+
+    make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "other",
+                                       "reply_suggestions": [{"style": "recommended",
+                                                              "body": "亲，订单9999999999999999999这边看到了。"}]})
+    response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
+    assert response.status_code >= 400
+
+    make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "other",
+                                       "reply_suggestions": [{"style": "recommended",
+                                                              "body": "亲，理解您着急，我帮您登记一下。"}]},
+                  lambda payload: verify_calls.append(payload) or {"supported": True, "issues": []})
+    response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
+    assert response.status_code == 200, response.text
+    assert len(verify_calls) == 1
+    assert response.json()["modelUsage"]["verifyReasons"] == ["status"]
+
+
 def test_partial_generation_is_cached_for_human_and_never_auto_sent(workspace):
     from app.domain.consumer_service.auto_reception import process_job
     from app.domain.consumer_service.models import AutoReplyJobRow

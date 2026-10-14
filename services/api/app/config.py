@@ -81,6 +81,8 @@ class Settings(BaseSettings):
     llm_fast_model: str = ""
     llm_timeout_seconds: float = 60.0
     auto_reply_timeout_seconds: float = Field(default=45.0, ge=5, le=120)
+    #: 改进方案 P0-2：回复只有寒暄、共情、补问时只做程序校验，不调用模型核验
+    verify_on_demand: bool = True
     risk_repeat_contact_hours: int = Field(default=72, ge=1, le=720)
     risk_source_ticket_hours: int = Field(default=48, ge=1, le=720)
     risk_monitor_interval_seconds: int = Field(default=15, ge=5, le=300)
