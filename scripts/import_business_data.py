@@ -15,7 +15,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "services" / "api"))
 
-from app.config import Settings  # noqa: E402
+from app.config import Settings, official_source_path  # noqa: E402
 from app.db import build_engine, build_session_factory, commit_with_retry  # noqa: E402
 from app.domain.case_state.models import Base as CaseBase  # noqa: E402
 from app.domain.consumer_service import models as _consumer_models  # noqa: E402
@@ -30,7 +30,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="导入欧莱雅官方虚构业务数据")
     parser.add_argument(
         "--source",
-        default=r"D:\下载\赛题 1：数据共情者-业务数据.xlsx",
+        default=str(official_source_path()),
         help="Excel 源文件",
     )
     parser.add_argument("--database-url", default=None, help="覆盖 SQLite 数据库地址")

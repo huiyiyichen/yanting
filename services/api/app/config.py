@@ -23,6 +23,24 @@ RerankBackend = Literal["none", "http", "mock"]
 # 仓库根目录：本文件位于 <code>/services/api/app/config.py
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
+OFFICIAL_SOURCE_NAME = "赛题 1：数据共情者-业务数据.xlsx"
+_LEGACY_OFFICIAL_SOURCE = Path(r"D:\下载") / OFFICIAL_SOURCE_NAME
+
+
+def official_source_path() -> Path:
+    """官方赛题 Excel 位置：环境变量 > 仓库 data/source/ > 旧本机路径。
+
+    官方数据不入 Git，只约定位置，避免各成员机器写死盘符。
+    """
+
+    configured = os.environ.get("YANTING_OFFICIAL_SOURCE") or os.environ.get("ANKER_AGENT_OFFICIAL_SOURCE")
+    if configured:
+        return Path(configured)
+    in_repo = REPO_ROOT / "data" / "source" / OFFICIAL_SOURCE_NAME
+    if in_repo.exists() or not _LEGACY_OFFICIAL_SOURCE.exists():
+        return in_repo
+    return _LEGACY_OFFICIAL_SOURCE
+
 
 def _load_dotenv_into_environ() -> None:
     """把 services/api/.env 读入环境变量，真实环境变量优先。"""
@@ -104,6 +122,12 @@ class Settings(BaseSettings):
 
     contract_version: str = "0.1.0"
     prompt_version: str = "s0-bootstrap"
+
+    @field_validator("embedding_dimension", mode="before")
+    @classmethod
+    def _blank_is_unset(cls, value):
+        # .env.example 留空的可选整数表示“未设置”，不是解析错误。
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("llm_base_url", "embedding_http_base_url")
     @classmethod

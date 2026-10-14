@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from app.config import Settings
+from app.config import Settings, official_source_path
 from app.db import build_engine, build_session_factory
 from app.domain.case_state.models import Base as CaseBase
 from app.domain.consumer_service import models as _consumer_models  # noqa: F401
@@ -22,7 +22,7 @@ from app.domain.consumer_service.models import (
     WorkOrderRow,
 )
 
-OFFICIAL_SOURCE = Path(r"D:\下载\赛题 1：数据共情者-业务数据.xlsx")
+OFFICIAL_SOURCE = official_source_path()
 
 
 @pytest.fixture

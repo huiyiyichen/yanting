@@ -4,13 +4,12 @@ import io
 import json
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.config import Settings
+from app.config import Settings, official_source_path
 from app.db import build_engine, build_session_factory
 from app.domain.case_state.models import Base, MessageRow
 from app.domain.consumer_service.auto_reception import process_job
@@ -25,7 +24,7 @@ from app.runtime import RuntimeContext
 
 SUPPORT = {"X-Demo-View-Role": "support"}
 CUSTOMER = {"X-Demo-View-Role": "customer"}
-SOURCE = Path(r"D:\下载\赛题 1：数据共情者-业务数据.xlsx")
+SOURCE = official_source_path()
 OUTPUT = json.dumps(
     {
         "current_question": "查询订单物流",
