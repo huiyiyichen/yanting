@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 
-class AnkerAgentError(Exception):
+class YantingError(Exception):
     """本项目所有可预期错误的基类。"""
 
     code = "agent_error"
@@ -17,53 +17,57 @@ class AnkerAgentError(Exception):
         self.detail = detail
 
 
-class ProviderNotConfigured(AnkerAgentError):
+class ProviderNotConfigured(YantingError):
     """外部能力未配置（缺 base_url / key / model）。"""
 
     code = "provider_not_configured"
 
 
-class ProviderRequestFailed(AnkerAgentError):
+class ProviderRequestFailed(YantingError):
     """外部能力请求失败（网络、HTTP 错误、返回体非法）。"""
 
     code = "provider_request_failed"
 
 
-class ProviderTimeout(AnkerAgentError):
+class ProviderTimeout(YantingError):
     """外部能力超时。与"人工等待"完全分开。"""
 
     code = "provider_timeout"
 
 
-class ModelOutputInvalid(AnkerAgentError):
+class ModelOutputInvalid(YantingError):
     """模型输出不符合结构/业务约束，必须拒绝而不是猜测修复。"""
 
     code = "model_output_invalid"
 
 
-class ToolAccessDenied(AnkerAgentError):
+class ToolAccessDenied(YantingError):
     """工具不在白名单、权限不足或参数校验失败。"""
 
     code = "tool_access_denied"
 
 
-class RiskBoundaryViolation(AnkerAgentError):
+class RiskBoundaryViolation(YantingError):
     """试图自动执行高风险动作。属于红线错误。"""
 
     code = "risk_boundary_violation"
 
 
-class ConflictError(AnkerAgentError):
+class ConflictError(YantingError):
     """并发或状态冲突：旧版本确认、重复提交、过期候选等。"""
 
     code = "conflict"
 
 
-class NotFoundError(AnkerAgentError):
+class NotFoundError(YantingError):
     code = "not_found"
 
 
-class ValidationRejected(AnkerAgentError):
+class ValidationRejected(YantingError):
     """业务规则校验拒绝（区别于 Pydantic 结构校验）。"""
 
     code = "validation_rejected"
+
+
+#: 旧名别名，保留一个版本（P2-1）；新代码请用 YantingError。
+AnkerAgentError = YantingError

@@ -15,7 +15,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   outputDir: 'test-results',
   use: {
-    baseURL: process.env.ANKER_AGENT_WEB_BASE ?? 'http://127.0.0.1:5173',
+    baseURL: process.env.YANTING_WEB_BASE ?? 'http://127.0.0.1:5173',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     // 使用本机已安装的 Chrome，避免依赖浏览器二进制下载

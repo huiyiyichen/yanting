@@ -84,18 +84,18 @@ uv sync --project services/api --extra dev --no-editable
 在 `services/api/.env` 中填入模型配置：
 
 ```dotenv
-ANKER_AGENT_RUN_MODE=live
-ANKER_AGENT_LLM_BASE_URL=
-ANKER_AGENT_LLM_API_KEY=
-ANKER_AGENT_LLM_MODEL=
-ANKER_AGENT_LLM_VISION_MODEL=
-ANKER_AGENT_LLM_VISION_BASE_URL=
-ANKER_AGENT_LLM_VISION_API_KEY=
-ANKER_AGENT_EMBEDDING_BACKEND=onnx-local
-ANKER_AGENT_EMBEDDING_MODEL_ID=BAAI/bge-m3
+YANTING_RUN_MODE=live
+YANTING_LLM_BASE_URL=
+YANTING_LLM_API_KEY=
+YANTING_LLM_MODEL=
+YANTING_LLM_VISION_MODEL=
+YANTING_LLM_VISION_BASE_URL=
+YANTING_LLM_VISION_API_KEY=
+YANTING_EMBEDDING_BACKEND=onnx-local
+YANTING_EMBEDDING_MODEL_ID=BAAI/bge-m3
 ```
 
-配置沿用 `ANKER_AGENT_` 前缀，项目界面名称为“颜听”。文本与视觉模型可分别填写服务商提供的模型 ID、地址和凭证，模型选择沿用成员的本机配置。
+配置沿用 `YANTING_` 前缀，项目界面名称为“颜听”。文本与视觉模型可分别填写服务商提供的模型 ID、地址和凭证，模型选择沿用成员的本机配置。
 
 ### 2. 下载编码模型
 

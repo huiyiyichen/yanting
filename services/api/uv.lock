@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "anker-agent-api"
+name = "yanting-api"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

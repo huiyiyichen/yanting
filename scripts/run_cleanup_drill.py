@@ -137,9 +137,9 @@ def main() -> int:
 
     env = dict(os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
-    env["ANKER_AGENT_DATABASE_URL"] = f"sqlite+pysqlite:///{RUNTIME_DRILL_REL}/drill.sqlite3"
-    env["ANKER_AGENT_RUNTIME_DIR"] = RUNTIME_DRILL_REL
-    env["ANKER_AGENT_QDRANT_PATH"] = f"{RUNTIME_DRILL_REL}/qdrant"
+    env["YANTING_DATABASE_URL"] = f"sqlite+pysqlite:///{RUNTIME_DRILL_REL}/drill.sqlite3"
+    env["YANTING_RUNTIME_DIR"] = RUNTIME_DRILL_REL
+    env["YANTING_QDRANT_PATH"] = f"{RUNTIME_DRILL_REL}/qdrant"
 
     server = subprocess.Popen(  # noqa: S603
         [str(SERVICES_API / ".venv" / "Scripts" / "python.exe"), "-m", "uvicorn",

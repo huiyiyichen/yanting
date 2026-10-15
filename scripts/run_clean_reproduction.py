@@ -81,9 +81,9 @@ def main() -> int:
 
     env = dict(os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
-    env["ANKER_AGENT_DATABASE_URL"] = f"sqlite+pysqlite:///{RUNTIME_REL}/clean.sqlite3"
-    env["ANKER_AGENT_RUNTIME_DIR"] = RUNTIME_REL
-    env["ANKER_AGENT_QDRANT_PATH"] = f"{RUNTIME_REL}/qdrant"
+    env["YANTING_DATABASE_URL"] = f"sqlite+pysqlite:///{RUNTIME_REL}/clean.sqlite3"
+    env["YANTING_RUNTIME_DIR"] = RUNTIME_REL
+    env["YANTING_QDRANT_PATH"] = f"{RUNTIME_REL}/qdrant"
 
     server = subprocess.Popen(  # noqa: S603
         [str(PYTHON), "-m", "uvicorn", "app.main:app",

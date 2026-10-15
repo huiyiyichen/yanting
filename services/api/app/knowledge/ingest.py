@@ -20,7 +20,7 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.errors import AnkerAgentError
+from app.errors import YantingError
 from app.integrations.embedding_provider import EmbeddingProvider
 from app.integrations.qdrant_store import QdrantKnowledgeStore
 from app.knowledge.chunking import build_chunk_id, chunk_document
@@ -39,7 +39,7 @@ logger = get_logger(__name__)
 SUPPORTED_SUFFIXES = {".md", ".markdown", ".txt", ".json"}
 
 
-class IngestError(AnkerAgentError):
+class IngestError(YantingError):
     code = "ingest_failed"
 
 

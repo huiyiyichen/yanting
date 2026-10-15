@@ -225,7 +225,7 @@ class UnderstandingAnalyzer:
             raise ProviderNotConfigured(
                 "多模态模型未配置，无法从图片提取线索",
                 detail=(
-                    "请在配置中设置 ANKER_AGENT_LLM_VISION_MODEL；"
+                    "请在配置中设置 YANTING_LLM_VISION_MODEL；"
                     "在此之前图片线索提取不可用，也不要把它当作已完成"
                 ),
             )

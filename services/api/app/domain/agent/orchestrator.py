@@ -49,7 +49,7 @@ from app.domain.enums import (
     ToolName,
     WarrantyStatus,
 )
-from app.errors import AnkerAgentError
+from app.errors import YantingError
 from app.integrations.embedding_provider import EmbeddingProvider
 from app.logging_setup import get_logger, log_event
 from app.repositories.conversation_repository import ConversationRepository
@@ -1006,7 +1006,7 @@ def today() -> date:
 
 __all__ = [
     "INTENT_TO_REQUEST_TYPE",
-    "AnkerAgentError",
+    "YantingError",
     "CaseOrchestrator",
     "OrchestratorDeps",
     "RequestStatus",

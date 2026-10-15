@@ -229,7 +229,7 @@ test.describe('附件与图片', () => {
     expect(content.ok()).toBeTruthy()
     expect(content.headers()['content-type']).toContain('image/png')
 
-    /* 多模态已接通（`ANKER_AGENT_LLM_VISION_MODEL=deepseek-chat`，健康检查
+    /* 多模态已接通（`YANTING_LLM_VISION_MODEL=deepseek-chat`，健康检查
        `vision: ready`）：带图发送必须成功，并且**回复里要出现只有看图才知道的内容**。
        未配置多模态时这里会是 503 provider_not_configured——那条边界由后端的
        `TestVisionBoundary` 固定，不再由 e2e 承担。 */

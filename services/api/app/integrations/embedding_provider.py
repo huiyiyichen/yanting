@@ -507,7 +507,7 @@ class HttpEmbeddingProvider:
         if not self.available():
             raise ProviderNotConfigured(
                 "HTTP 编码服务未配置",
-                detail="缺少 ANKER_AGENT_EMBEDDING_HTTP_BASE_URL / ANKER_AGENT_EMBEDDING_MODEL_ID",
+                detail="缺少 YANTING_EMBEDDING_HTTP_BASE_URL / YANTING_EMBEDDING_MODEL_ID",
             )
         payload = {"model": self._model_id, "input": texts}
         request = urllib.request.Request(
@@ -639,7 +639,7 @@ def build_embedding_provider(settings: Settings) -> EmbeddingProvider:
         if settings.run_mode != "mock":
             raise ProviderNotConfigured(
                 "live 模式不允许 mock 编码后端",
-                detail="如需联调请显式设置 ANKER_AGENT_RUN_MODE=mock，并在报告中标注",
+                detail="如需联调请显式设置 YANTING_RUN_MODE=mock，并在报告中标注",
             )
         return MockEmbeddingProvider(reason="run_mode=mock 的显式测试配置")
     if settings.embedding_backend == "http":
@@ -654,7 +654,7 @@ def build_embedding_provider(settings: Settings) -> EmbeddingProvider:
 def default_model_dir(repo_id: str, cache_root: Path | None = None) -> Path:
     """定位 snapshot_download 落盘后的模型目录。
 
-    优先使用 `ANKER_AGENT_MODEL_CACHE`，否则使用 `%LOCALAPPDATA%\\anker-agent\\models`，
+    优先使用 `YANTING_MODEL_CACHE`，否则使用 `%LOCALAPPDATA%\\anker-agent\\models`，
     与 `scripts/fetch_embedding_model.py` 保持一致。
     """
 
@@ -662,7 +662,7 @@ def default_model_dir(repo_id: str, cache_root: Path | None = None) -> Path:
 
     root = cache_root
     if root is None:
-        override = os.environ.get("ANKER_AGENT_MODEL_CACHE")
+        override = os.environ.get("YANTING_MODEL_CACHE")
         if override:
             root = Path(override)
         else:

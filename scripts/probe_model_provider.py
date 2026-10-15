@@ -22,10 +22,10 @@ import urllib.request
 import zlib
 from pathlib import Path
 
-BASE_URL = os.environ.get("ANKER_AGENT_LLM_BASE_URL", "").rstrip("/")
-API_KEY = os.environ.get("ANKER_AGENT_LLM_API_KEY", "")
-MODEL = os.environ.get("ANKER_AGENT_LLM_MODEL", "")
-VISION_MODEL = os.environ.get("ANKER_AGENT_LLM_VISION_MODEL", "")
+BASE_URL = os.environ.get("YANTING_LLM_BASE_URL", "").rstrip("/")
+API_KEY = os.environ.get("YANTING_LLM_API_KEY", "")
+MODEL = os.environ.get("YANTING_LLM_MODEL", "")
+VISION_MODEL = os.environ.get("YANTING_LLM_VISION_MODEL", "")
 
 
 def load_dotenv(path: Path) -> None:
@@ -92,10 +92,10 @@ def main() -> int:
     load_dotenv(Path(__file__).resolve().parents[1] / "services" / "api" / ".env")
     if args.qwen:
         return probe_qwen(args)
-    base = os.environ.get("ANKER_AGENT_LLM_BASE_URL", "").rstrip("/")
-    key = os.environ.get("ANKER_AGENT_LLM_API_KEY", "")
-    model = os.environ.get("ANKER_AGENT_LLM_MODEL", "")
-    vision = os.environ.get("ANKER_AGENT_LLM_VISION_MODEL", "")
+    base = os.environ.get("YANTING_LLM_BASE_URL", "").rstrip("/")
+    key = os.environ.get("YANTING_LLM_API_KEY", "")
+    model = os.environ.get("YANTING_LLM_MODEL", "")
+    vision = os.environ.get("YANTING_LLM_VISION_MODEL", "")
 
     report: dict[str, object] = {
         "base_url_set": bool(base),

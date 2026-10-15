@@ -13,7 +13,7 @@ from app.config import get_settings
 @pytest.fixture(autouse=True)
 def _verify_every_draft_unless_marked(request, monkeypatch):
     enabled = request.node.get_closest_marker("on_demand_verification") is not None
-    monkeypatch.setenv("ANKER_AGENT_VERIFY_ON_DEMAND", "true" if enabled else "false")
+    monkeypatch.setenv("YANTING_VERIFY_ON_DEMAND", "true" if enabled else "false")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

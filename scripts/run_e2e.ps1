@@ -5,7 +5,7 @@
 # （详见 开发进度.md 第 6.2 节）。本脚本用独立的 SQLite、独立的运行目录和
 # 独立的后端端口跑 e2e，开发库 data/runtime 完全不受影响。
 #
-# 做法：vite 的 /api 代理目标由 ANKER_AGENT_API_TARGET 控制，因此这里临时
+# 做法：vite 的 /api 代理目标由 YANTING_API_TARGET 控制，因此这里临时
 # 用指向隔离后端（默认 8001）的 vite 实例替换 5173 上的开发前端；因为浏览器
 # 页面与 page.request 都走同源 /api，隔离后端即可覆盖全部请求。结束后恢复。
 #
@@ -94,7 +94,7 @@ Stop-PortListener $WebPort
 
 $backendJob = $null
 $frontendJob = $null
-$env:ANKER_AGENT_WEB_BASE = "http://127.0.0.1:$WebPort"
+$env:YANTING_WEB_BASE = "http://127.0.0.1:$WebPort"
 
 try {
   Write-Host "[e2e] 启动隔离后端 127.0.0.1:$ApiPort（库：$e2eDbRelative）"
@@ -102,9 +102,9 @@ try {
     param($Dir, $Python, $Port, $DbUrl, $RuntimeDir, $QdrantPath)
     Set-Location $Dir
     $env:PYTHONIOENCODING = "utf-8"
-    $env:ANKER_AGENT_DATABASE_URL = $DbUrl
-    $env:ANKER_AGENT_RUNTIME_DIR = $RuntimeDir
-    $env:ANKER_AGENT_QDRANT_PATH = $QdrantPath
+    $env:YANTING_DATABASE_URL = $DbUrl
+    $env:YANTING_RUNTIME_DIR = $RuntimeDir
+    $env:YANTING_QDRANT_PATH = $QdrantPath
     & $Python -m uvicorn app.main:app --host 127.0.0.1 --port $Port 2>&1
   } -ArgumentList $apiDir, $python, $ApiPort, "sqlite+pysqlite:///$e2eDbRelative", "data/runtime-e2e", "data/runtime-e2e/qdrant"
 
@@ -119,7 +119,7 @@ try {
   $frontendJob = Start-Job -ScriptBlock {
     param($Dir, $Port, $Target)
     Set-Location $Dir
-    $env:ANKER_AGENT_API_TARGET = $Target
+    $env:YANTING_API_TARGET = $Target
     & npx vite --host 127.0.0.1 --port $Port 2>&1
   } -ArgumentList $webDir, $WebPort, "http://127.0.0.1:$ApiPort"
 

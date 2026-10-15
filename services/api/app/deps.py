@@ -19,14 +19,14 @@ from sqlalchemy.orm import Session
 
 from app.db import commit_with_retry
 from app.domain.enums import ViewRole
-from app.errors import AnkerAgentError
+from app.errors import YantingError
 from app.routes.commit import SESSION_STATE_KEY
 from app.runtime import RuntimeContext
 
 DEMO_ROLE_HEADER = "X-Demo-View-Role"
 
 
-class PermissionDenied(AnkerAgentError):
+class PermissionDenied(YantingError):
     """接口层权限拒绝。与会话不存在区分开（不泄露资源是否存在）。"""
 
     code = "tool_access_denied"

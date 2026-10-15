@@ -1,5 +1,5 @@
 [project]
-name = "anker-agent-api"
+name = "yanting-api"
 version = "0.1.0"
 description = "安克智能服务 Agent 后端（本期 Demo）"
 requires-python = ">=3.11,<3.12"

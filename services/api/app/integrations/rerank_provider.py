@@ -94,7 +94,7 @@ class HttpRerankProvider:
         if not self.available():
             raise ProviderNotConfigured(
                 "重排序服务未配置",
-                detail="需要 ANKER_AGENT_RERANK_BASE_URL 与 ANKER_AGENT_RERANK_MODEL",
+                detail="需要 YANTING_RERANK_BASE_URL 与 YANTING_RERANK_MODEL",
             )
         if not documents:
             return []
@@ -169,7 +169,7 @@ def build_rerank_provider(settings: Any) -> RerankProvider | None:
         if getattr(settings, "run_mode", "live") != "mock":
             raise ProviderNotConfigured(
                 "live 模式不允许 mock 重排序后端",
-                detail="如需联调请显式设置 ANKER_AGENT_RUN_MODE=mock，并在报告中标注",
+                detail="如需联调请显式设置 YANTING_RUN_MODE=mock，并在报告中标注",
             )
         return None
     if backend != "http":

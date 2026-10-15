@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.config import REPO_ROOT, Settings
 
-PROTECTED_FILES = frozenset({"anker_agent.sqlite3", "demo.sqlite3", "demo-snapshot.sqlite3"})
+PROTECTED_FILES = frozenset({"yanting.sqlite3", "anker_agent.sqlite3", "demo.sqlite3", "demo-snapshot.sqlite3"})
 _IN_MEMORY = {"", ":memory:"}
 
 
@@ -40,6 +40,6 @@ def require_isolated_database(settings: Settings) -> None:
     runtime = (REPO_ROOT / "data" / "runtime").resolve()
     if resolved.name.lower() in PROTECTED_FILES and resolved.parent == runtime:
         raise ProtectedDatabaseError(
-            f"拒绝写入受保护的运行库 {resolved}；请用 ANKER_AGENT_DATABASE_URL 指向 "
+            f"拒绝写入受保护的运行库 {resolved}；请用 YANTING_DATABASE_URL 指向 "
             "data/runtime/eval-*.sqlite3 或临时目录"
         )

@@ -112,13 +112,13 @@ def generate(
     """生成接待辅助；带 style 时只替换该风格，其余风格保留上次已核验内容。"""
     from app.domain.consumer_service.assistant import ConsumerServiceAssistant
     from app.domain.consumer_service.grounding import record_failure
-    from app.errors import AnkerAgentError
+    from app.errors import YantingError
 
     try:
         return ConsumerServiceAssistant(session, context.model_provider, runtime=context).build(
             conversation_id, only_style=style,
         )
-    except AnkerAgentError as exc:
+    except YantingError as exc:
         session.rollback()
         record_failure(session, conversation_id, exc)
         session.commit()
@@ -242,7 +242,7 @@ async def stream_assistant(
 
     from app.domain.consumer_service.assistant import ConsumerServiceAssistant
     from app.domain.consumer_service.grounding import record_failure
-    from app.errors import AnkerAgentError
+    from app.errors import YantingError
 
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue = asyncio.Queue()
@@ -260,7 +260,7 @@ async def stream_assistant(
             )
             session.commit()
             emit({"type": "done", "view": view.model_dump(by_alias=True, mode="json")})
-        except AnkerAgentError as exc:
+        except YantingError as exc:
             session.rollback()
             record_failure(session, conversation_id, exc)
             session.commit()

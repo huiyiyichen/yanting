@@ -18,7 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const webRoot = resolve(here, '..')
 const repoRoot = resolve(webRoot, '../..')
 
-const apiBase = process.env.ANKER_AGENT_API_BASE ?? 'http://127.0.0.1:8000'
+const apiBase = process.env.YANTING_API_BASE ?? 'http://127.0.0.1:8000'
 const args = process.argv.slice(2)
 const fromFileIndex = args.indexOf('--from-file')
 const fromFile = fromFileIndex >= 0 ? args[fromFileIndex + 1] : null

@@ -31,7 +31,7 @@ with closing(sqlite3.connect(current / "data/runtime/anker_agent.sqlite3")) as d
                         count += 1
 print(f"Submission data ready: {count} file paths resolved.")
 
-cache = Path(os.environ.get("ANKER_AGENT_MODEL_CACHE") or
+cache = Path(os.environ.get("YANTING_MODEL_CACHE") or
              str(Path(os.environ["LOCALAPPDATA"]) / "anker-agent/models"))
 snapshots = cache / "models--BAAI--bge-m3/snapshots"
 if not any(snapshots.glob("*/onnx/model.onnx_data")):

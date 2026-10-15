@@ -24,7 +24,7 @@
 - 响应头还没发出去，提交失败可以如实变成 5xx，而不是「客户端收到 200、数据却丢了」。
 
 语义与旧实现保持一致：处理函数**正常返回**就提交；抛异常（含领域错误
-`AnkerAgentError`）则交给 `get_session` 收尾回滚，绝不半写。
+`YantingError`）则交给 `get_session` 收尾回滚，绝不半写。
 """
 
 from __future__ import annotations

@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -58,10 +59,43 @@ def _load_dotenv_into_environ() -> None:
 
 _load_dotenv_into_environ()
 
+logger = logging.getLogger(__name__)
+LEGACY_ENV_PREFIX = "ANKER_AGENT_"
+ENV_PREFIX = "YANTING_"
+
+
+def migrate_legacy_env() -> list[str]:
+    """过渡期：旧前缀 ANKER_AGENT_* 映射到 YANTING_*（新前缀已设置时以新为准），并提示改名。"""
+
+    migrated = []
+    for key, value in list(os.environ.items()):
+        if not key.startswith(LEGACY_ENV_PREFIX):
+            continue
+        name = key[len(LEGACY_ENV_PREFIX):]
+        if ENV_PREFIX + name in os.environ:
+            continue
+        os.environ[ENV_PREFIX + name] = value
+        migrated.append(name)
+    if migrated:
+        logger.warning("环境变量前缀 %s 已弃用，请改为 %s：%s", LEGACY_ENV_PREFIX, ENV_PREFIX,
+                       ", ".join(ENV_PREFIX + name for name in sorted(migrated)))
+    return migrated
+
+
+migrate_legacy_env()
+
+
+def default_database_url() -> str:
+    """默认运行库 data/runtime/yanting.sqlite3；仅有旧库 anker_agent.sqlite3 时继续使用旧库，不丢数据。"""
+
+    new, legacy = Path("data/runtime/yanting.sqlite3"), Path("data/runtime/anker_agent.sqlite3")
+    path = legacy if legacy.exists() and not new.exists() else new
+    return f"sqlite+pysqlite:///{path.as_posix()}"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="ANKER_AGENT_",
+        env_prefix=ENV_PREFIX,
         env_file=None,
         extra="ignore",
     )
@@ -109,7 +143,7 @@ class Settings(BaseSettings):
     rerank_candidates: int = Field(default=16, ge=2, le=64)
 
     # 存储
-    database_url: str = "sqlite+pysqlite:///data/runtime/anker_agent.sqlite3"
+    database_url: str = Field(default_factory=default_database_url)
     qdrant_path: str = "data/runtime/qdrant"
     runtime_dir: str = "data/runtime"
 

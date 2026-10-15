@@ -155,7 +155,7 @@ def breakpoint_analyze(
 ):
     from app.audit.recorder import AuditContext, AuditRecorder
     from app.domain.consumer_service.grounding import record_failure
-    from app.errors import AnkerAgentError
+    from app.errors import YantingError
 
     try:
         service_breakpoints.analyze_service_breakpoints(
@@ -166,7 +166,7 @@ def breakpoint_analyze(
             event_type="service_breakpoint_analysis_requested", detail={"operator": actor},
         )
         return service_breakpoints.read_assessment(session, conversation_id)
-    except AnkerAgentError as exc:
+    except YantingError as exc:
         session.rollback()
         record_failure(session, conversation_id, exc)
         session.commit()

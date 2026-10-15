@@ -1,6 +1,6 @@
 """构建演示库快照（改进方案 P0-4）。
 
-步骤（全部幂等，只写演示文件，不碰主运行库 data/runtime/anker_agent.sqlite3）：
+步骤（全部幂等，只写演示文件，不碰主运行库 data/runtime/yanting.sqlite3（或旧名 anker_agent.sqlite3））：
 1. 删除并重建 `data/runtime/demo-snapshot.sqlite3`；
 2. 从官方 Excel 导入聊天、订单与五类工单，写入内置 Prompt 模板；
 3. 发布当前美妆知识快照到 `data/runtime/demo-qdrant`（需要编码模型；`--skip-knowledge` 跳过）；
@@ -66,8 +66,8 @@ def build_database(source: Path) -> dict:
 def publish_knowledge() -> dict:
     env = {
         **os.environ,
-        "ANKER_AGENT_DATABASE_URL": _sqlite_url(SNAPSHOT),
-        "ANKER_AGENT_QDRANT_PATH": SNAPSHOT_QDRANT.relative_to(REPO).as_posix(),
+        "YANTING_DATABASE_URL": _sqlite_url(SNAPSHOT),
+        "YANTING_QDRANT_PATH": SNAPSHOT_QDRANT.relative_to(REPO).as_posix(),
         "PYTHONIOENCODING": "utf-8",
     }
     completed = subprocess.run(

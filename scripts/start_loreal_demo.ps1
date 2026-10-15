@@ -18,8 +18,8 @@ try {
         if (-not (Test-Path -LiteralPath $demoDb -PathType Leaf)) {
             throw 'demo.sqlite3 is missing. Run scripts\build_demo_database.py, then scripts\reset_demo.ps1.'
         }
-        $env:ANKER_AGENT_DATABASE_URL = 'sqlite+pysqlite:///data/runtime/demo.sqlite3'
-        $env:ANKER_AGENT_QDRANT_PATH = 'data/runtime/demo-qdrant'
+        $env:YANTING_DATABASE_URL = 'sqlite+pysqlite:///data/runtime/demo.sqlite3'
+        $env:YANTING_QDRANT_PATH = 'data/runtime/demo-qdrant'
         $storylines = Get-Content -Raw -Encoding UTF8 (Join-Path $PSScriptRoot '..\data\demo\storylines.json') | ConvertFrom-Json
         $env:VITE_DEMO_CUSTOMER_ID = $storylines.customerViewId
     }

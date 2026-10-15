@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.errors import AnkerAgentError
+from app.errors import YantingError
 from app.logging_setup import configure_logging, get_logger
 from app.routes import (
     contracts,
@@ -82,8 +82,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.exception_handler(AnkerAgentError)
-    async def _handle_domain_error(_request: Request, exc: AnkerAgentError) -> JSONResponse:
+    @app.exception_handler(YantingError)
+    async def _handle_domain_error(_request: Request, exc: YantingError) -> JSONResponse:
         status_by_code = {
             "provider_not_configured": 503,
             "provider_timeout": 504,

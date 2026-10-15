@@ -248,7 +248,7 @@ class OpenAICompatibleModelProvider:
             if not self.supports_vision:
                 raise ProviderNotConfigured(
                     "多模态模型未配置",
-                    detail="请求包含图片，但未设置 ANKER_AGENT_LLM_VISION_MODEL",
+                    detail="请求包含图片，但未设置 YANTING_LLM_VISION_MODEL",
                 )
             model = self._vision_model
             base_url = self._vision_base_url or base_url

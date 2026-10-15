@@ -2,7 +2,7 @@
 
 设计原因：编码模型权重（bge-m3 约 4.5GB）属于大数据，不应进入 Git 仓库，
 也不应放在 `code/` 内部。默认缓存到 `%LOCALAPPDATA%\\anker-agent\\models`，
-可用 ANKER_AGENT_MODEL_CACHE 覆盖。
+可用 YANTING_MODEL_CACHE 覆盖。
 
 用法：
     python scripts/fetch_embedding_model.py --repo BAAI/bge-m3 --allow-pattern "onnx/*"
@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 def default_cache() -> Path:
-    override = os.environ.get("ANKER_AGENT_MODEL_CACHE")
+    override = os.environ.get("YANTING_MODEL_CACHE")
     if override:
         return Path(override)
     local = os.environ.get("LOCALAPPDATA") or str(Path.home() / ".cache")
