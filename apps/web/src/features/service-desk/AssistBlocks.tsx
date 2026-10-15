@@ -16,7 +16,7 @@ export function IntentRow({ primary, items, missing }: { primary?: string; items
 const storeKey = (scope: string) => `yt-next-steps:${scope}`
 
 /** 下一步：可勾选清单，按会话与建议版本记在本机；勾完沉到底部并划掉。 */
-export function NextSteps({ scope, steps }: { scope: string; steps: string[] }) {
+export function NextSteps({ scope, steps, title = '下一步' }: { scope: string; steps: string[]; title?: string }) {
   const [done, setDone] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem(storeKey(scope)) ?? '[]') as string[] } catch { return [] }
   })
@@ -30,8 +30,8 @@ export function NextSteps({ scope, steps }: { scope: string; steps: string[] }) 
     return next
   })
   const ordered = [...steps.filter((s) => !done.includes(s)), ...steps.filter((s) => done.includes(s))]
-  return <section className="service-section yt-card" aria-label="下一步">
-    <h3>下一步<span className="r">{steps.filter((s) => done.includes(s)).length}/{steps.length}</span></h3>
+  return <section className="service-section yt-card" aria-label={title}>
+    <h3>{title}<span className="r">{steps.filter((s) => done.includes(s)).length}/{steps.length}</span></h3>
     <ul className="yt-todo">
       {ordered.map((step) => <li key={step} className={done.includes(step) ? 'is-done' : undefined}>
         <label><input type="checkbox" checked={done.includes(step)} onChange={() => toggle(step)} /><span>{step}</span></label>

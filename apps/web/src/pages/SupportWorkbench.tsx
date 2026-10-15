@@ -12,7 +12,7 @@ import { QianniuTopbar } from '../components/QianniuTopbar'
 import { makeSenderInput } from '../components/SenderParts'
 import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
-import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
+import { OrderFacts, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { escalationMessage, messageEmotions } from '../features/service-desk/messageEmotion'
 import { AiReceptionBar, ChatHead } from '../features/service-desk/ChatHead'
@@ -25,7 +25,7 @@ import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
 import { ReplyCard } from '../features/service-desk/ReplyCard'
 import { EvidenceFolds, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
 import { useIsNarrow } from '../hooks/useMediaQuery'
-import { handoffBrief } from '../features/service-desk/handoffBrief'
+import { ServiceJourney } from '../features/service-desk/ServiceJourney'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
 const memoryLabels = { known: '已知信息', concern: '消费者关注', attempted: '已尝试措施', unresolved: '待解决事项' }
@@ -262,7 +262,6 @@ export function SupportWorkbench() {
     current?.messageRevision ?? 0, current?.modeRevision ?? 0,
     current?.activeRiskTypes?.join(',') ?? '', current?.reviewRiskTypes?.join(',') ?? '',
   ].join('|')
-  const brief = handoffBrief(assistant, messages)
   const refreshAfterIntervention = async (target: string) => {
     if (active.current !== target) return
     setSnapshot(await supportApi.reception())
@@ -280,14 +279,9 @@ export function SupportWorkbench() {
       { key: 'assistant', label: '辅助', children: <>
         {profile?.memory && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
         {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
-          items={profile?.conversationId === id ? (profile?.memory.pending ?? []).map((item) => item.text) : []}
+          items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
           missing={assistant.missingInformation} /> : null}
         {aiError && <Alert type="error" title={aiError} showIcon />}
-        {!(assistant && !assistant.stale && assistant.replySuggestions.length) && <section className="service-section yt-card" aria-label="交接摘要">
-          <h3>交接摘要</h3>
-          {brief.map((line, index) => <p key={index}>{line}</p>)}
-          {!brief.length && <p className="yt-empty">暂无咨询</p>}
-        </section>}
         {assistant && !assistant.stale && assistant.replySuggestions.length ? <>
           {assistant.verificationStatus === 'partial' && <Tag color="warning">
             已移除 {Number(assistant.modelUsage?.segmentsDropped ?? 0)} 段
@@ -359,21 +353,7 @@ export function SupportWorkbench() {
           <p>{t.ticketId}</p><p>{t.assignee || '待分配'}</p><Button size="small" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看详情</Button>
         </section>)}
       </> },
-      { key: 'history', label: '轨迹', children: <>
-        <ServiceTimeline context={context} />
-        {context?.historyServices?.length ? <section className="service-section">
-          <div className="section-title-row"><h3>历史服务</h3><Tag>{context.historyServices.length} 次</Tag></div>
-          {context.historyServices.map((item) => <article className="consumer-history-item" key={item.conversationId}>
-            <div className="consumer-history-item-head">
-              <strong>{item.conversationId}</strong>
-              <time>{dateLabel(item.lastAt ?? item.firstAt)}</time>
-            </div>
-            <p>{item.latestCustomerMessage || '暂无消费者原话'}</p>
-            {item.latestStaffMessage && <span>客服曾回复：{item.latestStaffMessage}</span>}
-            <span>订单 {item.orderIds?.length ?? 0} · 工单 {item.workOrderIds?.length ?? 0}</span>
-          </article>)}
-        </section> : null}
-      </> },
+      { key: 'history', label: '轨迹', children: <ServiceJourney context={context} profile={profile} /> },
     ]} />
   </div>
   return <div className="desk-workbench">

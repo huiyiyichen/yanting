@@ -2,7 +2,7 @@ import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, MessageOut
 import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError, deskApi, supportApi, type ProductClueView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
+import { ApiError, deskApi, supportApi, type ProductClueView, type ConsumerProfileView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
 import { QianniuTopbar } from '../components/QianniuTopbar'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, optionsOf } from '../features/service-desk/shared'
 import { HighlightedText } from '../features/service-desk/HighlightedText'
@@ -10,6 +10,8 @@ import { serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus, followupDeadlines, primaryConversation, signalAttention } from '../features/service-desk/riskPresentation'
 import { EmotionArc } from '../features/service-desk/EmotionArc'
 import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
+import { RiskEmotionTrack, RiskLinks, RiskTriggers, emotionNow, linkedRecords } from '../features/risk/RiskDetailSections'
+import { NextSteps } from '../features/service-desk/AssistBlocks'
 
 const actionLabels = { resolved: '复核关闭', ignored: '忽略风险', reopen: '重新介入' }
 const actionResults = {
@@ -64,6 +66,7 @@ export function RiskDashboardPage() {
   const [saving, setSaving] = useState(false)
   const [overview, setOverview] = useState<RiskOverviewView | null>(null)
   const [clues, setClues] = useState<ProductClueView[]>([])
+  const [detailProfile, setDetailProfile] = useState<ConsumerProfileView | null>(null)
   const [toast, holder] = message.useMessage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -236,6 +239,12 @@ export function RiskDashboardPage() {
     `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query))
   const incident = selected?.incident
   const primaryId = incident && primaryConversation(incident)
+  useEffect(() => {
+    if (!primaryId) return
+    let cancelled = false
+    supportApi.profile(primaryId).then((data) => { if (!cancelled) setDetailProfile(data) }).catch(() => undefined)
+    return () => { cancelled = true }
+  }, [primaryId])
   const assessments = selected?.serviceBreakpointAssessments ?? []
   const inspection = assessments.find((item) => item.conversationId === inspectionId)
     ?? assessments.find((item) => item.conversationId === requestedConversation)
@@ -247,6 +256,11 @@ export function RiskDashboardPage() {
     group.push(signal)
     signalGroups.set(signal.riskType, group)
   }
+  const trackHistory = (selected?.emotionHistory ?? []).filter((point) => !primaryId || point.conversationId === primaryId)
+  const suggestedActions = [...new Set([
+    ...(incident?.signals ?? []).filter((signal) => signalAttention(signal) === 'active').map((signal) => signal.recommendedAction),
+    ...(incident?.signals ?? []).flatMap((signal) => followupDeadlines(signal.conditions)).map((deadline) => `跟进工单 ${deadline.ticketId}，截止 ${dateLabel(deadline.dueAt)}`),
+  ].filter(Boolean))]
   const evidenceQuote = (evidence: RiskIncidentDetailView['evidence'][number], fallbackId?: string) => {
     const conversationId = evidence.conversationId ?? (evidence.kind.includes('message') || evidence.kind === 'history_context'
       ? (selected?.incident.conversationIds.includes(evidence.label) || selected?.contactHistory?.some((point) => point.label === evidence.label)
@@ -349,18 +363,22 @@ export function RiskDashboardPage() {
             <Button aria-label="更多处置" title="更多处置" icon={<MoreOutlined />} />
           </Dropdown>
         </div>
-        <Tabs items={[
-          { key: 'evidence', label: '风险依据', children: <>
-            {[...signalGroups.values()].map((group) => {
-              const signal = group.find((item) => signalAttention(item) === 'active') ?? group[0]
-              const evidence = [...new Map(group.flatMap((item) => (item.evidenceRefs ?? []).flatMap((ref) => {
-                const point = selected.evidence.find((entry) => entry.ref === ref)
-                return point ? [[ref, { point, conversationId: item.conversationId }] as const] : []
-              }))).values()]
-              const targets = group.filter((item) => !['resolved', 'ignored'].includes(item.riskStatus))
-              return <section key={signal.riskType} className="service-section">
-              <div className="section-title-row"><h3>{serviceRiskTypeLabels[signal.riskType]}</h3><Space>
-                <Tag color={signalAttention(signal) === 'active' ? 'error' : 'default'}>{signalState(signal, incident)}</Tag>
+        <section className="yt-d-sec" aria-label="情绪轨迹">
+          <h3>情绪轨迹{emotionNow(trackHistory) && <span className="now"><i className={`is-${emotionNow(trackHistory)!.emotion}`} />{emotionNow(trackHistory)!.label}</span>}</h3>
+          <RiskEmotionTrack history={trackHistory} servicePoints={(selected.servicePoints ?? []).filter((point) => !primaryId || point.conversationId === primaryId)} />
+        </section>
+        <section className="yt-d-sec" aria-label="触发依据">
+          <h3>触发依据</h3>
+          <RiskTriggers onOpen={openConversation} rows={[...signalGroups.values()].map((group) => {
+            const signal = group.find((item) => signalAttention(item) === 'active') ?? group[0]
+            const quotes = [...new Map(group.flatMap((item) => (item.evidenceRefs ?? []).flatMap((ref) => {
+              const point = selected.evidence.find((entry) => entry.ref === ref)
+              return point ? [[ref, { ...point, conversationId: point.conversationId ?? item.conversationId }] as const] : []
+            }))).values()]
+            const targets = group.filter((item) => !['resolved', 'ignored'].includes(item.riskStatus))
+            return { key: signal.riskType, type: serviceRiskTypeLabels[signal.riskType], summary: signal.triggerSummary, quotes,
+              high: signal.riskLevel === 'high' && signalAttention(signal) !== 'closed',
+              tools: <span className="yt-ev-state">{signalState(signal, incident)}
                 {targets.length > 0 && <Dropdown menu={{ items: targets.map((item) => ({
                   key: item.alertId, label: `${signalState(item, incident) === '已标误报' ? '恢复预警' : '标记误报'}${targets.length > 1 ? ` · ${item.conversationId}` : ''}`,
                 })), onClick: ({ key }) => {
@@ -370,17 +388,19 @@ export function RiskDashboardPage() {
                   Modal.confirm({ title: restore ? '恢复这条预警？' : '将这条预警标记为误报？',
                     okText: '确认', cancelText: '取消', onOk: () => feedback(target, restore) })
                 } }}><Button size="small" type="text" icon={<MoreOutlined />} aria-label={`信号操作 ${signal.alertId}`} disabled={saving} /></Dropdown>}
-              </Space></div>
-              <p>{signal.triggerSummary}</p>
-              {signalAttention(signal) === 'active' && <p className="next-action">{signal.recommendedAction}</p>}
-              {[...new Map(group.flatMap((item) => followupDeadlines(item.conditions)).map((deadline) => [deadline.ticketId, deadline])).values()].map((deadline) => <Tag key={deadline.ticketId}>
-                {deadline.ticketId} · 截止 {dateLabel(deadline.dueAt)}
-              </Tag>)}
-              {evidence.map(({ point, conversationId }) => evidenceQuote(point, conversationId))}
-              {!evidence.some(({ point }) => point.kind.includes('message')) && <Button size="small" icon={<MessageOutlined />} disabled={!signal.conversationId}
-                onClick={() => openConversation(signal.conversationId)}>打开相关会话</Button>}
-            </section> })}
-            {inspection && <Collapse ghost items={[(() => {
+              </span> }
+          })} />
+        </section>
+        <section className="yt-d-sec" aria-label="关联记录">
+          <h3>关联记录</h3>
+          <RiskLinks rows={linkedRecords(selected, detailProfile?.conversationId === primaryId ? detailProfile : null,
+            (ticketId) => navigate(`/platform/work-orders?ticket=${encodeURIComponent(ticketId)}`))} />
+        </section>
+        {suggestedActions.length > 0 && <section className="yt-d-sec" aria-label="建议动作">
+          <NextSteps title="建议动作" scope={`risk:${incident.incidentId}:${incident.version}`} steps={suggestedActions} />
+        </section>}
+        <Collapse ghost className="yt-d-more" items={[
+          ...(inspection ? [(() => {
               const item = inspection
               const findings = item.findings ?? []
               const status = item.stale ? '待更新分析' : item.analyzed
@@ -415,8 +435,7 @@ export function RiskDashboardPage() {
                   </section>)}
                 </Space>,
               }
-            })()]} />}
-          </> },
+})()] : []),
           { key: 'trajectory', label: '服务轨迹', children: <>
             <EmotionArc
               history={selected.emotionHistory ?? []}
