@@ -1,7 +1,7 @@
 import type { ProductClueView, RiskOverviewView } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 
-const LEVEL_LABELS: Record<string, string> = { high: '高', medium: '中', low: '低' }
+const LEVEL_LABELS: Record<string, string> = { high: '高风险', medium: '中风险', low: '低风险' }
 const typeLabel = (key: string) => (serviceRiskTypeLabels as Record<string, string>)[key] ?? key
 
 /**
@@ -20,36 +20,43 @@ function DistributionVoiceprint({ overview, onMarker }: {
   const index = new Map(buckets.map((b, i) => [`${b.date}-${b.hour}`, i]))
   const peak = buckets.reduce((best, b, i) => (b.dissatisfied + b.angry > (best.v ?? -1) ? { i, v: b.dissatisfied + b.angry } : best), { i: -1, v: -1 })
   const summary = `情绪声纹：消费者消息 ${overview.customerMessages} 条，负面 ${negative} 条，高风险会话 ${overview.highRiskMarkers.length} 个`
-  let lastDate = ''
+  const height = mid + half + 6
+  const pct = (x: number) => `${(x / width) * 100}%`
+  const days = buckets.flatMap((b, i) => i === 0 || b.date !== buckets[i - 1].date ? [{ date: b.date, x: 4 + i * (barW + gap) }] : [])
+  // 日期标签至少相隔 5% 宽度，避免数据稀疏的尾部挤在一起
+  const axis: typeof days = []
+  for (const day of days) if (!axis.length || day.x - axis[axis.length - 1].x >= width * 0.05) axis.push(day)
   return <div className="yt-dist">
-    <svg role="img" aria-label={summary} width={width} height={mid + half + 6} viewBox={`0 0 ${width} ${mid + half + 6}`}>
-      <line x1={0} x2={width} y1={mid} y2={mid} className="yt-dist-mid" />
+    <svg role="img" aria-label={summary} width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+      <line x1={0} x2={width} y1={mid} y2={mid} className="yt-dist-mid" vectorEffect="non-scaling-stroke" />
+      {days.slice(1).map((day) => <line key={day.date} x1={day.x - gap / 2} x2={day.x - gap / 2} y1={top} y2={mid + half}
+        className="yt-dist-day" vectorEffect="non-scaling-stroke" />)}
       {buckets.map((b, i) => {
         const x = 4 + i * (barW + gap)
         const scale = (n: number) => (n / max) * (half - 4)
         const upset = scale(b.dissatisfied), angry = scale(b.angry), calm = scale(b.calm)
-        const divider = b.date !== lastDate && i > 0
-        lastDate = b.date
         return <g key={`${b.date}-${b.hour}`}>
-          {divider && <line x1={x - gap / 2} x2={x - gap / 2} y1={top} y2={mid + half} className="yt-dist-day" />}
           <title>{`${b.date} ${b.hour}时 平稳 ${b.calm} · 不满 ${b.dissatisfied} · 激烈 ${b.angry}`}</title>
           {upset > 0 && <rect x={x} y={mid - upset} width={barW} height={upset} className="yt-dist-upset" />}
           {angry > 0 && <rect x={x} y={mid - upset - angry - (upset > 0 ? 2 : 0)} width={barW} height={angry} className="yt-dist-fury" />}
           {calm > 0 && <rect x={x} y={mid + 1} width={barW} height={calm} className="yt-dist-calm" />}
         </g>
       })}
-      {peak.i >= 0 && peak.v > 0 && <text x={4 + peak.i * (barW + gap)} y={top - 4} className="yt-dist-peak">
-        {buckets[peak.i].hour}时 {peak.v}
-      </text>}
     </svg>
-    <div className="yt-dist-markers" style={{ width }}>
+    {peak.i >= 0 && peak.v > 0 && <span className="yt-dist-peak" style={{ left: pct(4 + peak.i * (barW + gap)) }}>
+      {buckets[peak.i].date.slice(5).replace('-', '/')} {buckets[peak.i].hour}时 负面 {peak.v}
+    </span>}
+    <div className="yt-dist-markers">
       {overview.highRiskMarkers.map((m) => {
         const i = index.get(`${m.date}-${m.hour}`)
         if (i === undefined) return null
         return <button key={m.conversationId} type="button" className="yt-dist-marker"
-          style={{ left: 4 + i * (barW + gap) - 3 }} title={`${m.alias} · ${m.types.map(typeLabel).join('、')}`}
+          style={{ left: pct(4 + i * (barW + gap) + barW / 2) }} title={`${m.alias} · ${m.types.map(typeLabel).join('、')}`}
           aria-label={`${m.alias} ${m.conversationId}`} onClick={() => onMarker(m.conversationId)} />
       })}
+    </div>
+    <div className="yt-dist-axis" aria-hidden>
+      {axis.map((day) => <span key={day.date} style={{ left: pct(day.x) }}>{day.date.slice(5).replace('-', '/')}</span>)}
     </div>
   </div>
 }
@@ -67,14 +74,15 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
       <div className="yt-kpis">
         <div className="yt-kpi is-main" aria-label="待处理"><span>待处理</span><strong>{counts.pending}</strong></div>
         <div className="yt-kpi" aria-label="高风险"><span>高风险</span><strong className="is-fury">{counts.high}</strong></div>
-        <div className="yt-kpi" aria-label="风险事件"><span>风险事件</span><strong>{counts.events}</strong></div>
-        <div className="yt-kpi" aria-label="风险信号"><span>风险信号</span><strong>{counts.signals}</strong></div>
+        <div className="yt-kpi" aria-label="风险事件"><span>风险事件</span><strong>{counts.events}</strong>
+          <small aria-label="风险信号">信号 {counts.signals}</small></div>
         <div className="yt-kpi" aria-label="情绪升级"><span>情绪升级</span><strong>{counts.emotionEscalation}</strong></div>
         <div className="yt-kpi" aria-label="不良反应"><span>不良反应</span><strong>{counts.adverseReaction}</strong></div>
       </div>
       <div className="yt-dist-wrap">
         <div className="yt-panel-head"><h3>情绪声纹</h3>
-          <span>{overview.hourly[0]?.date.slice(5)}–{overview.hourly.at(-1)?.date.slice(5)} · {overview.customerMessages} 条 · 负面 {Math.round(overview.negativeShare * 100)}%</span>
+          <span className="yt-num">{overview.hourly[0]?.date.slice(5).replace('-', '/')}–{overview.hourly.at(-1)?.date.slice(5).replace('-', '/')}</span>
+          <span>消费者消息 <b>{overview.customerMessages}</b> 负面 <b>{Math.round(overview.negativeShare * 100)}%</b></span>
           <span className="yt-legend"><i className="is-fury" />激烈<i className="is-upset" />不满<i className="is-calm" />平稳<i className="is-marker" />高风险会话</span>
         </div>
         <DistributionVoiceprint overview={overview} onMarker={onFilterConversation} />
@@ -85,7 +93,7 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
         <div className="yt-level-bar">{(['high', 'medium', 'low'] as const).map((key) => overview.levels[key] ? <span key={key}
           className={`is-${key}`} style={{ flexGrow: overview.levels[key] / levelTotal }} /> : null)}</div>
         <ul className="yt-level-legend">{(['high', 'medium', 'low'] as const).map((key) => <li key={key}>
-          <i className={`is-${key}`} />{LEVEL_LABELS[key]} {overview.levels[key] ?? 0}</li>)}</ul>
+          <i className={`is-${key}`} />{LEVEL_LABELS[key]}<b>{overview.levels[key] ?? 0}</b></li>)}</ul>
       </div>
       <div className="yt-panel"><div className="yt-panel-head"><h3>风险类型</h3></div>
         <ul className="yt-type-bars">{typeRows.map(([key, value]) => <li key={key}>

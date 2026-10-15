@@ -1,5 +1,5 @@
 import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { Alert, Button, Collapse, Drawer, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
+import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, deskApi, supportApi, type ProductClueView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
@@ -257,29 +257,20 @@ export function RiskDashboardPage() {
       <p><HighlightedText text={evidence.body} highlights={evidence.highlights} /></p>
     </blockquote>
   }
-  return <div className="desk-workbench">{holder}
-    <QianniuTopbar title="风险预警" stats={mode === 'historical' ? [
-      { label: '官方事件', value: historical.length },
-      { label: '高风险', value: historical.filter((row) => row.riskLevel === 'high').length, warning: true },
-      { label: '情绪升级', value: historical.filter((row) => row.signals.some((signal) => signal.riskType === 'emotion_escalation')).length },
-      { label: '重复进线', value: historical.filter((row) => row.signals.some((signal) => signal.riskType === 'repeated_contact')).length },
-    ] : mode === 'safe' ? [
-      { label: '低风险', value: lowRisk.length },
-      { label: '当前无风险', value: safeCustomers.length },
-      { label: '待复核', value: review.length },
-      { label: '官方记录', value: historical.length },
-    ] : [
-      { label: '待处理', value: runtimeWarning ? '未加载' : active.length, warning: true },
-      { label: '高风险', value: active.filter((row) => row.riskLevel === 'high').length, warning: true },
-      { label: '情绪加剧', value: active.filter((row) => row.emotionTrend === 'rising').length, warning: true },
-      { label: '待复核', value: review.length },
-    ]} actions={<Space><Button icon={<ReloadOutlined />} aria-label="刷新风险" loading={loading} onClick={() => void load()} />
+  return <div className="desk-workbench yt-risk-page">{holder}
+    <QianniuTopbar title="风险预警" extra={<div className="yt-scope" role="radiogroup" aria-label="数据范围">
+      {(['official', 'live'] as const).map((key) => <button key={key} type="button" role="radio" aria-checked={scope === key}
+        className={scope === key ? 'on' : undefined}
+        onClick={() => setMode(key === 'official' ? 'historical' : 'active')}>{key === 'official' ? '官方记录' : '实时'}</button>)}
+    </div>} actions={<Space><Button icon={<ReloadOutlined />} aria-label="刷新风险" loading={loading} onClick={() => void load()} />
       <Button icon={<PlayCircleOutlined />} loading={scanning} onClick={() => void scan()}>扫描异常</Button></Space>} />
     <div className="desk-page-body">
       {error && <Alert type="error" title={error} showIcon />}
       {runtimeWarning && <Alert type="warning" title="风险接口版本过旧，请更新后端" showIcon />}
       {overview && <RiskOverviewPanel overview={overview} clues={clues}
         onFilterType={(next) => setType(next)} onFilterConversation={(cid) => setQuery(cid)} />}
+      <div className={`yt-risk-md${selectedId ? ' has-detail' : ''}`}>
+      <section className="yt-risk-queue" aria-label="风险队列">
       <Tabs activeKey={mode} onChange={setMode} items={[
         { key: 'historical', label: `官方记录 ${historical.length}` },
         { key: 'safe', label: `低风险 / 无风险 ${lowRisk.length + safeCustomers.length}` },
@@ -302,7 +293,7 @@ export function RiskDashboardPage() {
           </Tag> },
           { title: '最新消费者消息', render: (_, item) => <div className="table-cell-stack"><div className="table-excerpt">{item.preview || '暂无消息'}</div><span>{dateLabel(item.updatedAt)}</span></div> },
           { title: '操作', width: 100, render: (_, item) => <Button aria-label={`打开会话 ${item.buyerAlias}`} size="small" icon={<MessageOutlined />} onClick={() => openConversation(item.conversationId)} /> },
-        ]} /> : <Table<RiskIncidentView> rowKey="incidentId" size="small" dataSource={filtered} loading={loading} scroll={{ x: 1050 }} pagination={{ pageSize: 10, showSizeChanger: false }}
+        ]} /> : <Table<RiskIncidentView> rowKey="incidentId" size="small" rowClassName={(row) => `yt-rk-row is-${row.riskLevel}${row.incidentId === selectedId ? ' is-selected' : ''}`} dataSource={filtered} loading={loading} scroll={{ x: 1050 }} pagination={{ pageSize: 10, showSizeChanger: false }}
         locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={runtimeWarning ? '当前预警未加载' : '暂无风险事件'} /> }}
         columns={[
           { title: '等级 / 状态', width: 125, render: (_, row) => <div className="table-cell-stack">
@@ -327,18 +318,23 @@ export function RiskDashboardPage() {
               onClick={() => { const id = primaryConversation(row); if (id) openConversation(id) }} />
           </Space> },
         ]} />}
-    </div>
-    <Drawer title="风险详情" size={640} open={Boolean(selectedId)} onClose={closeDetail}>
+      </section>
+      {selectedId && <aside className="yt-risk-detail" aria-label="风险详情">
+      <Button className="yt-risk-close" type="text" size="small" icon={<CloseOutlined />} aria-label="Close" onClick={closeDetail} />
       {selectedId && !selected && <Skeleton active paragraph={{ rows: 8 }} />}
       {selected && incident && <>
-        <div className="section-title-row"><h2>{incident.buyerAlias}</h2><Space wrap>
+        <div className="yt-risk-id">
+          <span className="yt-risk-avatar" aria-hidden>{incident.buyerAlias.slice(0, 1)}</span>
+          <div><h2>{incident.buyerAlias}</h2><div className="yt-risk-sub">{primaryId} {dateLabel(incident.latestCustomerAt)}</div></div>
+        </div>
+        <div className="yt-risk-tags"><Space size={[6, 6]} wrap>
           <Tag color={incident.riskLevel === 'high' ? 'error' : incident.riskLevel === 'medium' ? 'warning' : 'default'}>{levelLabels[incident.riskLevel]}</Tag>
           <Tag>{serviceStateLabels[incident.serviceState]}</Tag>
           <Tag color={incident.currentEmotion === 'angry' ? 'error' : incident.currentEmotion === 'dissatisfied' ? 'warning' : incident.currentEmotion === 'calm' ? 'success' : 'default'}>{emotionStatus(incident)}</Tag>
           {incident.historicalSensitivity > 0 && <Tag color="processing">历史敏感度 {incident.historicalSensitivity}/3</Tag>}
         </Space></div>
         <div className="risk-actions">
-          <Button icon={<MessageOutlined />} disabled={!primaryId} onClick={() => primaryId && openConversation(primaryId)}>打开当前会话</Button>
+          <Button icon={<MessageOutlined />} disabled={!primaryId} onClick={() => primaryId && openConversation(primaryId)}>打开会话</Button>
           {incident.currentAction === 'intervene' && incident.serviceState === 'live' &&
             <Button type="primary" icon={<PlayCircleOutlined />} loading={saving} disabled={!primaryId} onClick={() => void takeOver()}>接管并回复</Button>}
           {incident.currentAction === 'intervene' && incident.serviceState !== 'live' && openTicket &&
@@ -474,7 +470,9 @@ export function RiskDashboardPage() {
           </> },
         ]} />
       </>}
-    </Drawer>
+      </aside>}
+      </div>
+    </div>
     <Modal title={action ? actionLabels[action.status] : ''} open={Boolean(action)} onCancel={() => { if (!saving) setAction(null) }}
       onOk={() => void handle()} okText="确认" cancelText="取消" confirmLoading={saving}
       cancelButtonProps={{ disabled: saving }} okButtonProps={{ disabled: !result }}>

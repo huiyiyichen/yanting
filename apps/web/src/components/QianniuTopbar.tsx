@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { DemoOperatorSelect } from '../features/service-desk/DemoOperatorSelect'
 
-export function QianniuTopbar({ title, stats, actions }: {
+export function QianniuTopbar({ title, stats, actions, extra }: {
   title: string
+  extra?: ReactNode
   stats?: { label: string; value: number | string; warning?: boolean }[]
   actions?: ReactNode
 }) {
   return <header className="desk-topbar">
-    <div className="desk-topbar-title"><h1>{title}</h1></div>
+    <div className="desk-topbar-title"><h1>{title}</h1>{extra}</div>
     <div className="desk-topbar-stats">
       {stats?.map((stat) => <div key={stat.label} className={stat.warning ? 'is-warning' : ''}>
         <span>{stat.label}</span><strong>{stat.value}</strong>
