@@ -625,7 +625,7 @@ body {
 .desk-topbar-stats > div { display: flex; flex-direction: column; gap: 2px; }
 .desk-topbar-stats span { color: #777e87; font-size: 11px; }
 .desk-topbar-stats strong { font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 600; }
-.desk-topbar-stats .is-warning strong { color: #c55239; }
+.desk-topbar-stats .is-warning strong { color: var(--yt-fury); }
 .desk-topbar-actions { margin-left: auto; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 100%; }
 .desk-operator { display: flex; gap: 7px; align-items: center; }
 .desk-operator .ant-select { width: 166px; }
@@ -722,7 +722,7 @@ body {
 .evidence-quote { margin: 12px 0; padding: 10px 14px; border-left: 3px solid #9ab3cf; background: #f7f9fc; overflow-wrap: anywhere; font-size: 13px; line-height: 1.8; }
 .evidence-quote p { margin: 6px 0; }
 .evidence-quote small { color: #697586; }
-.next-action { color: #237b68; font-size: 13px; }
+.next-action { color: var(--yt-calm); font-size: 13px; }
 .support-risk-incident + .support-risk-incident, .support-risk-signal + .support-risk-signal { padding-top: 10px; margin-top: 10px; border-top: 1px solid #eceef1; }
 .support-risk-signal { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
 .knowledge-layout { display: flex; flex: 1; min-height: 0; min-width: 0; }
