@@ -57,3 +57,12 @@ export function EvidenceFolds({ folds }: { folds: Fold[] }) {
     </div>)}
   </section>
 }
+
+/** 交接摘要：只展示模型生成的 service_summary（1–2 句）；未生成时只标“待生成”，不再拼接聊天原句。 */
+export function HandoffSummary({ summary, state }: { summary?: string | null; state: '待生成' | '生成中' | '待更新' | null }) {
+  const text = summary?.trim()
+  return <section className="service-section yt-card yt-handoff" aria-label="交接摘要">
+    <h3>交接摘要{(!text || state) && <span className="r">{state ?? '待生成'}</span>}</h3>
+    {text ? <p>{text}</p> : null}
+  </section>
+}

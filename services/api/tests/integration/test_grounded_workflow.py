@@ -132,7 +132,8 @@ def test_customer_language_policy_applies_after_saved_prompts_in_both_modes(work
         assert get_enabled_template(session, purpose).content == "SAVED-CUSTOM-PROMPT"
     prompt = provider.calls[0][0].content
     assert prompt.index("SAVED-CUSTOM-PROMPT") < prompt.index("面向消费者的话术")
-    assert "合计2–5句" in prompt
+    assert "合计2–3句" in prompt
+    assert "交接摘要：1–2句、60字以内" in prompt
     assert "退款金额来自售后记录refundAmount" in prompt
     assert result["draft"] is not None
     assert len(provider.calls) == 2

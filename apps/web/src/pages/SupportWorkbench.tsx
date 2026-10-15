@@ -23,7 +23,7 @@ import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftRe
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
 import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
 import { ReplyCard } from '../features/service-desk/ReplyCard'
-import { EvidenceFolds, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
+import { EvidenceFolds, HandoffSummary, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { ServiceJourney } from '../features/service-desk/ServiceJourney'
 
@@ -281,6 +281,8 @@ export function SupportWorkbench() {
         {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
           items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
           missing={assistant.missingInformation} /> : null}
+        <HandoffSummary summary={assistant && !assistant.stale ? assistant.serviceSummary : null}
+          state={generating ? '生成中' : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
         {aiError && <Alert type="error" title={aiError} showIcon />}
         {assistant && !assistant.stale && assistant.replySuggestions.length ? <>
           {assistant.verificationStatus === 'partial' && <Tag color="warning">

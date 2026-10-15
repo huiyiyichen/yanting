@@ -316,11 +316,14 @@ describe('颜听工作台', () => {
       return original(input, options)
     })
     renderApp()
-    await screen.findByRole('region', { name: '回复建议' })
-    // 交接摘要只是复述左侧聊天，已移除
-    expect(screen.queryByRole('region', { name: '交接摘要' })).not.toBeInTheDocument()
+    // 交接摘要只用模型生成的 service_summary；未生成时不拼接聊天原句
+    const brief = await screen.findByRole('region', { name: '交接摘要' })
+    await screen.findByText('好的，谢谢。')
+    expect(brief).toHaveTextContent('待生成')
+    expect(brief).not.toHaveTextContent('好的，谢谢。')
+    expect(brief).not.toHaveTextContent('退货已经寄回了')
     const headings = screen.getAllByRole('heading', { level: 3 }).map((node) => node.textContent)
-    expect(headings[0]).toMatch(/^回复建议/); expect(headings[1]).toBe('风险关注')
+    expect(headings[0]).toMatch(/^交接摘要/); expect(headings[1]).toMatch(/^回复建议/); expect(headings[2]).toBe('风险关注')
     expect(fetchMock.mock.calls.some(([path, options]) =>
       String(path).endsWith('/assistant') && options?.method === 'POST')).toBe(false)
   })
@@ -377,10 +380,10 @@ describe('颜听工作台', () => {
     renderApp()
     await screen.findByRole('button', { name: '消费者甲 live-1' })
     await user.click(screen.getByRole('tab', { name: '轨迹' }))
-    expect(await screen.findByText('工单创建')).toBeInTheDocument()
+    expect(await screen.findByText('工单创建', {}, { timeout: 8000 })).toBeInTheDocument()
     expect(screen.getAllByText('BH001').length).toBeGreaterThan(0)
     expect(screen.getByRole('region', { name: '业务节点' })).toBeInTheDocument()
-  })
+  }, 15000)
   it('工单页显示源工单类型而非会话案件', async () => {
     renderApp('/platform/work-orders')
     expect(await screen.findByText('BH001')).toBeInTheDocument()

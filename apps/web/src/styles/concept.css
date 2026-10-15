@@ -523,3 +523,4 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .reception-plugin .yt-jnodes .is-promise .pin { border-color: #d9b47c; } .reception-plugin .yt-jnodes .is-promise b { color: #8a6532; }
 .reception-plugin .yt-jnodes .is-due .pin { border-color: #d9b47c; border-style: dashed; } .reception-plugin .yt-jnodes .is-due b { color: #8a6532; }
 .reception-plugin .yt-jnodes .is-due .st { background: #f7efe1; color: #8a6532; }
+.reception-plugin .yt-handoff p { margin: 0; font-size: 13px; line-height: 1.65; color: #231a2b; }

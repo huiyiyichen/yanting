@@ -8,7 +8,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { EvidenceFolds, IntentRow, NextSteps } from './AssistBlocks'
+import { EvidenceFolds, HandoffSummary, IntentRow, NextSteps } from './AssistBlocks'
 
 beforeEach(() => localStorage.clear())
 
@@ -49,5 +49,23 @@ describe('AssistBlocks', () => {
     fireEvent.click(order)
     expect(order).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByText('订单 0707')).toBeInTheDocument()
+  })
+})
+
+/**
+ * 交接摘要（重新保留，改为 AI 总结）：
+ * H1 无模型结果时拼接聊天原句；H2 有 service_summary 时仍显示“待生成”或不显示正文。
+ */
+describe('HandoffSummary', () => {
+  it('H1 shows only 待生成 without AI summary', () => {
+    render(<HandoffSummary summary={null} state="待生成" />)
+    const region = screen.getByRole('region', { name: '交接摘要' })
+    expect(region).toHaveTextContent('交接摘要待生成')
+    expect(region.querySelector('p')).toBeNull()
+  })
+  it('H2 shows the AI summary', () => {
+    render(<HandoffSummary summary=" 空包投诉，已建退款工单待财务审核，客户催促到账。 " state={null} />)
+    expect(screen.getByText('空包投诉，已建退款工单待财务审核，客户催促到账。')).toBeInTheDocument()
+    expect(screen.queryByText('待生成')).toBeNull()
   })
 })
