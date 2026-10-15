@@ -6,6 +6,9 @@
  * C4 已拒绝事项没有删除线样式，与关注混淆。
  * C5 情绪只靠颜色，没有“平稳/不满/激烈”文字。
  * C6 声纹没有可读的 aria-label 文字摘要。
+ * C7 关注与已拒绝混在一行，看不出哪项是客户拒绝过的做法（概念稿：分“关注 / 已拒绝”两行）。
+ * C8 进线次数只写累计，看不出近 3 天反复进线。
+ * C9 承诺卡没有把“承诺内容”与“到期日 + 状态”分区，状态不可一眼读出。
  */
 import { render, screen } from '@testing-library/react'
 import { ConfigProvider } from 'antd'
@@ -38,7 +41,9 @@ describe('PersonaCard', () => {
   it('C1 marks alias aggregation', () => {
     mount(base)
     expect(screen.getByText('同昵称')).toBeInTheDocument()
-    expect(screen.getByText('进线 2 次')).toBeInTheDocument()
+    expect(screen.getByText('3 天内第 2 次进线')).toBeInTheDocument()
+    mount({ ...base, contacts: { withinThreeDays: 1, total: 4 } })
+    expect(screen.getByText('进线 4 次')).toBeInTheDocument()
   })
   it('C2 shows skin only when self-reported, with the quote', () => {
     mount(base)
@@ -48,7 +53,7 @@ describe('PersonaCard', () => {
   })
   it('C3 promise card shows due date and status; due uses risk class', () => {
     const { container, unmount } = mount(base)
-    expect(screen.getByText('05/08 待兑现')).toBeInTheDocument()
+    expect(screen.getByTestId('promise-due')).toHaveTextContent('05/08待兑现')
     unmount()
     const due = mount({ ...base, promises: [{ ...base.promises[0], status: 'due' }] })
     expect(due.container.querySelector('.yt-promise.is-due')).not.toBeNull()
@@ -65,5 +70,24 @@ describe('PersonaCard', () => {
   it('C6 voiceprint has a text summary', () => {
     mount(base)
     expect(screen.getByRole('img', { name: /消费者消息 2 条.*激烈 1/ })).toBeInTheDocument()
+  })
+  it('C7 concerns and rejected are separate labelled rows', () => {
+    render(<ConfigProvider><PersonaCard profile={base} /></ConfigProvider>)
+    const concern = screen.getByRole('definition', { name: '关注' })
+    const rejected = screen.getByRole('definition', { name: '已拒绝' })
+    expect(concern).toHaveTextContent('退款到账时效')
+    expect(rejected).toHaveTextContent('不想再叠面霜')
+    expect(concern).not.toHaveTextContent('不想再叠面霜')
+  })
+  it('C8 shows repeat contacts within 3 days', () => {
+    render(<ConfigProvider><PersonaCard profile={base} /></ConfigProvider>)
+    expect(screen.getByText('3 天内第 2 次进线')).toBeInTheDocument()
+  })
+  it('C9 promise shows commitment and due/status in separate parts', () => {
+    render(<ConfigProvider><PersonaCard profile={base} /></ConfigProvider>)
+    const due = screen.getByTestId('promise-due')
+    expect(due).toHaveTextContent('05/08')
+    expect(due).toHaveTextContent('待兑现')
+    expect(screen.getByText(/线下打款直接补给您/)).not.toHaveTextContent('05/08')
   })
 })

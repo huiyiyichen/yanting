@@ -18,17 +18,16 @@ function hk(value: string, withTime = false): string {
 
 export function PersonaCard({ profile }: { profile: ConsumerProfileView }) {
   const emotion = profile.currentEmotion ?? null
-  const tags = [
-    ...profile.memory.concerns.map((item) => ({ ...item, kind: 'concern' as const })),
-    ...profile.memory.rejected.map((item) => ({ ...item, kind: 'rejected' as const })),
-  ].slice(0, 6)
+  const concerns = profile.memory.concerns.slice(0, 4)
+  const rejected = profile.memory.rejected.slice(0, 3)
   return <section className="yt-persona" aria-label="客户画像">
     <header className="yt-persona-head">
       <Avatar className="yt-persona-avatar">{profile.alias.slice(0, 1)}</Avatar>
       <div className="yt-persona-id">
         <strong title={profile.alias}>{profile.alias}</strong>
         <span className="yt-persona-meta">
-          <span>进线 {profile.contacts.total} 次</span>
+          <span>{profile.contacts.withinThreeDays > 1
+            ? `3 天内第 ${profile.contacts.withinThreeDays} 次进线` : `进线 ${profile.contacts.total} 次`}</span>
           {profile.aggregation === 'buyer_alias' && <Tag className="yt-chip">同昵称</Tag>}
           {profile.skin && <Tooltip title={profile.skin.quote}>
             <Tag className="yt-chip" data-testid="persona-skin" title={profile.skin.quote}>{profile.skin.text}</Tag>
@@ -41,15 +40,19 @@ export function PersonaCard({ profile }: { profile: ConsumerProfileView }) {
       </div>}
     </header>
     {profile.emotionTrail.length > 0 && <Voiceprint points={profile.emotionTrail} />}
-    {tags.length > 0 && <div className="yt-memory-tags">
-      {tags.map((item) => <span key={`${item.kind}-${item.text}`} title={item.sourceRef}
-        className={`yt-memory-tag${item.kind === 'rejected' ? ' is-rejected' : ''}`}>{item.text}</span>)}
-    </div>}
+    {(concerns.length > 0 || rejected.length > 0) && <dl className="yt-mem">
+      {concerns.length > 0 && <><dt id={`mem-c-${profile.conversationId}`}>关注</dt>
+        <dd aria-labelledby={`mem-c-${profile.conversationId}`}>{concerns.map((item) =>
+          <span key={item.text} title={item.sourceRef} className="yt-memory-tag">{item.text}</span>)}</dd></>}
+      {rejected.length > 0 && <><dt id={`mem-r-${profile.conversationId}`}>已拒绝</dt>
+        <dd aria-labelledby={`mem-r-${profile.conversationId}`}>{rejected.map((item) =>
+          <span key={item.text} title={item.sourceRef} className="yt-memory-tag is-rejected">{item.text}</span>)}</dd></>}
+    </dl>}
     {profile.promises.map((promise) => <div key={promise.sourceRef}
-      className={`yt-promise is-${promise.status}`} title={promise.text}>
-      <ClockCircleOutlined />
-      <span className="yt-promise-text">{hk(promise.madeAt)} {promise.text}</span>
-      <span className="yt-promise-due">{hk(promise.dueAt)} {PROMISE_STATUS[promise.status] ?? promise.status}</span>
+      className={`yt-promise is-${promise.status}`}>
+      <span className="yt-promise-ic"><ClockCircleOutlined /></span>
+      <div className="yt-promise-body"><b>{hk(promise.madeAt)} 客服承诺</b><span title={promise.text}>{promise.text}</span></div>
+      <div className="yt-promise-due" data-testid="promise-due">{hk(promise.dueAt)}<small>{PROMISE_STATUS[promise.status] ?? promise.status}</small></div>
     </div>)}
     {profile.lastContact && <div className="yt-persona-last">
       上次 {hk(profile.lastContact.at)} · {profile.lastContact.scene || profile.lastContact.conversationId}
