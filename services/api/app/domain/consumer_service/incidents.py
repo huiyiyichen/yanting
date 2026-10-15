@@ -11,7 +11,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.domain.case_state.models import MessageRow
-from app.domain.consumer_service.emotion import emotion_trend, has_complaint_signal, score_message
+from app.domain.consumer_service.emotion import emotion_sequence, emotion_trend, has_complaint_signal, score_message
 from app.domain.consumer_service.models import (
     DatasetRow,
     RiskEpisodeRow,
@@ -347,6 +347,9 @@ def list_incidents(
                 emotion_trend(item.body for item in trail[-2:]).value
                 if current_emotion != "unknown" else "unknown"
             ),
+            emotion_seq=emotion_sequence(
+                (m.sender_role.value, m.body) for m in _messages(session, primary_conversation_id)
+            ) if primary_conversation_id else [],
             service_state=service_state,
             service_closed_at=service_closed_at,
             latest_customer_at=latest_at.isoformat() if latest_at else None,

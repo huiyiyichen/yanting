@@ -3800,6 +3800,8 @@ export interface components {
              * @enum {string}
              */
             emotionTrend: "stable" | "rising" | "falling" | "repeated" | "unknown";
+            /** Emotionseq */
+            emotionSeq?: string[];
             /**
              * Servicestate
              * @default historical

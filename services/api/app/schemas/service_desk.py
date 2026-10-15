@@ -211,6 +211,7 @@ class RiskIncidentView(ApiModel):
     attention_state: Literal["active", "review", "closed"]
     current_emotion: Literal["calm", "dissatisfied", "angry", "unknown"]
     emotion_trend: Literal["stable", "rising", "falling", "repeated", "unknown"] = "unknown"
+    emotion_seq: list[str] = Field(default_factory=list)
     service_state: Literal["live", "closed", "historical"] = "historical"
     service_closed_at: str | None = None
     latest_customer_at: str | None = None

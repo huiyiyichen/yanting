@@ -524,3 +524,20 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .reception-plugin .yt-jnodes .is-due .pin { border-color: #d9b47c; border-style: dashed; } .reception-plugin .yt-jnodes .is-due b { color: #8a6532; }
 .reception-plugin .yt-jnodes .is-due .st { background: #f7efe1; color: #8a6532; }
 .reception-plugin .yt-handoff p { margin: 0; font-size: 13px; line-height: 1.65; color: #231a2b; }
+
+/* 风险队列行：迷你声纹、状态胶囊、长昵称单行 */
+.yt-risk-queue .yt-rk-name { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-rk-emo { display: grid; gap: 4px; }
+.yt-rspark { display: block; }
+.yt-rspark .is-calm { fill: var(--m-calm); fill-opacity: .6; }
+.yt-rspark .is-dissatisfied { fill: var(--m-upset); }
+.yt-rspark .is-angry { fill: var(--m-fury); }
+.yt-rspark .is-service { fill: #d9b47c; fill-opacity: .8; }
+.yt-rk-emo-l { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--m-ink-2); }
+.yt-rk-emo-l i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-ink-3); }
+.yt-rk-emo-l.is-calm i { background: var(--m-calm); }
+.yt-rk-emo-l.is-dissatisfied i { background: var(--m-upset); }
+.yt-rk-emo-l.is-angry i { background: var(--m-fury); }
+.yt-rk-status { justify-self: start; width: fit-content; font-size: 12px; padding: 1px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); color: var(--m-ink-2); white-space: nowrap; }
+.yt-rk-status.is-intervene { border-color: rgba(217,180,124,.5); color: #d9b47c; }
+.yt-rk-status.is-review { border-color: rgba(141,147,201,.5); color: #b8bce6; }

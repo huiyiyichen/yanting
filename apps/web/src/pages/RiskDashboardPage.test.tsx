@@ -93,6 +93,16 @@ describe('风险服务断点', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/support?conversation=S00146')
   })
 
+  /** F 队列行：长昵称无全称提示、缺迷你声纹、状态不是胶囊。 */
+  it('队列行显示迷你声纹与状态胶囊，长昵称单行并悬停显示全称', async () => {
+    api.risks.mockResolvedValue([{ ...incident, buyerAlias: '一个特别特别长的消费者昵称**', emotionSeq: ['c0', 'o', 'c1'] }])
+    renderPage()
+    await screen.findByTestId('risk-open-incident-1')
+    expect(screen.getByRole('img', { name: /^情绪序列/ })).toBeInTheDocument()
+    expect(screen.getByTitle('一个特别特别长的消费者昵称**')).toHaveClass('yt-rk-name')
+    expect(document.querySelector('.yt-rk-status')).not.toBeNull()
+  })
+
   it('查看证据不调用模型，并保留资料更新后的待分析状态', async () => {
     const user = userEvent.setup()
     renderPage()

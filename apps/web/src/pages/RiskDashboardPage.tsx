@@ -9,6 +9,7 @@ import { HighlightedText } from '../features/service-desk/HighlightedText'
 import { serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus, followupDeadlines, primaryConversation, signalAttention } from '../features/service-desk/riskPresentation'
 import { EmotionArc } from '../features/service-desk/EmotionArc'
+import { RiskSpark } from '../features/risk/RiskSpark'
 import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
 import { RiskEmotionTrack, RiskLinks, RiskTriggers, emotionNow, linkedRecords } from '../features/risk/RiskDetailSections'
 import { NextSteps } from '../features/service-desk/AssistBlocks'
@@ -312,9 +313,9 @@ export function RiskDashboardPage() {
         columns={[
           { title: '等级 / 状态', width: 125, render: (_, row) => <div className="table-cell-stack">
             <Tag color={row.riskLevel === 'high' ? 'error' : row.riskLevel === 'medium' ? 'warning' : 'default'}>{levelLabels[row.riskLevel]}</Tag>
-            <span>{row.currentAction === 'intervene' && row.riskStatus === 'in_progress' ? '处理中' : currentActionLabels[row.currentAction]}</span>
+            <span className={`yt-rk-status is-${row.currentAction}`}>{row.currentAction === 'intervene' && row.riskStatus === 'in_progress' ? '处理中' : currentActionLabels[row.currentAction]}</span>
           </div> },
-          { title: '消费者', width: 180, render: (_, row) => <div className="table-cell-stack"><strong>{row.buyerAlias}</strong><span>{serviceStateLabels[row.serviceState]}</span></div> },
+          { title: '消费者', width: 180, render: (_, row) => <div className="table-cell-stack"><strong className="yt-rk-name" title={row.buyerAlias}>{row.buyerAlias}</strong><span>{serviceStateLabels[row.serviceState]}</span></div> },
           { title: '风险 / 原因', width: 290, render: (_, row) => {
             const signals = row.signals.filter((signal) => mode !== 'active' || signalAttention(signal) === 'active')
             const unique = [...new Map(signals.map((signal) => [`${signal.riskType}:${signalAttention(signal)}`, signal])).values()]
@@ -324,7 +325,7 @@ export function RiskDashboardPage() {
             </Tag>)}{row.historicalSensitivity > 0 && <Tag color="processing">历史敏感 {row.historicalSensitivity}/3</Tag>}</Space><div className="table-excerpt">{(signals.find((signal) => signalAttention(signal) === 'active')
               ?? signals.find((signal) => signalAttention(signal) === 'review') ?? signals[0])?.triggerSummary}</div></div>
           } },
-          { title: mode === 'historical' ? '结束时情绪' : '当前情绪', width: 125, render: (_, row) => <Tag color={row.currentEmotion === 'angry' ? 'error' : row.currentEmotion === 'dissatisfied' ? 'warning' : row.currentEmotion === 'calm' ? 'success' : 'default'}>{emotionStatus(row)}</Tag> },
+          { title: mode === 'historical' ? '结束时情绪' : '当前情绪', width: 150, render: (_, row) => <div className="yt-rk-emo"><RiskSpark seq={row.emotionSeq} /><span className={`yt-rk-emo-l is-${row.currentEmotion}`}><i />{emotionStatus(row)}</span></div> },
           { title: '最新消费者消息', width: 280, render: (_, row) => <div className="table-cell-stack"><div className="table-excerpt">{row.latestMessage || '暂无消息'}</div><span>{dateLabel(row.latestCustomerAt)}</span></div> },
           { title: '操作', width: 155, render: (_, row) => <Space>
             <Button data-testid={`risk-open-${row.incidentId}`} size="small" icon={<EyeOutlined />} onClick={() => setSelectedId(row.incidentId)}>详情</Button>

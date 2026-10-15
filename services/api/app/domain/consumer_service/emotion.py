@@ -203,3 +203,16 @@ def trigger_highlights(text: str) -> list[TriggerHighlight]:
                 continue
             found.append(TriggerHighlight(match.start(), match.end(), kind))
     return sorted(found, key=lambda item: item.start)
+
+
+def emotion_sequence(rows: Iterable[tuple[str, str]], limit: int = 12) -> list[str]:
+    """风险队列迷你声纹：消费者消息记 c0/c1/c2，客服或 AI 连续回复合并为一个 o；只保留最近 limit 格。"""
+    seq: list[str] = []
+    for role, body in rows:
+        if not (body or "").strip():
+            continue
+        if role == "customer":
+            seq.append(f"c{score_message(body)}")
+        elif role in {"operator", "assistant"} and (not seq or seq[-1] != "o"):
+            seq.append("o")
+    return seq[-limit:]
