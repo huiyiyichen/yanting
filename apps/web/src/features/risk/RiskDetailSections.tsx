@@ -2,17 +2,15 @@ import { ClockCircleOutlined, FileTextOutlined, MessageOutlined, ShoppingOutline
 import type { ReactNode } from 'react'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
 import { HighlightedText } from '../service-desk/HighlightedText'
+import { shHourMinute, shMonthDay, shTimestamp } from '../service-desk/shTime'
 
 type Emotion = NonNullable<RiskIncidentDetailView['emotionHistory']>[number]
 type Evidence = RiskIncidentDetailView['evidence'][number]
 const LEVEL = { angry: 0, dissatisfied: 1, calm: 2 } as const
 const EMO_LABEL = { angry: '激烈', dissatisfied: '不满', calm: '平稳' } as const
-const time = (value?: string | null) => {
-  const match = value?.match(/(\d{2}):(\d{2})/)
-  return match ? `${match[1]}:${match[2]}` : ''
-}
-const day = (value?: string | null) => value?.slice(5, 10).replace('-', '/') ?? ''
-const ts = (value: string) => Date.parse(value.replace(' ', 'T')) || 0
+const time = shHourMinute
+const day = shMonthDay
+const ts = shTimestamp
 
 /** 情绪轨迹：单会话内消费者每条消息的情绪，三档纵轴；升级段（升到激烈的那一跳）用色块标出，客服回复为底部金色刻度。 */
 export function RiskEmotionTrack({ history, servicePoints = [] }: {

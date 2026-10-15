@@ -1,9 +1,10 @@
+import { shHourMinute, shMonthDay, shTimestamp } from './shTime'
 import type { ConsumerProfileView, ConsumerServiceContextView } from '../../api/client'
 
 type Node = { key: string; at: string; kind: string; tone: 'order' | 'ticket' | 'promise' | 'contact' | 'fury' | 'due'; title: string; state?: string }
-const ts = (v?: string | null) => (v ? Date.parse(v.replace(' ', 'T')) || 0 : 0)
-const md = (v?: string | null) => v?.slice(5, 10).replace('-', '/') ?? ''
-const hm = (v?: string | null) => v?.match(/[T ](\d{2}:\d{2})/)?.[1] ?? ''
+const ts = shTimestamp
+const md = shMonthDay
+const hm = shHourMinute
 const tail = (id: string) => (id.length > 8 ? `…${id.slice(-4)}` : id)
 const LEVEL: Record<string, number> = { angry: 0, dissatisfied: 1, calm: 2 }
 const LEVEL_LABEL: Record<string, string> = { angry: '激烈', dissatisfied: '不满', calm: '平稳' }
