@@ -541,3 +541,44 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .yt-rk-status { justify-self: start; width: fit-content; font-size: 12px; padding: 1px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); color: var(--m-ink-2); white-space: nowrap; }
 .yt-rk-status.is-intervene { border-color: rgba(217,180,124,.5); color: #d9b47c; }
 .yt-rk-status.is-review { border-color: rgba(141,147,201,.5); color: #b8bce6; }
+
+/* 插件「档案」 */
+.yt-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+.yt-archive { display: grid; gap: 12px; }
+.yt-arc-id { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 16px; border-radius: 14px; background: linear-gradient(140deg, var(--yt-plum, #3a2a48), #24192e); color: #f3eef6; }
+.yt-arc-id .ant-avatar { width: 40px; height: 40px; line-height: 40px; background: rgba(255,255,255,.1); color: var(--yt-gold, #d9b47c); font-weight: 700; }
+.yt-arc-who { min-width: 0; display: grid; gap: 4px; }
+.yt-arc-who strong { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-arc-alias { display: flex; gap: 4px; flex-wrap: wrap; }
+.yt-arc-alias i { font-style: normal; font-size: 11px; padding: 0 7px; border-radius: 6px; background: rgba(255,255,255,.08); color: #c3b8cc; }
+.yt-arc-kpi { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+.yt-arc-kpi div { display: grid; gap: 2px; }
+.yt-arc-kpi dt { font-size: 11px; color: #a89cb4; }
+.yt-arc-kpi dd { margin: 0; font: 600 18px/1.2 var(--yt-num); color: #fff; }
+.yt-arc-sec { padding: 14px 16px; border-radius: 14px; background: #fff; border: 1px solid var(--yt-hair, #ebe5ef); }
+.yt-arc-sec h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--yt-ink, #2a2230); }
+.yt-arc-sec h3 .r { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--yt-ink-3, #958ba1); }
+.yt-arc-sec h3 .r.is-stale { color: #c98216; }
+.yt-arc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.yt-arc-order { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--yt-hair-2, #f0ecf3); }
+.yt-arc-order:last-child { border-bottom: 0; padding-bottom: 0; }
+.yt-arc-order b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-arc-order .amt { font: 600 13px var(--yt-num); color: var(--yt-ink, #2a2230); }
+.yt-arc-order .sub { font-size: 12px; color: var(--yt-ink-3, #958ba1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-arc-order .st { justify-self: end; font-size: 11px; padding: 0 7px; border-radius: 999px; background: #f4f0f7; color: #6b5f78; }
+.yt-arc-hist { list-style: none; margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--yt-hair-2, #f0ecf3); display: grid; gap: 10px; }
+.yt-arc-hist li { position: relative; display: grid; gap: 2px; }
+.yt-arc-hist li::before { content: ""; position: absolute; left: -17px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--yt-gold, #d9b47c); box-shadow: 0 0 0 2px #fff; }
+.yt-arc-hist .t { font: 12px var(--yt-num); color: var(--yt-ink-3, #958ba1); }
+.yt-arc-hist .b { display: grid; gap: 3px; min-width: 0; }
+.yt-arc-hist .tags { display: flex; gap: 4px; }
+.yt-arc-hist .tags i { font-style: normal; font-size: 11px; padding: 0 7px; border-radius: 6px; background: #f4f0f7; color: #6b5f78; }
+.yt-arc-hist .tags i.is-topic { background: var(--yt-upset-wash, #fcf1df); color: #9a6410; }
+.yt-arc-hist p { margin: 0; font-size: 12.5px; color: var(--yt-ink-2, #5e5468); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yt-arc-mem { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; padding: 4px 0; }
+.yt-arc-mem .k { font-size: 12px; color: var(--yt-ink-3, #958ba1); padding-top: 2px; }
+.yt-arc-mem .v { display: flex; flex-wrap: wrap; gap: 6px; }
+.yt-arc-new { margin-left: 4px; height: 22px; padding: 0 6px; font-size: 12px; color: var(--yt-gold-ink, #9a7438); }
+.yt-arc-ticket { width: 100%; display: grid; grid-template-columns: 16px auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--yt-hair, #ebe5ef); border-radius: 10px; background: #fbf9fc; cursor: pointer; text-align: left; font-size: 12.5px; color: var(--yt-ink, #2a2230); }
+.yt-arc-ticket:hover { border-color: var(--yt-gold, #d9b47c); }
+.yt-arc-ticket span { color: var(--yt-ink-3, #958ba1); font-family: var(--yt-num); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

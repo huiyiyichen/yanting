@@ -1,5 +1,5 @@
 import {
-  FileTextOutlined, MenuOutlined, ProfileOutlined, ReloadOutlined,
+  MenuOutlined, ProfileOutlined, ReloadOutlined,
   SearchOutlined, SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
 import { Alert, Button, Tooltip, Drawer, Empty, Input, Segmented, Spin, Tabs, Tag, message } from 'antd'
@@ -12,12 +12,13 @@ import { QianniuTopbar } from '../components/QianniuTopbar'
 import { makeSenderInput } from '../components/SenderParts'
 import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
-import { OrderFacts, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
+
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { escalationMessage, messageEmotions } from '../features/service-desk/messageEmotion'
 import { AiReceptionBar, ChatHead } from '../features/service-desk/ChatHead'
 import { QueueRow } from '../features/service-desk/QueueRow'
 import { DeskProductCard } from '../features/service-desk/DeskProductCard'
+import { ArchivePanel } from '../features/service-desk/ArchivePanel'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
@@ -28,7 +29,6 @@ import { useIsNarrow } from '../hooks/useMediaQuery'
 import { ServiceJourney } from '../features/service-desk/ServiceJourney'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
-const memoryLabels = { known: '已知信息', concern: '消费者关注', attempted: '已尝试措施', unresolved: '待解决事项' }
 const intentLabels: Record<string, string> = {
   product_question: '商品咨询', order_status: '订单查询', logistics: '物流查询',
   refund: '退款', return: '退货', replacement: '补发换货', adverse_reaction: '使用不适',
@@ -322,11 +322,6 @@ export function SupportWorkbench() {
             body: assistant?.knowledgeEvidence?.length ? assistant.knowledgeEvidence.map((item, i) => <div className="evidence-quote" key={i}>
               <strong>{String(item.document_title ?? '')}</strong><p>{String(item.quoted_excerpt ?? '')}</p>
             </div>) : <p className="yt-empty">{assistant?.knowledgeStatus === 'failed' ? '检索失败' : '依据不足'}</p> },
-          { key: 'orders', label: '订单与物流', icon: 'order', count: context?.orders.length ?? 0, body: <OrderFacts context={context} /> },
-          { key: 'tickets', label: '售后工单', icon: 'ticket', count: tickets.length, body: tickets.map((t) => <div className="yt-fold-row" key={t.ticketId}>
-            <strong>{ticketTypes[t.workOrderType]}</strong><span>{t.ticketId}</span><TicketStatus status={t.status} />
-            <Button size="small" type="link" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看</Button>
-          </div>) },
           { key: 'images', label: '图片可见信息', icon: 'image',
             count: assistant?.groundingSources?.filter((source) => source.kind === 'image_observation').length ?? 0,
             body: assistant?.groundingSources?.filter((source) => source.kind === 'image_observation').map((source) => (
@@ -349,25 +344,8 @@ export function SupportWorkbench() {
             </article>) },
         ]} />
       </> },
-      { key: 'profile', label: '档案', children: <>
-        {memory?.stale && <Tag color="warning">待更新</Tag>}
-        {Object.entries(memoryLabels).map(([category, label]) => <section className="service-section" key={category}>
-          <h3>{label}</h3>{memory?.items?.filter((item) => item.category === category).map((item, index) => {
-            const source = memory.sources?.find((s) => s.sourceId === item.sourceRef)
-            return <blockquote className="evidence-quote" key={`${item.sourceRef}-${index}`}>
-              {item.label && <strong>{item.label}</strong>}<p>{item.quote}</p>
-              <small>{source?.label ?? '原始来源'} · {dateLabel(source?.occurredAt)}</small>
-            </blockquote>
-          })}
-          {!memory?.items?.some((item) => item.category === category) && <Tag>暂无记录</Tag>}
-        </section>)}
-        <OrderFacts context={context} />
-        <h3>工单 {tickets.length}</h3>
-        <Button icon={<FileTextOutlined />} disabled={!id} onClick={() => setTicketDrawer(true)}>新建工单</Button>
-        {tickets.map((t) => <section className="service-section" key={t.ticketId}><div className="section-title-row"><strong>{ticketTypes[t.workOrderType]}</strong><TicketStatus status={t.status} /></div>
-          <p>{t.ticketId}</p><p>{t.assignee || '待分配'}</p><Button size="small" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看详情</Button>
-        </section>)}
-      </> },
+      { key: 'profile', label: '档案', children: <ArchivePanel context={context} memory={memory} tickets={tickets}
+        onOpenTicket={(ticketId) => navigate(`/platform/work-orders?ticket=${ticketId}`)} onNewTicket={() => setTicketDrawer(true)} /> },
       { key: 'history', label: '轨迹', children: <ServiceJourney context={context} profile={profile} /> },
     ]} />
   </div>

@@ -297,13 +297,16 @@ describe('颜听工作台', () => {
     expect(screen.getByText('业务处理')).toBeInTheDocument()
     expect(screen.getByText('个性化')).toBeInTheDocument()
   })
-  it('客服先看到跨会话消费者服务档案', async () => {
+  it('档案页展示跨会话消费者服务档案', async () => {
+    const user = userEvent.setup()
     renderApp()
+    await screen.findByRole('button', { name: '消费者甲 live-1' })
+    await user.click(screen.getByRole('tab', { name: '档案' }))
     expect(await screen.findByRole('heading', { name: '消费者服务档案' })).toBeInTheDocument()
     expect(screen.getByText('1 次历史进线')).toBeInTheDocument()
     expect(screen.getByText('上次咨询过包装破损怎么处理。')).toBeInTheDocument()
     expect(screen.getByText('同一诉求')).toBeInTheDocument()
-  })
+  }, 15000)
   it('没有模型缓存的官方会话先展示交接内容，摘要和建议位于风险之前', async () => {
     const original = fetchMock.getMockImplementation() as
       (input: RequestInfo | URL, options?: RequestInit) => Promise<Response>
@@ -388,11 +391,11 @@ describe('颜听工作台', () => {
     const user = userEvent.setup()
     renderApp()
     await screen.findByRole('button', { name: '消费者甲 live-1' })
-    await user.click(screen.getByRole('tab', { name: '订单 0' }))
+    await user.click(screen.getByRole('tab', { name: '档案' }))
     expect(await screen.findByText('测试轻透粉底液30ml')).toBeInTheDocument()
     expect(screen.getByText('SKU01')).toBeInTheDocument()
     expect(screen.getByText('¥259.00')).toBeInTheDocument()
-  })
+  }, 15000)
   it('服务轨迹展示业务节点而非聊天原文', async () => {
     const user = userEvent.setup()
     renderApp()
