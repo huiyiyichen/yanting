@@ -67,12 +67,16 @@ def test_reply_without_hard_facts_skips_model_verification_but_keeps_program_che
     assert verify_calls == []
     assert usage["verifyInvoked"] is False and usage["verifyReasons"] == []
 
+    cid = fixtures._create(client)  # 同会话输入未变会复用缓存，换新会话验证
+    fixtures._send(client, cid, "你好，在吗")
     make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "other",
                                        "reply_suggestions": [{"style": "recommended",
                                                               "body": "亲，订单9999999999999999999这边看到了。"}]})
     response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
     assert response.status_code >= 400
 
+    cid = fixtures._create(client)  # 同会话输入未变会复用缓存，换新会话验证
+    fixtures._send(client, cid, "你好，在吗")
     make_provider(provider, lambda _: {**json.loads(fixtures.OUTPUT), "intent": "other",
                                        "reply_suggestions": [{"style": "recommended",
                                                               "body": "亲，理解您着急，我帮您登记一下。"}]},
@@ -461,12 +465,13 @@ def test_drafting_uses_json_and_explicit_advice_field_contract_without_extra_cal
         if messages[0].content.startswith("GROUNDING_REVIEW_V1"):
             value = {"supported": True, "issues": []}
         else:
-            schema = payload["adviceContract"]
+            contract = json.loads(messages[0].content.split("OUTPUT_CONTRACT_V1\n", 1)[1])
+            schema = contract["adviceContract"]
             assert schema["additionalProperties"] is False
             assert {"action_parts", "rationale_parts", "evidence"} <= set(schema["required"])
-            assert "segments" in payload["replyContract"]["properties"]
-            assert "程序拼成body/claims" in payload["claimFieldRules"]["reply_suggestions"]
-            assert "action_parts/rationale_parts" in payload["claimFieldRules"]["personalized_advice"]
+            assert "segments" in contract["replyContract"]["properties"]
+            assert "程序拼成body/claims" in contract["claimFieldRules"]["reply_suggestions"]
+            assert "action_parts/rationale_parts" in contract["claimFieldRules"]["personalized_advice"]
             value = json.loads(fixtures.OUTPUT)
         return ChatResult(
             text=json.dumps(value), model="explicit-contract-fixture",

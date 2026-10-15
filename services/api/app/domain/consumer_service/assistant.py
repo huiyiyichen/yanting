@@ -164,6 +164,12 @@ class ConsumerServiceAssistant:
                 detail="模型不可用时不生成成功的客服辅助结果",
             )
 
+        if not (automatic or only_style or require_breakpoints):
+            # 输入哈希未变：直接复用已核验结果，不重跑全流程（P1-7 结果复用）。
+            cached = read_assistant(self._session, conversation_id)
+            if cached is not None and not cached.stale:
+                return cached
+
         from app.domain.consumer_service.grounded_workflow import run_grounded_workflow
         from app.domain.consumer_service.grounding import save_memory, usage_for
         from app.domain.consumer_service.personalization import advice_views
