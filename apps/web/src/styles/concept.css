@@ -7,8 +7,8 @@
   --yt-plum-3: #4c3a5c;
   --yt-fury-wash: #fbe9ed;
   --yt-upset-wash: #fcf1df;
-  --yt-num: "Bahnschrift", "DIN Alternate", "Source Han Sans CN", sans-serif;
-  --yt-sans: "Source Han Sans CN", "思源黑体 CN", "HarmonyOS Sans SC", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+  --yt-num: "Bahnschrift", "DIN Alternate", "Source Han Sans CN", "YT Sans", sans-serif;
+  --yt-sans: "Source Han Sans CN", "思源黑体 CN", "YT Sans", "HarmonyOS Sans SC", "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
 }
 body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing: antialiased; }
 

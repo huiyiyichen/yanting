@@ -22,7 +22,7 @@ export function ArchivePanel({ context, memory, tickets, onOpenTicket, onNewTick
     .sort((a, b) => shTimestamp(b.orderedAt) - shTimestamp(a.orderedAt))
   const paid = orders.reduce((sum, order) => sum + (order.paidAmountMinor ?? 0), 0)
   const history = (context.historyServices ?? []).filter((item) => item.conversationId !== context.conversationId)
-    .sort((a, b) => shTimestamp(b.firstAt) - shTimestamp(a.firstAt))
+    .sort((a, b) => shTimestamp(b.lastAt ?? b.firstAt) - shTimestamp(a.lastAt ?? a.firstAt))
   const aliases = context.buyerAliases.filter((alias) => alias !== context.buyerAlias)
   const memoryGroups = (Object.keys(MEMORY_LABELS) as (keyof typeof MEMORY_LABELS)[])
     .map((category) => ({ category, items: memory?.items?.filter((item) => item.category === category) ?? [] }))
@@ -64,7 +64,7 @@ export function ArchivePanel({ context, memory, tickets, onOpenTicket, onNewTick
       <h3>历史进线<span className="r">{history.length} 次历史进线</span></h3>
       <ol className="yt-arc-hist">
         {history.map((item) => <li key={item.conversationId}>
-          <span className="t">{stamp(item.firstAt) || item.conversationId}</span>
+          <span className="t">{stamp(item.lastAt ?? item.firstAt) || item.conversationId}</span>
           <div className="b">
             <span className="tags">
               {item.relation === 'same_order' && <i className="is-order">同订单</i>}

@@ -12,6 +12,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import { App } from './App'
 import { antdTheme } from './styles/theme'
+import './styles/fonts.css'
 import './styles/global.css'
 import './styles/yanting.css'
 import './styles/concept.css'

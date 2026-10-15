@@ -1,0 +1,4 @@
+/* 思源黑体 CN 子集（改名 YT Sans，SIL OFL 1.1，见 /fonts/LICENSE.txt）。由 scripts/build_font_subset.py 生成。 */
+@font-face { font-family: "YT Sans"; src: url("/fonts/YTSans-Regular.woff2") format("woff2"); font-weight: 100 449; font-style: normal; font-display: swap; }
+@font-face { font-family: "YT Sans"; src: url("/fonts/YTSans-Medium.woff2") format("woff2"); font-weight: 450 649; font-style: normal; font-display: swap; }
+@font-face { font-family: "YT Sans"; src: url("/fonts/YTSans-Bold.woff2") format("woff2"); font-weight: 650 900; font-style: normal; font-display: swap; }

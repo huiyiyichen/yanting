@@ -52,7 +52,7 @@ export const antdTheme: ThemeConfig = {
     colorBgLayout: palette.layoutBg,
     colorBgContainer: palette.container,
     fontFamily:
-      '"Source Han Sans CN", "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif',
+      '"Source Han Sans CN", "Source Han Sans SC", "YT Sans", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif',
     fontSize: typography.bodySize,
     colorLink: palette.primary,
     borderRadius: 8,
