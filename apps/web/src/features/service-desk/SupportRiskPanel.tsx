@@ -1,5 +1,5 @@
 import { CustomerServiceOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Alert, Button, Space, Spin, Tag, Tooltip } from 'antd'
+import { Alert, Button, Spin, Tooltip } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { deskApi, type ReceptionItem, type RiskIncidentView } from '../../api/client'
@@ -124,58 +124,54 @@ export function SupportRiskPanel({ conversationId, enabled, refreshKey, serviceM
       if (mounted.current && active.current === target) setTakingOver(null)
     }
   }
-  return <section className="service-section" aria-label="当前风险关注">
-    <div className="section-title-row">
-      <h3>风险关注</h3>
-      <Space>
-        {loading ? <Spin size="small" /> : null}
+  const pending = rows.reduce((sum, incident) => sum + incident.signals.length, 0)
+  const canTakeOver = (incident: RiskIncidentView) => incident.serviceState === 'live' && incident.signals.some((signal) =>
+    signalAttention(signal) === 'active' && (signal.riskStatus === 'pending' || serviceMode !== 'operator_assisted'))
+  return <section className="service-section yt-card yt-risk-focus" aria-label="当前风险关注">
+    <h3>风险关注
+      <span className="r">
+        {loading ? <Spin size="small" /> : pending ? `${pending} 项待处理` : null}
         <Tooltip title="刷新风险关注">
           <Button type="text" size="small" aria-label="刷新风险关注" icon={<ReloadOutlined />}
             loading={loading} onClick={() => setRetry((value) => value + 1)} />
         </Tooltip>
-      </Space>
-    </div>
+      </span>
+    </h3>
     {error && <Alert type="error" showIcon title={`风险读取失败：${error}`} />}
     {actionError && <Alert type="error" showIcon title={actionError} />}
-    <>
-      {rows.map((incident) => <div className="support-risk-incident" key={incident.incidentId}>
-        {incident.signals.map((signal) => {
-          const needsReview = signalAttention(signal) === 'review'
-          const query = new URLSearchParams({
-            incident: incident.incidentId, conversation: conversationId, type: signal.riskType,
-          })
-          return <div className="support-risk-signal" key={signal.alertId}>
-            <Space wrap>
-              <strong>{serviceRiskTypeLabels[signal.riskType]}</strong>
-              <Tag color={signal.riskLevel === 'high' ? 'error' : signal.riskLevel === 'medium' ? 'warning' : 'default'}>
-                {riskLevelLabels[signal.riskLevel]}
-              </Tag>
-              <Tag color={needsReview ? 'processing' : signal.riskLevel === 'high' ? 'error' : 'warning'}>
-                {signalState(signal)}
-              </Tag>
-            </Space>
-            <p>{signal.triggerSummary}</p>
-            <p className="next-action">{nextAction(signal)}</p>
+    <div className="yt-risks">
+      {rows.map((incident) => incident.signals.map((signal, index) => {
+        const needsReview = signalAttention(signal) === 'review'
+        const query = new URLSearchParams({ incident: incident.incidentId, conversation: conversationId, type: signal.riskType })
+        const primary = index === 0 && canTakeOver(incident)
+        return <div className={`yt-rk is-${signal.riskLevel}${needsReview ? ' is-review' : ''}`} key={signal.alertId}>
+          <i className="bar" aria-hidden />
+          <div className="yt-rk-main">
+            <b>{serviceRiskTypeLabels[signal.riskType]}</b>
+            <span className="yt-rk-quote">{signal.triggerSummary}</span>
+            <small className="yt-rk-meta">
+              <span>{riskLevelLabels[signal.riskLevel]}</span>
+              <span>{signalState(signal)}</span>
+              <span className="next-action">{nextAction(signal)}</span>
+              {primary && <Link to={`/risk?${query}`} aria-label={`查看${serviceRiskTypeLabels[signal.riskType]}处置详情`}>详情</Link>}
+            </small>
             {signal.riskType === 'followup_due_soon' ? followupDeadlines(signal.conditions).map((deadline) => (
-              <p key={`${deadline.ticketId}-${deadline.dueAt}`}>
-                <Link to={`/platform/work-orders?ticket=${encodeURIComponent(deadline.ticketId)}`}>
-                  {deadline.ticketId}
-                </Link> · 截止 {dateLabel(deadline.dueAt)}
-              </p>
+              <small className="yt-rk-meta" key={`${deadline.ticketId}-${deadline.dueAt}`}>
+                <Link to={`/platform/work-orders?ticket=${encodeURIComponent(deadline.ticketId)}`}>{deadline.ticketId}</Link>
+                <span>截止 {dateLabel(deadline.dueAt)}</span>
+              </small>
             )) : null}
-            <Link to={`/risk?${query}`} aria-label={`查看${serviceRiskTypeLabels[signal.riskType]}处置详情`}>
-              查看处置
-            </Link>
           </div>
-        })}
-        {incident.serviceState === 'live' && incident.signals.some((signal) =>
-          signalAttention(signal) === 'active' && (signal.riskStatus === 'pending' || serviceMode !== 'operator_assisted')) ? <Button
-          size="small" icon={<CustomerServiceOutlined />} loading={takingOver === incident.incidentId}
-          disabled={Boolean(error) || loading || Boolean(takingOver && takingOver !== incident.incidentId)}
-          aria-label={serviceMode === 'operator_assisted' ? '开始处理' : '接管会话'}
-          onClick={() => void takeOver(incident)}>{serviceMode === 'operator_assisted' ? '开始处理' : '接管会话'}</Button> : null}
-      </div>)}
-      {!error && !loading && !rows.length ? <Tag>暂无待处理风险</Tag> : null}
-    </>
+          {primary ? <Button size="small" type="primary" icon={<CustomerServiceOutlined />}
+            loading={takingOver === incident.incidentId}
+            disabled={Boolean(error) || loading || Boolean(takingOver && takingOver !== incident.incidentId)}
+            aria-label={serviceMode === 'operator_assisted' ? '开始处理' : '接管会话'}
+            onClick={() => void takeOver(incident)}>{serviceMode === 'operator_assisted' ? '开始处理' : '接管处理'}</Button>
+            : <Link className="yt-rk-link" to={`/risk?${query}`}
+              aria-label={`查看${serviceRiskTypeLabels[signal.riskType]}处置详情`}>详情</Link>}
+        </div>
+      }))}
+      {!error && !loading && !rows.length ? <p className="yt-empty">暂无待处理风险</p> : null}
+    </div>
   </section>
 }

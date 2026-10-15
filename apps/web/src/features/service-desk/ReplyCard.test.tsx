@@ -6,6 +6,9 @@
  * R4 编辑后采用写入原文而不是编辑后的文本，且未标记为编辑后采用。
  * R5 改写结果未经接口校验就替换正文；改写失败后原文丢失。
  * R6 单风格重生成没有带当前风格。
+ * R7 正文中有依据的片段与普通文字无区分（概念稿：金色虚线引用）。
+ * R8 看不到这条建议依据了哪些工单/订单/会话；同一来源重复出现。
+ * R9 风格切换不是可读的 tab（无 aria-selected），读屏无法知道当前风格。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ConfigProvider } from 'antd'
@@ -62,5 +65,27 @@ describe('ReplyCard', () => {
     fireEvent.click(screen.getByText('简洁'))
     fireEvent.click(screen.getByRole('button', { name: '重新生成此风格' }))
     expect(handlers.onRegenerate).toHaveBeenCalledWith('concise')
+  })
+  it('R7 grounded spans are marked as references', () => {
+    mount({ suggestions: [{ style: 'recommended', body: '亲，售后核实已经在处理，我来跟到底。',
+      claims: [{ text: '售后核实已经在处理', sourceRefs: ['work_order:KOC7263722'] }], empathyDimensions: [] }] })
+    const ref = screen.getByText('售后核实已经在处理')
+    expect(ref).toHaveClass('yt-reply-ref')
+    expect(ref).toHaveAttribute('title', '工单 KOC7263722')
+  })
+  it('R8 basis chips list distinct sources', () => {
+    mount({ suggestions: [{ style: 'recommended', body: '好的，5 号的退款我盯着。', claims: [
+      { text: '5 号的退款', sourceRefs: ['order:4812990707', 'message:S00005:m3'] },
+      { text: '我盯着', sourceRefs: ['message:S00005:m9', 'work_order:KOC7263722'] }], empathyDimensions: [] }] })
+    const basis = screen.getByRole('list', { name: '回复依据' })
+    expect(basis).toHaveTextContent('订单 …0707')
+    expect(basis).toHaveTextContent('工单 KOC7263722')
+    expect(basis.textContent?.match(/会话 S00005/g)).toHaveLength(1)
+  })
+  it('R9 style switch exposes the selected tab', () => {
+    mount()
+    expect(screen.getByRole('tab', { name: '推荐' })).toHaveAttribute('aria-selected', 'true')
+    fireEvent.click(screen.getByRole('tab', { name: '简洁' }))
+    expect(screen.getByRole('tab', { name: '简洁' })).toHaveAttribute('aria-selected', 'true')
   })
 })

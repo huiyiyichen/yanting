@@ -2,7 +2,7 @@ import {
   FileTextOutlined, MenuOutlined, ProfileOutlined, ReloadOutlined,
   SearchOutlined, SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
-import { Alert, Button, Tooltip, Collapse, Drawer, Empty, Input, Segmented, Space, Spin, Tabs, Tag, message } from 'antd'
+import { Alert, Button, Tooltip, Drawer, Empty, Input, Segmented, Spin, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
@@ -23,8 +23,8 @@ import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftRe
 import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
 import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
 import { ReplyCard } from '../features/service-desk/ReplyCard'
+import { EvidenceFolds, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
 import { useIsNarrow } from '../hooks/useMediaQuery'
-import { emotionStatus } from '../features/service-desk/riskPresentation'
 import { handoffBrief } from '../features/service-desk/handoffBrief'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
@@ -34,7 +34,6 @@ const intentLabels: Record<string, string> = {
   refund: '退款', return: '退货', replacement: '补发换货', adverse_reaction: '使用不适',
   complaint: '投诉', other: '其他诉求', unknown: '待明确',
 }
-const emotionTagColors: Record<string, string> = { calm: 'success', dissatisfied: 'warning', angry: 'error' }
 
 export function SupportWorkbench() {
   const [params, setParams] = useSearchParams()
@@ -280,77 +279,56 @@ export function SupportWorkbench() {
       }} items={[
       { key: 'assistant', label: '辅助', children: <>
         {profile?.memory && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
-        <section className="service-section" aria-label="交接摘要">
-          <div className="section-title-row"><h3>交接摘要</h3></div>
-          {brief.map((line, index) => <p key={index}>{line}</p>)}
-          {!brief.length && <Tag>暂无咨询</Tag>}
-          {assistant && !assistant.stale ? <Space wrap><Tag>{intentLabels[assistant.intent ?? 'unknown'] ?? '待明确'}</Tag>
-            <Tag color={emotionTagColors[assistant.emotionLevel]}>{emotionStatus({ currentEmotion: assistant.emotionLevel, emotionTrend: assistant.emotionTrend })}</Tag>
-          </Space> : null}
-        </section>
+        {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
+          items={profile?.conversationId === id ? (profile?.memory.pending ?? []).map((item) => item.text) : []}
+          missing={assistant.missingInformation} /> : null}
         {aiError && <Alert type="error" title={aiError} showIcon />}
-        <section className="service-section"><div className="section-title-row"><h3>回复建议</h3>
-          {assistant ? <Tag color="success">已采用 {assistant.adoptedCount ?? 0} 条</Tag> : null}
-        </div>
-          {assistant?.stale && <Tag color="warning">待更新</Tag>}
-          {assistant?.verificationStatus === 'partial' && <Tag color="warning">
+        {!(assistant && !assistant.stale && assistant.replySuggestions.length) && <section className="service-section yt-card" aria-label="交接摘要">
+          <h3>交接摘要</h3>
+          {brief.map((line, index) => <p key={index}>{line}</p>)}
+          {!brief.length && <p className="yt-empty">暂无咨询</p>}
+        </section>}
+        {assistant && !assistant.stale && assistant.replySuggestions.length ? <>
+          {assistant.verificationStatus === 'partial' && <Tag color="warning">
             已移除 {Number(assistant.modelUsage?.segmentsDropped ?? 0)} 段
           </Tag>}
-          {generating && stages.length > 0 && <ol className="yt-stages" aria-label="生成进度">
-            {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
-          </ol>}
-          {assistant && !assistant.stale && assistant.replySuggestions.length ? <ReplyCard key={`${id}-${assistant.inputHash}`}
+          <ReplyCard key={`${id}-${assistant.inputHash}`}
             suggestions={assistant.replySuggestions} automatic={automatic} generating={generating}
             adoptable={['verified', 'partial'].includes(assistant.verificationStatus ?? '')}
             onAdopt={(style, body, edited) => void adopt(style, body, edited ? 'adopt_edited' : 'adopt')}
             onIgnore={(style) => void adopt(style, '', 'ignore')}
             onRegenerate={(style) => void generate(id, style)} onRewrite={rewrite} />
-            : <Tag>{generating ? '生成中' : '待生成'}</Tag>}
-        </section>
+        </> : <section className="service-section yt-card yt-reply-empty" aria-label="回复建议">
+          <h3>回复建议<span className="r">{assistant?.stale ? '待更新' : generating ? '生成中' : '待生成'}</span></h3>
+          {generating && stages.length > 0 && <ol className="yt-stages" aria-label="生成进度">
+            {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
+          </ol>}
+        </section>}
         {id ? <SupportRiskPanel key={id} conversationId={id}
           enabled={visible && pluginTab === 'assistant'} refreshKey={riskRefreshKey}
           serviceMode={current?.serviceMode} onIntervened={refreshAfterIntervention} /> : null}
-        {context?.historyServices?.length ? <section className="service-section">
-          <div className="section-title-row"><h3>消费者服务档案</h3>
-            <Button size="small" onClick={() => { setPluginTab('history'); if (compact) setPluginOpen(true) }}>
-              查看完整轨迹
-            </Button>
-          </div>
-          <div className="consumer-history-card">
-            <div className="consumer-history-summary">
-              <strong>{context.historyServices.length} 次历史进线</strong>
-              <span>{context.historyServices.filter((item) => item.relation === 'same_order').length} 次同订单</span>
-            </div>
-            {context.historyServices.slice(0, 3).map((item) => <article key={item.conversationId}
-              className={`consumer-history-item${item.relation === 'same_order' ? ' is-related' : ''}`}>
-              <div className="consumer-history-item-head">
-                <Space size={4}>
-                  <strong>{item.relation === 'same_order' ? '同订单服务' : '历史服务'}</strong>
-                  {item.sameTopic === true && <Tag color="processing">同一诉求</Tag>}
-                  {item.sameTopic === false && <Tag>不同诉求</Tag>}
-                </Space>
-                <time>{dateLabel(item.lastAt ?? item.firstAt)}</time>
-              </div>
-              <p>{item.latestCustomerMessage || '暂无消费者原话'}</p>
-              {item.latestStaffMessage && <span>客服曾回复：{item.latestStaffMessage}</span>}
-            </article>)}
-          </div>
-        </section> : null}
-        {assistant ? <Collapse ghost items={[{ key: 'details', label: '更多信息', children: <>
-          {assistant.groundingSources?.some((source) => source.kind === 'image_observation') ? <section className="service-section">
-            <h3>图片可见信息</h3>
-            {assistant.groundingSources.filter((source) => source.kind === 'image_observation').map((source) => (
+        {assistant && !assistant.stale ? <NextSteps scope={`${id}:${assistant.inputHash}`} steps={assistant.nextSteps} /> : null}
+        <EvidenceFolds folds={[
+          { key: 'knowledge', label: '知识依据', icon: 'knowledge', count: assistant?.knowledgeEvidence?.length ?? 0,
+            body: assistant?.knowledgeEvidence?.length ? assistant.knowledgeEvidence.map((item, i) => <div className="evidence-quote" key={i}>
+              <strong>{String(item.document_title ?? '')}</strong><p>{String(item.quoted_excerpt ?? '')}</p>
+            </div>) : <p className="yt-empty">{assistant?.knowledgeStatus === 'failed' ? '检索失败' : '依据不足'}</p> },
+          { key: 'orders', label: '订单与物流', icon: 'order', count: context?.orders.length ?? 0, body: <OrderFacts context={context} /> },
+          { key: 'tickets', label: '售后工单', icon: 'ticket', count: tickets.length, body: tickets.map((t) => <div className="yt-fold-row" key={t.ticketId}>
+            <strong>{ticketTypes[t.workOrderType]}</strong><span>{t.ticketId}</span><TicketStatus status={t.status} />
+            <Button size="small" type="link" onClick={() => navigate(`/platform/work-orders?ticket=${t.ticketId}`)}>查看</Button>
+          </div>) },
+          { key: 'images', label: '图片可见信息', icon: 'image',
+            count: assistant?.groundingSources?.filter((source) => source.kind === 'image_observation').length ?? 0,
+            body: assistant?.groundingSources?.filter((source) => source.kind === 'image_observation').map((source) => (
               <div className="evidence-quote" key={source.sourceId}>
                 <p>{source.text}</p>
                 {typeof source.fields?.attachmentId === 'string' && <a
                   href={`/api/customer/attachments/${encodeURIComponent(source.fields.attachmentId)}/content`}
                   target="_blank" rel="noreferrer">查看原图</a>}
-              </div>
-            ))}
-          </section> : null}
-          {assistant.personalizedAdvice?.length ? <section className="service-section">
-            <h3>个性化建议</h3>
-            {assistant.personalizedAdvice.map((item) => <article className="reply-candidate" key={`${item.category}-${item.title}`}>
+              </div>)) },
+          { key: 'advice', label: '个性化建议', icon: 'advice', count: assistant?.personalizedAdvice?.length ?? 0,
+            body: assistant?.personalizedAdvice?.map((item) => <article className="reply-candidate" key={`${item.category}-${item.title}`}>
               <Tag color={item.category === 'product_selection' ? 'warning' : 'processing'}>{item.title}</Tag>
               {item.productName ? <strong>{item.productName}</strong> : null}
               {item.productSku ? <Tag>{item.productSku}</Tag> : null}
@@ -359,14 +337,8 @@ export function SupportWorkbench() {
               {item.evidence?.map((evidence) => <blockquote className="evidence-quote" key={`${evidence.sourceRef}-${evidence.quote}`}>
                 <small>{evidence.label}</small><p>{evidence.quote}</p>
               </blockquote>)}
-            </article>)}
-          </section> : null}
-          <section className="service-section"><h3>下一步</h3>{assistant.nextSteps.map((step) => <p key={step}>{step}</p>)}
-            {assistant.missingInformation.map((item) => <Tag key={item}>待确认：{item}</Tag>)}</section>
-          <section className="service-section"><h3>知识依据</h3>{assistant.knowledgeEvidence?.length ? assistant.knowledgeEvidence.map((item, i) => <div className="evidence-quote" key={i}>
-            <strong>{String(item.document_title ?? '')}</strong><p>{String(item.quoted_excerpt ?? '')}</p>
-          </div>) : <Tag>{assistant.knowledgeStatus === 'failed' ? '检索失败' : '依据不足'}</Tag>}</section>
-        </> }]} /> : null}
+            </article>) },
+        ]} />
       </> },
       { key: 'profile', label: '档案', children: <>
         {memory?.stale && <Tag color="warning">待更新</Tag>}

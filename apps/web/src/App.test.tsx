@@ -280,8 +280,7 @@ describe('颜听工作台', () => {
       return original?.(input, options)
     })
     renderApp()
-    await user.click(await screen.findByText('更多信息'))
-    expect(await screen.findByText('个性化建议')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: /个性化建议/ }))
     expect(screen.getByText('巴黎欧莱雅黑胖子气垫 200 中性象牙白')).toBeInTheDocument()
     expect(screen.getByText('油性区域避免过度清洁。')).toBeInTheDocument()
     expect(screen.getByText('匹配你当前T区出油的困扰。')).toBeInTheDocument()
@@ -340,9 +339,8 @@ describe('颜听工作台', () => {
       return original(input, options)
     })
     renderApp()
-    await user.click(await screen.findByText('更多信息'))
-    expect(await screen.findByRole('heading', { name: '图片可见信息' })).toBeInTheDocument()
-    expect(screen.getByText('图中文字：2604B')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: /图片可见信息/ }))
+    expect(await screen.findByText('图中文字：2604B')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '查看原图' })).toHaveAttribute(
       'href', '/api/customer/attachments/att-1/content',
     )

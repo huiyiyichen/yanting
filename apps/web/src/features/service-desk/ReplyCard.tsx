@@ -1,6 +1,6 @@
-import { CheckCircleFilled, CheckOutlined, CloseOutlined, DownOutlined, EditOutlined, MinusCircleOutlined, ReloadOutlined } from '@ant-design/icons'
-import { Button, Dropdown, Input, Segmented, Tooltip, message } from 'antd'
-import { useState } from 'react'
+import { BulbOutlined, CheckCircleFilled, CheckOutlined, CloseOutlined, DownOutlined, EditOutlined, MinusCircleOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Button, Dropdown, Input, Tooltip, message } from 'antd'
+import { useState, type ReactNode } from 'react'
 import type { ConsumerServiceAssistantView } from '../../api/client'
 
 type Suggestion = ConsumerServiceAssistantView['replySuggestions'][number]
@@ -10,6 +10,33 @@ const STYLES: Record<string, string> = { recommended: '推荐', concise: '简洁
 const REWRITES: { key: Instruction; label: string }[] = [
   { key: 'gentler', label: '更温和' }, { key: 'concise', label: '更简洁' }, { key: 'professional', label: '更专业' },
 ]
+
+/** 依据引用转成客服可读标签：工单号、订单尾号、会话号；未知类型原样。 */
+export function sourceLabel(ref: string): string {
+  const [kind, id = '', ...rest] = ref.split(':')
+  if (kind === 'work_order' || kind === 'ticket') return `工单 ${id}`
+  if (kind === 'order') return `订单 …${id.slice(-4)}`
+  if (kind === 'message' || kind === 'conversation') return `会话 ${id}`
+  if (kind === 'knowledge') return `知识 ${rest.length ? rest.join(':') : id}`
+  return ref
+}
+
+/** 把有依据的短片段（非整段）标成金色引用。 */
+function marked(body: string, claims: Suggestion['claims']): ReactNode[] {
+  const spans = (claims ?? []).filter((claim) => claim.text && claim.text !== body && body.includes(claim.text))
+    .map((claim) => ({ start: body.indexOf(claim.text), text: claim.text, title: [...new Set(claim.sourceRefs.map(sourceLabel))].join('、') }))
+    .sort((a, b) => a.start - b.start)
+  const out: ReactNode[] = []
+  let at = 0
+  for (const span of spans) {
+    if (span.start < at) continue
+    if (span.start > at) out.push(body.slice(at, span.start))
+    out.push(<span key={span.start} className="yt-reply-ref" title={span.title}>{span.text}</span>)
+    at = span.start + span.text.length
+  }
+  if (at < body.length) out.push(body.slice(at))
+  return out
+}
 
 /** 回复建议卡：风格切换、编辑、改写、单风格重生成；核验通过前不可采用，采用只填草稿不发送。 */
 export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdopt, onIgnore, onRegenerate, onRewrite }: {
@@ -30,6 +57,7 @@ export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdo
   const current = suggestions.find((item) => item.style === style) ?? suggestions[0]
   if (!current) return null
   const original = current.body
+  const basis = [...new Set((current.claims ?? []).flatMap((claim) => claim.sourceRefs.map(sourceLabel)))].slice(0, 5)
   const body = edits[current.style] ?? original
   const edited = body !== original
   const blocked = !adoptable || automatic || generating
@@ -47,21 +75,26 @@ export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdo
   return <article className={`yt-reply${generating ? ' is-refreshing' : ''}`} aria-label="回复建议">
     {holder}
     <div className="yt-reply-head">
-      {suggestions.length > 1 && <Segmented size="small" value={current.style}
-        onChange={(value) => { setStyle(String(value)); setEditing(false) }}
-        options={suggestions.map((item) => ({ value: item.style, label: STYLES[item.style] ?? item.style }))} />}
+      <h3><BulbOutlined />回复建议</h3>
+      {suggestions.length > 1 && <div className="yt-reply-styles" role="tablist" aria-label="回复风格">
+        {suggestions.map((item) => <button type="button" role="tab" key={item.style}
+          aria-selected={item.style === current.style} className={item.style === current.style ? 'on' : undefined}
+          onClick={() => { setStyle(item.style); setEditing(false) }}>{STYLES[item.style] ?? item.style}</button>)}
+      </div>}
       <Tooltip title="重新生成此风格"><Button size="small" type="text" icon={<ReloadOutlined />}
         aria-label="重新生成此风格" disabled={generating} onClick={() => onRegenerate(current.style)} /></Tooltip>
     </div>
     {editing
       ? <Input.TextArea aria-label="编辑回复建议" autoSize={{ minRows: 3, maxRows: 8 }} maxLength={800} value={body}
         onChange={(event) => setEdits((old) => ({ ...old, [current.style]: event.target.value }))} />
-      : <p className="yt-reply-body">{body}</p>}
+      : <p className="yt-reply-body">{edited ? body : marked(body, current.claims)}</p>}
     {(current.empathyDimensions?.length ?? 0) > 0 && <div className="yt-reply-empathy">
       {current.empathyDimensions!.map((item) =>
         <span key={item.key} title={item.reason} className={item.status === 'present' ? 'is-present' : 'is-missing'}>
           {item.status === 'present' ? <CheckCircleFilled /> : <MinusCircleOutlined />} {item.label}</span>)}
     </div>}
+    {basis.length > 0 && <ul className="yt-reply-basis" aria-label="回复依据">
+      {basis.map((label) => <li key={label}>{label}</li>)}</ul>}
     <div className="yt-reply-actions">
       <Tooltip title={reason}><span>
         <Button type="primary" size="small" icon={<CheckOutlined />} disabled={blocked}
