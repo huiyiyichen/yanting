@@ -1,11 +1,10 @@
 import {
   FileTextOutlined, MenuOutlined, ProfileOutlined,
-  ReloadOutlined, SearchOutlined, SendOutlined, ThunderboltOutlined, UserOutlined, RobotOutlined, CustomerServiceOutlined,
-} from '@ant-design/icons'
+  SearchOutlined, SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
-import { Alert, Avatar, Badge, Button, Collapse, Drawer, Empty, Input, Popconfirm, Segmented, Space, Spin, Tabs, Tag, Tooltip, message } from 'antd'
+import { Alert, Badge, Button, Collapse, Drawer, Empty, Input, Segmented, Space, Spin, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
@@ -16,7 +15,8 @@ import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, ticketTypes } from '../features/service-desk/shared'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { escalationMessage, messageEmotions } from '../features/service-desk/messageEmotion'
-import { QueueRow, riskHref } from '../features/service-desk/QueueRow'
+import { AiReceptionBar, ChatHead } from '../features/service-desk/ChatHead'
+import { QueueRow } from '../features/service-desk/QueueRow'
 import { DeskProductCard } from '../features/service-desk/DeskProductCard'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
 import { shouldHoldSend, useDraftReview } from '../features/service-desk/draftReview'
@@ -24,7 +24,6 @@ import { serviceMetricStats } from '../features/service-desk/serviceMetrics'
 import { TicketDraftDrawer } from '../features/service-desk/TicketDraftDrawer'
 import { ReplyCard } from '../features/service-desk/ReplyCard'
 import { useIsNarrow } from '../hooks/useMediaQuery'
-import { emotionLevelLabels, serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
 import { handoffBrief } from '../features/service-desk/handoffBrief'
 
@@ -401,40 +400,19 @@ export function SupportWorkbench() {
     <div className="reception-workspace">
       {!mobile && queue}
       <section className="reception-chat" aria-label="客服对话">
-        <header className="anker-chat-head anker-hairline-bottom">
-          {mobile && <Button icon={<MenuOutlined />} aria-label="会话列表" onClick={() => setQueueOpen(true)} />}
-          <Avatar icon={<UserOutlined />} /><strong className="chat-buyer">{current?.buyerAlias ?? '未选择会话'}</strong>
-          {current && <Tag color={automatic ? 'processing' : 'default'}>{aiReplying ? 'AI 回复中' : automatic ? 'AI 接待' : '人工接待'}</Tag>}
-          {current?.currentEmotion && <Tag color={emotionTagColors[current.currentEmotion]}>{emotionLevelLabels[current.currentEmotion]}</Tag>}
-          {current?.riskLevel === 'high' && <Tag color="error">高风险</Tag>}
-          <Tooltip title="刷新会话"><Button type="text" aria-label="刷新会话" icon={<ReloadOutlined />} disabled={!id} onClick={() => id && void loadDetail(id)} /></Tooltip>
-          {compact && <Button icon={<ProfileOutlined />} aria-label="接待辅助" onClick={() => setPluginOpen(true)} />}
-        </header>
-        {id && <div className="reception-modebar">
-          {automatic
-            ? <Button size="small" icon={<CustomerServiceOutlined />} aria-label="接管会话" loading={switching} onClick={() => void switchMode('operator_assisted')}>接管会话</Button>
-            : <Popconfirm title="恢复 AI 自动接待？" okText="恢复" cancelText="取消" onConfirm={() => void switchMode('autonomous')}>
-              <Button size="small" icon={<RobotOutlined />} aria-label="恢复 AI 接待" loading={switching}>恢复 AI 接待</Button>
-            </Popconfirm>}
-          {current?.handoffReason && <Tag color="warning">{current.handoffReason}</Tag>}
-        </div>}
-        {current && (current.activeRiskTypes?.length || current.reviewRiskTypes?.length) ? <div className="reception-riskbar">
-          {current.activeRiskTypes?.map((risk) => <Link key={risk} to={riskHref(current.conversationId, risk)}
-            aria-label={`查看当前${serviceRiskTypeLabels[risk]}`}>
-            <Tag color="warning">{serviceRiskTypeLabels[risk]}</Tag>
-          </Link>)}
-          {current.reviewRiskTypes?.map((risk) => <Link key={`review-${risk}`} to={riskHref(current.conversationId, risk)}
-            aria-label={`复核当前${serviceRiskTypeLabels[risk]}`}>
-            <Tag color="processing">待复核 · {serviceRiskTypeLabels[risk]}</Tag>
-          </Link>)}
-        </div> : null}
+        <ChatHead item={current} switching={switching} onMode={(next) => void switchMode(next)}
+          onTicket={() => setTicketDrawer(true)} onRefresh={() => id && void loadDetail(id)}
+          leading={mobile && <Button icon={<MenuOutlined />} aria-label="会话列表" onClick={() => setQueueOpen(true)} />}
+          trailing={compact && <Button icon={<ProfileOutlined />} aria-label="接待辅助" onClick={() => setPluginOpen(true)} />} />
         {id && <DeskProductCard conversationId={id} refreshKey={messages.length}
           onOpenOrder={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }} />}
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
         <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support"
           emotions={emotionsById} escalationMessageId={escalationId} />}</div>
-        <div className="anker-composer anker-hairline-top">
+        {id && automatic ? <div className="anker-composer anker-hairline-top">
+          <AiReceptionBar replying={aiReplying} switching={switching} onTakeOver={() => void switchMode('operator_assisted')} />
+        </div> : <div className="anker-composer anker-hairline-top">
           {imageUpload.image?.error && <Alert type="error" showIcon title={imageUpload.image.error}
             closable={{ onClose: () => imageUpload.clear() }} />}
           <ChatImagePreview image={imageUpload.image} onRemove={() => imageUpload.clear()}
@@ -442,7 +420,6 @@ export function SupportWorkbench() {
           <div className="composer-actions">
             <ChatImageButton upload={imageUpload.upload} disabled={!id || automatic || sending || uploading}
               uploading={uploading} />
-            <Button type="text" icon={<FileTextOutlined />} disabled={!id} onClick={() => setTicketDrawer(true)}>建工单</Button>
             <Button type="text" icon={<ThunderboltOutlined />} disabled={!id} loading={generating} onClick={() => { setPluginTab('assistant'); if (compact) setPluginOpen(true); void generate() }}>AI 建议</Button></div>
           {draftFindings.length > 0 && <div className="yt-draft-review" aria-label="发送前质检">
             {draftFindings.map((item) => <Tag key={`${item.kind}-${item.start}`}
@@ -456,7 +433,7 @@ export function SupportWorkbench() {
               aria-label="发送" icon={<SendOutlined />}
               disabled={!id || (!draft.trim() && !attachmentId) || automatic || sending || uploading}
               loading={sending} />} />
-        </div>
+        </div>}
       </section>
       {!compact && <aside className="reception-plugin" aria-label="接待辅助信息">{plugin(true)}</aside>}
     </div>

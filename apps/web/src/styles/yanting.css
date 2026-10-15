@@ -241,3 +241,13 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 .reception-row-preview { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .reception-row-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yt-queue-group { font-size: 12px; color: var(--yt-ink-3); padding: 6px 12px 2px; }
+
+/* 聊天头部单行 + AI 接待条（P1-1） */
+.yt-chat-head { flex-wrap: nowrap; overflow: hidden; }
+.yt-chat-head .chat-buyer { white-space: nowrap; }
+.yt-chat-head .ant-tag { margin-inline-end: 0; white-space: nowrap; }
+.yt-chat-head-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.yt-ai-bar { display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 10px;
+  background: var(--yt-gold-wash); border: 1px solid var(--yt-gold-line); color: var(--yt-gold-ink); font-weight: 600; }
+.yt-ai-bar-icon { color: var(--yt-gold-ink); }
+.yt-ai-bar-sep { width: 1px; height: 14px; background: var(--yt-gold-line); }

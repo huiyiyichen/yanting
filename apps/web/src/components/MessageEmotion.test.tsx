@@ -1,6 +1,6 @@
 /**
  * 客服视角消息情绪呈现（P1-1）。先列失败方式：
- * E1 不满/激烈的消费者消息没有情绪色边或文字；平稳消息误显示情绪文字。
+ * E1 不满/愤怒的消费者消息没有情绪色边或文字；平稳消息误显示情绪文字。
  * E2 情绪升级那条消息之前没有分隔线，或分隔线出现在别处、出现多次。
  * E3 AI 发出的消息与人工客服头像无法区分。
  * E4 客户视角出现情绪或升级等内部信息。
@@ -21,7 +21,7 @@ const emotions = { m1: 'calm', m3: 'angry' } as const
 describe('MessageList emotion (support)', () => {
   it('E1 E2 E3 marks emotion, divider and AI avatar', () => {
     const { container } = render(<MessageList messages={messages} viewRole="support" emotions={emotions} escalationMessageId="m3" />)
-    expect(screen.getAllByText('激烈')).toHaveLength(1)
+    expect(screen.getAllByText('愤怒')).toHaveLength(1)
     expect(screen.queryByText('平稳')).toBeNull()
     expect(container.querySelectorAll('[data-emotion="angry"]').length).toBeGreaterThan(0)
     const dividers = screen.getAllByRole('separator')
@@ -34,7 +34,7 @@ describe('MessageList emotion (support)', () => {
   })
   it('E4 customer view shows nothing internal', () => {
     const { container } = render(<MessageList messages={messages} viewRole="customer" emotions={emotions} escalationMessageId="m3" />)
-    expect(screen.queryByText('激烈')).toBeNull()
+    expect(screen.queryByText('愤怒')).toBeNull()
     expect(screen.queryByRole('separator')).toBeNull()
     expect(container.querySelector('[data-emotion]')).toBeNull()
   })

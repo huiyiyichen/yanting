@@ -8,6 +8,7 @@
  * 名字与时间在同一行（名 13px、时间 12px 次要色），气泡 15px、
  * 收到侧浅灰、发出侧薄荷（规范第 7.1 节）。
  */
+import { emotionLevelLabels } from '../contracts/enums'
 import { RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
 import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
@@ -36,7 +37,7 @@ interface MessageListProps {
   escalationMessageId?: string | null
 }
 
-const EMOTION_TEXT = { dissatisfied: '不满', angry: '激烈' } as const
+const EMOTION_TEXT = { dissatisfied: emotionLevelLabels.dissatisfied, angry: emotionLevelLabels.angry } as const
 const EMOTION_COLOR = { calm: 'var(--yt-calm)', dissatisfied: 'var(--yt-upset)', angry: 'var(--yt-fury)' } as const
 
 /** 头像：客户用人形图标，服务方用机器人图标，靠底色区分身份。 */
