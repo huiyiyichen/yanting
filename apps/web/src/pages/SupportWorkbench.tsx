@@ -92,6 +92,7 @@ export function SupportWorkbench() {
   const attachmentId = imageUpload.image?.attachment?.attachmentId
   const acknowledgedDraft = useRef<string | null>(null)
   const sendRef = useRef<() => void>(() => undefined)
+  const handoffGenerated = useRef(new Set<string>())
   sendRef.current = () => { void send() }
 
   const loadDetail = useCallback(async (target: string) => {
@@ -118,6 +119,15 @@ export function SupportWorkbench() {
     setMessages([]); setContext(null); setAssistant(null); setTickets([]); setMemory(null); setProfile(null); setAiError('')
     if (id) { setLoading(true); void loadDetail(id) }
   }, [id, loadDetail])
+
+  // 转人工（系统判定或客户要求）后自动生成一次交接摘要；同一次转人工只生成一次
+  const handoffKey = current?.serviceMode === 'operator_assisted' && current.handoffReason ? `${current.conversationId}:${current.modeRevision}` : ''
+  useEffect(() => {
+    if (!id || !handoffKey || loading || context?.conversationId !== id || generating || handoffGenerated.current.has(handoffKey)) return
+    handoffGenerated.current.add(handoffKey)
+    if (assistant && !assistant.stale && assistant.serviceSummary?.trim()) return
+    void generate(id)
+  }, [id, handoffKey, loading, context])
 
   useEffect(() => {
     let disposed = false
@@ -203,7 +213,10 @@ export function SupportWorkbench() {
     setSwitching(true)
     try {
       await supportApi.setReceptionMode(origin, mode)
-      setSnapshot(await supportApi.reception())
+      const next = await supportApi.reception()
+      setSnapshot(next)
+      const switched = next.items.find((item) => item.conversationId === origin)
+      if (mode === 'operator_assisted' && switched) handoffGenerated.current.add(`${origin}:${switched.modeRevision}`)
       await loadDetail(origin)
       if (mode === 'operator_assisted' && active.current === origin) {
         setPluginTab('assistant')

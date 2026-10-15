@@ -327,6 +327,24 @@ describe('颜听工作台', () => {
     expect(fetchMock.mock.calls.some(([path, options]) =>
       String(path).endsWith('/assistant') && options?.method === 'POST')).toBe(false)
   })
+  /**
+   * 转人工自动生成交接摘要：
+   * H3 系统/客户转人工后（handoffReason 有值）没有自动生成；H4 同一次转人工因轮询重复生成。
+   */
+  it('转人工后自动生成一次交接摘要，轮询不重复生成', async () => {
+    const original = fetchMock.getMockImplementation() as
+      (input: RequestInfo | URL, options?: RequestInit) => Promise<Response>
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, options?: RequestInit) => {
+      if (String(input).endsWith('/reception/queue')) return json({ items: [{ ...item, modeRevision: 2, handoffReason: 'customer_requested' }], unreadTotal: 1 })
+      return original(input, options)
+    })
+    renderApp()
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([path]) =>
+      String(path).includes('/assistant/stream')).length).toBe(1), { timeout: 8000 })
+    expect(await screen.findByRole('region', { name: '交接摘要' })).not.toHaveTextContent('待生成')
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    expect(fetchMock.mock.calls.filter(([path]) => String(path).includes('/assistant/stream')).length).toBe(1)
+  }, 15000)
   it('图片可见信息有原图入口，不与商品知识或业务执行结果混在一起', async () => {
     const user = userEvent.setup()
     const original = fetchMock.getMockImplementation() as
