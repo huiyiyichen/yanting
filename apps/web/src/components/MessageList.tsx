@@ -8,7 +8,6 @@
  * 名字与时间在同一行（名 13px、时间 12px 次要色），气泡 15px、
  * 收到侧浅灰、发出侧薄荷（规范第 7.1 节）。
  */
-import { emotionLevelLabels } from '../contracts/enums'
 import { RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
 import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
@@ -35,16 +34,21 @@ interface MessageListProps {
   emotions?: Record<string, 'calm' | 'dissatisfied' | 'angry' | null | undefined>
   /** 仅客服视角：情绪升级发生的那条消息。 */
   escalationMessageId?: string | null
+  /** 仅客服视角：消费者昵称，用于头像与发言人。 */
+  buyerAlias?: string
 }
 
-const EMOTION_TEXT = { dissatisfied: emotionLevelLabels.dissatisfied, angry: emotionLevelLabels.angry } as const
+// 概念稿与改进方案的三档温度用语：平稳 / 不满 / 激烈
+const EMOTION_TEXT = { dissatisfied: '不满', angry: '激烈' } as const
 const EMOTION_COLOR = { calm: 'var(--yt-calm)', dissatisfied: 'var(--yt-upset)', angry: 'var(--yt-fury)' } as const
 
 /** 头像：客户用人形图标，服务方用机器人图标，靠底色区分身份。 */
-function roleAvatar(senderRole: SenderRole, viewRole: ViewRole) {
+function roleAvatar(senderRole: SenderRole, viewRole: ViewRole, buyerAlias?: string) {
   const isService = senderRole === 'assistant' || senderRole === 'operator'
-  if (viewRole === 'support' && senderRole === 'assistant') {
-    return <Avatar size={38} className="yt-ai-avatar" icon={<RobotOutlined />} aria-hidden="true" />
+  if (viewRole === 'support') {
+    if (senderRole === 'assistant') return <Avatar size={30} className="yt-ai-avatar" icon={<RobotOutlined />} aria-hidden="true" />
+    if (senderRole === 'operator') return <Avatar size={30} className="yt-op-avatar" aria-hidden="true">客</Avatar>
+    return <Avatar size={30} className="yt-cust-avatar" aria-hidden="true">{buyerAlias?.slice(0, 1) || <UserOutlined />}</Avatar>
   }
   return (
     <Avatar
@@ -101,6 +105,7 @@ export const MessageList = memo(function MessageList({
   failedKeys = {},
   emotions = {},
   escalationMessageId,
+  buyerAlias,
 }: MessageListProps) {
   const internal = viewRole === 'support'
   const root = useRef<HTMLDivElement>(null)
@@ -157,8 +162,8 @@ export const MessageList = memo(function MessageList({
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: 20,
-            padding: '18px 18px 10px',
+            gap: internal ? 14 : 20,
+            padding: internal ? '16px 18px 8px' : '18px 18px 10px',
           }}
         >
           {messages.map((message) => {
@@ -172,13 +177,13 @@ export const MessageList = memo(function MessageList({
             return (
               <Fragment key={message.messageId}>
               {internal && escalationMessageId === message.messageId
-                ? <div role="separator" className="yt-escalation-divider"><span>情绪升级</span></div> : null}
+                ? <div role="separator" className="yt-escalation-divider"><span>情绪升级 <b>{formatTime(message.createdAt)}</b></span></div> : null}
               <div data-message-id={message.messageId} data-emotion={emotion ?? undefined}
                 style={{ display: 'flex', flexDirection: 'column' }}>
                 <Bubble
                   placement={side === 'end' ? 'end' : 'start'}
                   variant={side === 'center' ? 'outlined' : 'filled'}
-                  avatar={side === 'center' ? undefined : roleAvatar(senderRole, viewRole)}
+                  avatar={side === 'center' ? undefined : roleAvatar(senderRole, viewRole, buyerAlias)}
                   header={
                     side === 'center' ? undefined : (
                       <span
@@ -190,7 +195,7 @@ export const MessageList = memo(function MessageList({
                         }}
                       >
                         <span style={{ fontSize: 13, color: 'var(--anker-graphite-soft)' }}>
-                          {senderLabel(senderRole)}
+                          {internal && senderRole === 'customer' && buyerAlias ? buyerAlias : senderLabel(senderRole)}
                         </span>
                         {emotionText && emotion ? <span className="yt-emotion-mark" style={{ color: EMOTION_COLOR[emotion] }}>
                           <i style={{ background: EMOTION_COLOR[emotion] }} />{emotionText}</span> : null}
@@ -206,18 +211,19 @@ export const MessageList = memo(function MessageList({
                        消息是自己的——固定按身份上色会让客户界面看起来和服务方一样。 */
                     content: {
                       background:
-                        side === 'center'
-                          ? 'var(--anker-bubble-in)'
-                          : internal && side === 'end'
-                            ? 'var(--yt-service-bubble, #f1ecf7)'
-                            : side === 'end'
-                              ? 'var(--anker-bubble-out)'
-                              : 'var(--anker-bubble-in)',
-                      boxShadow: emotion ? `inset 3px 0 0 ${EMOTION_COLOR[emotion]}` : undefined,
-                      borderRadius: 10,
-                      padding: '10px 14px',
-                      maxWidth: 560,
-                      fontSize: 15,
+                        internal && side !== 'center'
+                          ? (side === 'end' ? '#ece6f3' : '#fff')
+                          : side === 'end'
+                            ? 'var(--anker-bubble-out)'
+                            : 'var(--anker-bubble-in)',
+                      boxShadow: emotion && emotion !== 'calm' ? `inset 3px 0 0 ${EMOTION_COLOR[emotion]}` : undefined,
+                      ...(internal && side !== 'center' ? {
+                        border: `1px solid ${side === 'end' ? '#e0d7ea' : 'var(--yt-hair)'}`,
+                        borderRadius: side === 'end' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
+                        padding: '9px 13px',
+                        maxWidth: 520,
+                        fontSize: 14,
+                      } : { borderRadius: 10, padding: '10px 14px', maxWidth: 560, fontSize: 15 }),
                       lineHeight: 1.65,
                       color: 'var(--anker-graphite)',
                     },

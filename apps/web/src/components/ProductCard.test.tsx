@@ -42,7 +42,7 @@ describe('ProductCard', () => {
     const onOpen = vi.fn()
     render(<DeskProductCard conversationId="c1" onOpenOrder={onOpen} />)
     expect(await screen.findByText('测试轻透粉底液')).toBeTruthy()
-    for (const text of ['¥259.00', '6920947277927059788', '交易成功', '圆通快递 · 苏州市']) expect(screen.getByText(text)).toBeTruthy()
+    for (const text of ['¥259.00', '6920947277927059788', '交易成功', '圆通快递 苏州市']) expect(screen.getByText(text)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /测试轻透粉底液/ }))
     expect(onOpen).toHaveBeenCalledWith('6920947277927059788')
   })

@@ -7,7 +7,7 @@ import type { ReactElement } from 'react'
 export type VoiceprintPoint = { at: string; role: string; level?: string | null }
 
 const LEVEL_HEIGHT: Record<string, [number, number]> = {
-  calm: [7, 5], dissatisfied: [15, 12], angry: [24, 20],
+  calm: [14, 5], dissatisfied: [30, 12], angry: [48, 20],
 }
 const LEVEL_LABEL: Record<string, string> = { calm: '平稳', dissatisfied: '不满', angry: '激烈' }
 
@@ -28,13 +28,14 @@ export function Voiceprint({ points, variant = 'conversation', width }: {
   const height = mini ? 24 : 52
   const mid = height / 2
   const shown = points.filter((point) => point.role !== 'system')
-  const step = mini ? 7 : 16
-  const total = width ?? Math.max(mini ? 132 : 120, shown.length * step + 8)
+  // 插件客户卡：铺满卡片宽度（概念稿 360px 宽），点数少时拉开间距
+  const total = width ?? (mini ? Math.max(132, shown.length * 7 + 8) : 360)
+  const step = mini ? 7 : Math.min(56, (total - 36) / Math.max(1, shown.length - 1))
   const bars: ReactElement[] = []
   let escalationStart: number | null = null
   let previous: string | null | undefined
   shown.forEach((point, index) => {
-    const x = 6 + index * step
+    const x = (mini ? 6 : 18) + index * step
     if (point.role !== 'customer') {
       bars.push(<circle key={index} cx={x} cy={mid} r={mini ? 1.6 : 2.4} className="yt-vp-service" />)
       return
@@ -52,8 +53,8 @@ export function Voiceprint({ points, variant = 'conversation', width }: {
     const shape = [0.3, 0.55, 0.8, 1, 0.8, 0.55, 0.3]
     shape.forEach((ratio, offset) => {
       const h = Math.max(2, peak * ratio)
-      bars.push(<rect key={`${index}-${offset}`} x={x - 6 + offset * 2} y={mid - h / 2} width={1.4} height={h}
-        rx={0.7} className={`yt-vp-bar is-${level}`} />)
+      bars.push(<rect key={`${index}-${offset}`} x={x - 12 + offset * 4} y={mid - h / 2} width={2.5} height={h}
+        rx={1.25} className={`yt-vp-bar is-${level}`} />)
     })
   })
   return <svg className={`yt-voiceprint is-${variant}`} role="img" aria-label={voiceprintSummary(shown)}

@@ -14,6 +14,7 @@ import { App } from './App'
 import { antdTheme } from './styles/theme'
 import './styles/global.css'
 import './styles/yanting.css'
+import './styles/concept.css'
 
 const container = document.getElementById('root')
 if (!container) {

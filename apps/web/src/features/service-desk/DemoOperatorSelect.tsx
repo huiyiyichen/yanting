@@ -1,4 +1,3 @@
-import { UserOutlined } from '@ant-design/icons'
 import { Select, Tooltip } from 'antd'
 import { useEffect, useState } from 'react'
 import { deskApi, type DemoOperatorRosterView } from '../../api/client'
@@ -21,8 +20,7 @@ export function DemoOperatorSelect() {
     return () => { active = false }
   }, [])
   return <Tooltip title={error || undefined}><div className="desk-operator">
-    <UserOutlined />
-    <Select aria-label="模拟客服" value={roster ? operator : undefined}
+    <Select variant="borderless" prefix={<i className={`desk-online${roster ? ' is-on' : ''}`} />} aria-label="模拟客服" value={roster ? operator : undefined}
       placeholder={error || '模拟客服'} loading={!roster && !error} disabled={!roster}
       options={roster?.operators.map((item) => ({ value: item.operatorId, label: item.name }))}
       onChange={setDemoOperator} />

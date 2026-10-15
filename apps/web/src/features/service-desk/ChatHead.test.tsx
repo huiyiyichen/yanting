@@ -3,7 +3,7 @@
  * H1 头部仍分多行：风险标签、AI/人工切换、建工单、刷新不在同一个头部里。
  * H2 切到「人工」没有立即接管；切回「AI」未经确认就交还。
  * H3 AI 接待中仍显示可输入的回复框，或缺少「接管」入口；AI 回复中状态不可见。
- * H4 待复核风险与当前风险混为一谈（待复核需带前缀）。
+ * H4 待复核风险与当前风险混为一谈（待复核需带前缀）；头像缺少当前情绪圆点。
  */
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -32,7 +32,7 @@ describe('ChatHead', () => {
     expect(within(header).getByRole('radiogroup', { name: '接待方式' })).toBeTruthy()
     expect(within(header).getByRole('link', { name: '查看当前投诉风险' })).toBeTruthy()
     expect(within(header).getByText(/待复核 · /)).toBeTruthy()
-    expect(within(header).getByText('愤怒')).toBeTruthy()
+    expect(header.querySelector('.yt-emotion-dot.is-angry')).toBeTruthy()
   })
   it('H2 manual immediately, AI after confirm', async () => {
     const user = userEvent.setup()

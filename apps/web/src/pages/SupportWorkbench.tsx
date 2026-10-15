@@ -1,8 +1,8 @@
 import {
-  FileTextOutlined, MenuOutlined, ProfileOutlined,
+  FileTextOutlined, MenuOutlined, ProfileOutlined, ReloadOutlined,
   SearchOutlined, SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
-import { Alert, Badge, Button, Collapse, Drawer, Empty, Input, Segmented, Space, Spin, Tabs, Tag, message } from 'antd'
+import { Alert, Button, Tooltip, Collapse, Drawer, Empty, Input, Segmented, Space, Spin, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
@@ -241,13 +241,18 @@ export function SupportWorkbench() {
     && (mode !== '人工' || item.serviceMode === 'operator_assisted')
     && (mode !== '风险' || Boolean(item.activeRiskTypes?.length || item.reviewRiskTypes?.length))
     && `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query))
+  const allItems = snapshot?.items ?? []
+  const queueCounts: Record<string, number> = {
+    人工: allItems.filter((item) => item.serviceMode === 'operator_assisted').length,
+    风险: allItems.filter((item) => item.activeRiskTypes?.length || item.reviewRiskTypes?.length).length,
+  }
   const queue = <div className="reception-queue">
     <div className="reception-queue-head">
-      <div className="section-title-row"><h2>会话</h2><Badge count={snapshot?.unreadTotal ?? 0} /></div>
-      <Input prefix={<SearchOutlined />} placeholder="客户、会话、消息" aria-label="搜索会话" value={query} allowClear onChange={(e) => setQuery(e.target.value)} />
-      <Segmented block options={['全部', '人工', '风险', '未读']} value={mode} onChange={setMode} />
+      <Input variant="filled" prefix={<SearchOutlined />} placeholder="客户、订单号、聊天记录" aria-label="搜索会话" value={query} allowClear onChange={(e) => setQuery(e.target.value)} />
+      <Segmented className="yt-qtabs" options={(['全部', '人工', '风险', '未读'] as const).map((value) => ({ value,
+        label: <>{value}{queueCounts[value] ? <span className="n">{queueCounts[value]}</span> : null}</> }))} value={mode} onChange={setMode} />
     </div>
-    <div className="reception-list">{queueItems.length ? <div className="yt-queue-group">正在接待</div> : null}
+    <div className="reception-list">{queueItems.length ? <div className="yt-queue-group"><span>正在接待</span><span>最近消息</span></div> : null}
       {queueItems.map((item) => <QueueRow key={item.conversationId} item={item} active={id === item.conversationId} now={now}
         onOpen={() => { setParams({ conversation: item.conversationId }); setQueueOpen(false) }} />)}
       {!queueItems.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无会话" />}
@@ -266,12 +271,17 @@ export function SupportWorkbench() {
     if (active.current === target) await generate(target)
   }
   const plugin = (visible: boolean) => <div className="desk-plugin-inner">
-    <Tabs size="small" activeKey={pluginTab} onChange={setPluginTab} items={[
-      { key: 'assistant', label: 'AI 辅助', children: <>
+    <Tabs size="small" className="yt-ptabs" activeKey={pluginTab} onChange={setPluginTab}
+      tabBarExtraContent={{
+        left: <span className="yt-pbrand"><span className="yt-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>颜听</span>,
+        right: <Tooltip title={assistant ? '重新生成' : '生成建议'}><Button type="text" className="yt-pbar-btn"
+          aria-label={assistant ? '重新生成' : '生成建议'} icon={<ReloadOutlined />} loading={generating} disabled={!id}
+          onClick={() => void generate()} /></Tooltip>,
+      }} items={[
+      { key: 'assistant', label: '辅助', children: <>
         {profile?.memory && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
         <section className="service-section" aria-label="交接摘要">
-          <div className="section-title-row"><h3>交接摘要</h3><Button size="small" icon={<ThunderboltOutlined />} loading={generating} disabled={!id}
-            onClick={() => void generate()}>{assistant ? '重新生成' : '生成建议'}</Button></div>
+          <div className="section-title-row"><h3>交接摘要</h3></div>
           {brief.map((line, index) => <p key={index}>{line}</p>)}
           {!brief.length && <Tag>暂无咨询</Tag>}
           {assistant && !assistant.stale ? <Space wrap><Tag>{intentLabels[assistant.intent ?? 'unknown'] ?? '待明确'}</Tag>
@@ -409,7 +419,7 @@ export function SupportWorkbench() {
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
         <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support"
-          emotions={emotionsById} escalationMessageId={escalationId} />}</div>
+          emotions={emotionsById} escalationMessageId={escalationId} buyerAlias={current?.buyerAlias} />}</div>
         {id && automatic ? <div className="anker-composer anker-hairline-top">
           <AiReceptionBar replying={aiReplying} switching={switching} onTakeOver={() => void switchMode('operator_assisted')} />
         </div> : <div className="anker-composer anker-hairline-top">
@@ -420,7 +430,7 @@ export function SupportWorkbench() {
           <div className="composer-actions">
             <ChatImageButton upload={imageUpload.upload} disabled={!id || automatic || sending || uploading}
               uploading={uploading} />
-            <Button type="text" icon={<ThunderboltOutlined />} disabled={!id} loading={generating} onClick={() => { setPluginTab('assistant'); if (compact) setPluginOpen(true); void generate() }}>AI 建议</Button></div>
+            <span className="yt-tools-sep" /><Button type="text" className="yt-tool-ai" icon={<ThunderboltOutlined />} disabled={!id} loading={generating} onClick={() => { setPluginTab('assistant'); if (compact) setPluginOpen(true); void generate() }}>AI 建议</Button></div>
           {draftFindings.length > 0 && <div className="yt-draft-review" aria-label="发送前质检">
             {draftFindings.map((item) => <Tag key={`${item.kind}-${item.start}`}
               color={item.severity === 'high' ? 'error' : 'warning'} title={item.quote}>{item.label}</Tag>)}
@@ -430,9 +440,9 @@ export function SupportWorkbench() {
             onPasteFile={(files) => { if (files[0]) void imageUpload.upload(files[0]) }}
             submitType="enter" disabled={!id || automatic || sending} loading={sending}
             suffix={(_, { components }) => <components.SendButton type="primary" shape="default"
-              aria-label="发送" icon={<SendOutlined />}
+              aria-label="发送" icon={<SendOutlined />} className="yt-send"
               disabled={!id || (!draft.trim() && !attachmentId) || automatic || sending || uploading}
-              loading={sending} />} />
+              loading={sending}>发送</components.SendButton>} />
         </div>}
       </section>
       {!compact && <aside className="reception-plugin" aria-label="接待辅助信息">{plugin(true)}</aside>}

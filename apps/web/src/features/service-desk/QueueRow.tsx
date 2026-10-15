@@ -1,5 +1,4 @@
-import { UserOutlined } from '@ant-design/icons'
-import { Avatar, Badge, Tag } from 'antd'
+import { Badge } from 'antd'
 import { Link } from 'react-router-dom'
 import type { ReceptionItem } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
@@ -24,26 +23,24 @@ export function QueueRow({ item, active, now, onOpen }: {
 }) {
   const risk = item.riskLevel === 'high' ? 'high' : item.activeRiskTypes?.length ? 'medium' : null
   const wait = waitLabel(item, now)
-  const firstRisk = item.activeRiskTypes?.[0]
-  const tag = firstRisk ? serviceRiskTypeLabels[firstRisk] : item.serviceMode === 'autonomous' ? 'AI' : null
-  return <div className={`reception-row-item${active ? ' is-active' : ''}${risk ? ` is-risk-${risk}` : ''}`}>
+  const activeRisk = item.activeRiskTypes?.[0]
+  const reviewRisk = activeRisk ? undefined : item.reviewRiskTypes?.[0]
+  const tagRisk = activeRisk ?? reviewRisk
+  return <div className={`reception-row-item yt-qi${active ? ' is-active' : ''}${risk ? ` is-risk-${risk}` : ''}`}>
     <button className={`reception-row${active ? ' is-active' : ''}`} aria-label={`${item.buyerAlias} ${item.conversationId}`} onClick={onOpen}>
-      <Badge count={item.unreadCount} size="small">
-        <span className="yt-queue-avatar"><Avatar icon={<UserOutlined />} />
+      <Badge count={item.unreadCount} size="small" offset={[-2, 2]}>
+        <span className="yt-queue-avatar">{item.buyerAlias.slice(0, 1)}
           {item.currentEmotion && <i className={`yt-emotion-dot is-${item.currentEmotion}`} />}</span>
       </Badge>
-      <span className="reception-row-main">
-        <span className="reception-row-title"><strong>{item.buyerAlias}</strong>
-          {wait ? <time className="yt-queue-wait">{wait}</time> : <time>{dateLabel(item.updatedAt)}</time>}</span>
-        <span className="reception-row-preview"><span className="reception-row-text">{item.preview || '新会话'}</span>
-          {tag && <Tag data-testid="queue-tag" color={firstRisk ? (risk === 'high' ? 'error' : 'warning') : 'gold'}>{tag}</Tag>}</span>
-      </span>
+      <strong className="yt-qi-nm">{item.buyerAlias}</strong>
+      {wait ? <time className="yt-qi-tm yt-queue-wait">{wait}</time> : <time className="yt-qi-tm">{dateLabel(item.updatedAt)}</time>}
+      <span className="yt-qi-last">{item.preview || '新会话'}</span>
     </button>
-    {item.activeRiskTypes?.length || item.reviewRiskTypes?.length ? <div className="reception-risk-links">
-      {item.activeRiskTypes?.slice(0, 2).map((r) => <Link key={r} to={riskHref(item.conversationId, r)}
-        aria-label={`查看${serviceRiskTypeLabels[r]} · ${item.buyerAlias}`}><Tag color="warning">{serviceRiskTypeLabels[r]}</Tag></Link>)}
-      {item.reviewRiskTypes?.slice(0, 1).map((r) => <Link key={`review-${r}`} to={riskHref(item.conversationId, r)}
-        aria-label={`复核${serviceRiskTypeLabels[r]} · ${item.buyerAlias}`}><Tag color="processing">待复核 · {serviceRiskTypeLabels[r]}</Tag></Link>)}
-    </div> : null}
+    {tagRisk
+      ? <Link className="yt-qi-tag-link" to={riskHref(item.conversationId, tagRisk)}
+        aria-label={`${activeRisk ? '查看' : '复核'}${serviceRiskTypeLabels[tagRisk]} · ${item.buyerAlias}`}>
+        <span data-testid="queue-tag" className={`yt-tag ${activeRisk ? (risk === 'high' ? 'is-hi' : 'is-mid') : 'is-review'}`}>
+          {serviceRiskTypeLabels[tagRisk]}</span></Link>
+      : item.serviceMode === 'autonomous' ? <span data-testid="queue-tag" className="yt-tag is-ai yt-qi-tag">AI</span> : null}
   </div>
 }

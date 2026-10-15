@@ -1,13 +1,12 @@
 import { CustomerServiceOutlined, FileTextOutlined, ReloadOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Button, Popconfirm, Segmented, Tag, Tooltip } from 'antd'
+import { Button, Popconfirm, Segmented, Tooltip } from 'antd'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { ReceptionItem } from '../../api/client'
-import { emotionLevelLabels, serviceRiskTypeLabels } from '../../contracts/enums'
+import { serviceRiskTypeLabels } from '../../contracts/enums'
 import { riskHref } from './QueueRow'
 
 type Mode = 'autonomous' | 'operator_assisted'
-const emotionColors: Record<string, string> = { calm: 'success', dissatisfied: 'warning', angry: 'error' }
 
 /** 聊天头部：一行内放买家、情绪、风险、接待方式切换与操作。 */
 export function ChatHead({ item, switching, onMode, onTicket, onRefresh, leading, trailing }: {
@@ -23,25 +22,26 @@ export function ChatHead({ item, switching, onMode, onTicket, onRefresh, leading
   const automatic = item?.serviceMode === 'autonomous'
   return <header className="anker-chat-head anker-hairline-bottom yt-chat-head">
     {leading}
-    <Avatar icon={<UserOutlined />} /><strong className="chat-buyer">{item?.buyerAlias ?? '未选择会话'}</strong>
-    {item?.currentEmotion && <Tag color={emotionColors[item.currentEmotion]}>{emotionLevelLabels[item.currentEmotion]}</Tag>}
-    {item?.riskLevel === 'high' && <Tag color="error">高风险</Tag>}
-    {item?.activeRiskTypes?.map((risk) => <Link key={risk} to={riskHref(item.conversationId, risk)}
-      aria-label={`查看当前${serviceRiskTypeLabels[risk]}`}><Tag color="warning">{serviceRiskTypeLabels[risk]}</Tag></Link>)}
-    {item?.reviewRiskTypes?.map((risk) => <Link key={`review-${risk}`} to={riskHref(item.conversationId, risk)}
-      aria-label={`复核当前${serviceRiskTypeLabels[risk]}`}><Tag color="processing">待复核 · {serviceRiskTypeLabels[risk]}</Tag></Link>)}
-    {item?.handoffReason && <Tag color="warning">{item.handoffReason}</Tag>}
-    <span className="yt-chat-head-actions">
-      {item && <Popconfirm title="恢复 AI 自动接待？" okText="恢复" cancelText="取消" open={confirming}
+    <span className="yt-chead-av">{item?.buyerAlias?.slice(0, 1) ?? <UserOutlined />}
+      {item?.currentEmotion && <i className={`yt-emotion-dot is-${item.currentEmotion}`} />}</span>
+    <strong className="chat-buyer">{item?.buyerAlias ?? '未选择会话'}</strong>
+    {item && <Popconfirm title="恢复 AI 自动接待？" okText="恢复" cancelText="取消" open={confirming}
         onOpenChange={(open) => { if (!open) setConfirming(false) }}
         onConfirm={() => { setConfirming(false); onMode('autonomous') }} onCancel={() => setConfirming(false)}>
         <Segmented size="small" name="reception-mode" aria-label="接待方式" disabled={switching}
           value={automatic ? 'autonomous' : 'operator_assisted'}
-          options={[{ value: 'autonomous', label: 'AI' }, { value: 'operator_assisted', label: '人工' }]}
+          options={[{ value: 'autonomous', label: 'AI', icon: <RobotOutlined /> }, { value: 'operator_assisted', label: '人工', icon: <UserOutlined /> }]}
           onChange={(value) => { if (value === 'operator_assisted') onMode(value); else setConfirming(true) }} />
       </Popconfirm>}
-      <Button type="text" aria-label="建工单" icon={<FileTextOutlined />} disabled={!item} onClick={onTicket}>建工单</Button>
-      <Tooltip title="刷新会话"><Button type="text" aria-label="刷新会话" icon={<ReloadOutlined />} disabled={!item} onClick={onRefresh} /></Tooltip>
+    {item?.riskLevel === 'high' && <span className="yt-chip is-hi">高风险</span>}
+    {item?.activeRiskTypes?.map((risk) => <Link key={risk} to={riskHref(item.conversationId, risk)}
+      aria-label={`查看当前${serviceRiskTypeLabels[risk]}`}><span className={`yt-chip ${item.riskLevel === 'high' ? 'is-hi' : 'is-mid'}`}>{serviceRiskTypeLabels[risk]}</span></Link>)}
+    {item?.reviewRiskTypes?.map((risk) => <Link key={`review-${risk}`} to={riskHref(item.conversationId, risk)}
+      aria-label={`复核当前${serviceRiskTypeLabels[risk]}`}><span className="yt-chip is-review">待复核 · {serviceRiskTypeLabels[risk]}</span></Link>)}
+    {item?.handoffReason && <span className="yt-chip is-mid">{item.handoffReason}</span>}
+    <span className="yt-chat-head-actions">
+      <Tooltip title="建工单"><Button type="text" className="yt-ibtn" aria-label="建工单" icon={<FileTextOutlined />} disabled={!item} onClick={onTicket} /></Tooltip>
+      <Tooltip title="刷新会话"><Button type="text" className="yt-ibtn" aria-label="刷新会话" icon={<ReloadOutlined />} disabled={!item} onClick={onRefresh} /></Tooltip>
       {trailing}
     </span>
   </header>

@@ -224,7 +224,7 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 .yt-emotion-mark { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
 .yt-emotion-mark i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 .yt-escalation-divider { display: flex; align-items: center; gap: 10px; color: var(--yt-fury); font-size: 12px; }
-.yt-escalation-divider::before, .yt-escalation-divider::after { content: ''; flex: 1; border-top: 1px dashed var(--yt-fury); opacity: 0.6; }
+.yt-escalation-divider::before, .yt-escalation-divider::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(204, 53, 80, 0.35), transparent); }
 .ant-avatar.yt-ai-avatar { background: var(--yt-plum); color: var(--yt-gold); }
 
 /* 队列项（P1-1）：头像情绪点、左侧风险色条、超时等待 */

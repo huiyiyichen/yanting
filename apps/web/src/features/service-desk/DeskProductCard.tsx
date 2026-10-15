@@ -18,7 +18,7 @@ export function DeskProductCard({ conversationId, refreshKey, onOpenOrder }: {
     return () => { alive = false }
   }, [conversationId, refreshKey])
   if (!card) return null
-  const logistics = [card.carrier, card.city].filter(Boolean).join(' · ')
+  const logistics = [card.carrier, card.city].filter(Boolean).join(' ')
   return (
     <button type="button" className="yt-desk-product" onClick={() => onOpenOrder(card.orderId ?? null)} aria-label={card.name}>
       {card.imageUrl ? <img src={card.imageUrl} alt="" /> : <span className="yt-product-card-ph"><ShoppingOutlined /></span>}
@@ -27,11 +27,13 @@ export function DeskProductCard({ conversationId, refreshKey, onOpenOrder }: {
         <span className="yt-desk-product-facts">
           {money(card.paidAmountMinor) && <span>{money(card.paidAmountMinor)}</span>}
           {card.orderId && <span>{card.orderId}</span>}
-          {card.status && <span>{card.status}</span>}
-          {logistics && <span>{logistics}</span>}
           {!card.orderId && card.sku && <span>{card.sku}</span>}
         </span>
       </span>
+      {(card.status || logistics) && <span className="yt-desk-product-ship">
+        {card.status && <span className="yt-pill">{card.status}</span>}
+        {logistics && <span>{logistics}</span>}
+      </span>}
     </button>
   )
 }
