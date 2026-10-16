@@ -28,8 +28,10 @@ export function ServiceLanes({ detail, profile, onContact }: {
     {lanes.map((lane) => <div key={lane.key} className={`yt-lanes-row is-${lane.key}`} role="row">
       <span className="yt-lanes-name" role="rowheader">{lane.label}</span>
       <div className="yt-lanes-track" role="cell">
-        {lane.nodes.map((node) => {
+        {lane.nodes.map((node, index) => {
           const left = xPercent(node.at, segments)
+          const next = lane.nodes.slice(index + 1).map((other) => xPercent(other.at, segments)).find((x) => x >= left)
+          const roomy = next == null || next - left > 12
           const right = node.end != null ? xPercent(node.end, segments) : null
           const tone = node.tone ? ` is-${node.tone}` : ''
           if (lane.key === 'contacts') return <Tooltip key={node.key} title={node.title}>
@@ -40,7 +42,7 @@ export function ServiceLanes({ detail, profile, onContact }: {
             <span className={`yt-lanes-bar${node.open ? ' is-open' : ''}${tone}`} style={{ left: `${left}%`, width: `${right - left}%` }} tabIndex={0}>
               <em>{node.label}</em></span></Tooltip>
           return <Tooltip key={node.key} title={node.title}>
-            <span className={`yt-lanes-dot${tone}`} style={{ left: `${left}%` }} tabIndex={0}><i /><em>{node.label}</em></span></Tooltip>
+            <span className={`yt-lanes-dot${tone}`} style={{ left: `${left}%` }} tabIndex={0} aria-label={node.title}><i />{roomy && <em>{node.label}</em>}</span></Tooltip>
         })}
       </div>
     </div>)}
