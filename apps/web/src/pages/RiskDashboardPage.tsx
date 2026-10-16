@@ -1,18 +1,17 @@
-import { CheckOutlined, CloseOutlined, EyeOutlined, FileTextOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
+import { CheckOutlined, CloseOutlined, EyeOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, deskApi, supportApi, type ProductClueView, type ConsumerProfileView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
-import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, optionsOf } from '../features/service-desk/shared'
-import { HighlightedText } from '../features/service-desk/HighlightedText'
+import { dateLabel, optionsOf } from '../features/service-desk/shared'
 import { serviceRiskTypeLabels } from '../contracts/enums'
 import { emotionStatus, followupDeadlines, primaryConversation, signalAttention } from '../features/service-desk/riskPresentation'
-import { EmotionArc } from '../features/service-desk/EmotionArc'
 import { RiskSpark } from '../features/risk/RiskSpark'
 import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
 import { RiskEmotionTrack, RiskLinks, RiskTriggers, emotionNow, linkedRecords } from '../features/risk/RiskDetailSections'
 import { NextSteps } from '../features/service-desk/AssistBlocks'
+import { EvidenceQuote, RiskTicketList, RiskTrajectory, type EvidenceItem } from '../features/risk/RiskDetailMore'
 import { visibleInterval } from '../hooks/visibleInterval'
 
 const actionLabels = { resolved: '复核关闭', ignored: '忽略风险', reopen: '重新介入' }
@@ -22,7 +21,6 @@ const actionResults = {
   reopen: ['需重新核对', '出现新的待处理事项'],
 }
 const levelLabels: Record<string, string> = { high: '高风险', medium: '中风险', low: '低风险', unknown: '未知' }
-const emotionLabels: Record<string, string> = { calm: '平稳', dissatisfied: '不满', angry: '激烈', unknown: '未知' }
 const serviceStateLabels: Record<string, string> = { live: '服务中', closed: '服务已结束', historical: '历史记录' }
 const currentActionLabels: Record<string, string> = { intervene: '待处理', review: '待复核', record_only: '历史记录', none: '已归档' }
 type Signal = RiskIncidentView['signals'][number]
@@ -263,16 +261,8 @@ export function RiskDashboardPage() {
     ...(incident?.signals ?? []).filter((signal) => signalAttention(signal) === 'active').map((signal) => signal.recommendedAction),
     ...(incident?.signals ?? []).flatMap((signal) => followupDeadlines(signal.conditions)).map((deadline) => `跟进工单 ${deadline.ticketId}，截止 ${dateLabel(deadline.dueAt)}`),
   ].filter(Boolean))]
-  const evidenceQuote = (evidence: RiskIncidentDetailView['evidence'][number], fallbackId?: string) => {
-    const conversationId = evidence.conversationId ?? (evidence.kind.includes('message') || evidence.kind === 'history_context'
-      ? (selected?.incident.conversationIds.includes(evidence.label) || selected?.contactHistory?.some((point) => point.label === evidence.label)
-        ? evidence.label : fallbackId) : undefined)
-    return <blockquote className="evidence-quote" key={evidence.ref}>
-      <div className="section-title-row"><span>{dateLabel(evidence.occurredAt)} · {evidence.label}</span>
-        {conversationId && <Button size="small" type="text" icon={<MessageOutlined />} onClick={() => openConversation(conversationId)}>打开会话</Button>}</div>
-      <p><HighlightedText text={evidence.body} highlights={evidence.highlights} /></p>
-    </blockquote>
-  }
+  const evidenceQuote = (evidence: EvidenceItem, fallbackId?: string) => <EvidenceQuote key={evidence.ref}
+    evidence={evidence} fallbackId={fallbackId} detail={selected} onOpen={openConversation} />
   return <div className="desk-workbench yt-risk-page">{holder}
     <PageHeader title="风险预警" extra={<div className="yt-scope" role="radiogroup" aria-label="数据范围">
       {(['official', 'live'] as const).map((key) => <button key={key} type="button" role="radio" aria-checked={scope === key}
@@ -438,57 +428,10 @@ export function RiskDashboardPage() {
                 </Space>,
               }
 })()] : []),
-          { key: 'trajectory', label: '服务轨迹', children: <>
-            <EmotionArc
-              history={selected.emotionHistory ?? []}
-              servicePoints={selected.servicePoints ?? []}
-              comparisons={selected.emotionComparisons ?? []}
-              onOpenConversation={openConversation}
-            />
-            {Boolean(selected.emotionHistory?.length) && <section className="service-section"><h3>消费者消息</h3>
-              <Timeline items={selected.emotionHistory?.map((point) => ({
-                key: point.messageId, content: <div className="service-message-content">
-                  <div className="section-title-row"><Space><Tag color={point.emotion === 'angry' ? 'error' : point.emotion === 'dissatisfied' ? 'warning' : 'success'}>{emotionLabels[point.emotion]}</Tag>
-                    <span>{dateLabel(point.occurredAt)} · {point.conversationId}</span></Space>
-                    <Button type="text" size="small" icon={<MessageOutlined />} aria-label={`打开会话 ${point.conversationId}`} onClick={() => openConversation(point.conversationId)} /></div>
-                  <p>{point.body}</p>
-                </div>,
-              }))} />
-            </section>}
-            {Boolean(selected.contactHistory?.length) && <section className="service-section"><h3>历史进线</h3>
-              {selected.contactHistory?.map((item) => evidenceQuote(item, item.label))}
-            </section>}
-            {selected.contexts.map((context) => <section className="service-section" key={context.conversationId}>
-              <div className="section-title-row"><strong>{context.conversationId}</strong>
-                <Space>
-                  <Button size="small" icon={<MessageOutlined />} onClick={() => openConversation(context.conversationId)}>打开会话</Button>
-                  <Button size="small" icon={<FileTextOutlined />} aria-label={`为会话 ${context.conversationId} 新建工单`}
-                    title="为此会话新建工单"
-                    onClick={() => navigate(`/platform/work-orders?conversation=${encodeURIComponent(context.conversationId)}&create=1`)} />
-                </Space></div>
-              <OrderFacts context={context} /><ServiceTimeline context={context} />
-            </section>)}
-            {selected.handlingHistory.length > 0 && <Collapse ghost items={[{
-              key: 'handling', label: '处置记录', children: <Timeline items={selected.handlingHistory.map((event) => ({
-                key: event.eventId, content: <div><span>{dateLabel(event.createdAt)} · {event.actor}</span><p>{event.note}</p></div>,
-              }))} />,
-            }]} />}
-            {Boolean(selected.episodes?.length) && <Collapse ghost items={[{
-              key: 'episodes', label: '历史轮次', children: selected.episodes?.map((episode) => <section className="service-section" key={`${episode.alertId}-${episode.episode}`}>
-                <h3>第 {episode.episode} 轮 · {serviceRiskTypeLabels[episode.riskType as keyof typeof serviceRiskTypeLabels] ?? episode.riskType}</h3>
-                <p>{dateLabel(episode.closedAt)} · {episode.handledBy}</p><p>{episode.handledNote}</p>
-                {episode.evidence.map((item) => evidenceQuote(item))}
-              </section>),
-            }]} />}
-          </> },
-          { key: 'work', label: `关联工单 ${selected.tickets.length}`, children: <>
-            <Button disabled={!primaryId} onClick={() => primaryId && navigate(`/platform/work-orders?conversation=${encodeURIComponent(primaryId)}&create=1`)}>新建跟进工单</Button>
-            {selected.tickets.map((ticket) => <section className="service-section" key={ticket.ticketId}>
-              <div className="section-title-row"><strong>{ticket.title}</strong><TicketStatus status={ticket.status} /></div>
-              <p>{ticket.assignee || '待分配'} · {ticket.ticketId}</p>
-              <Button size="small" onClick={() => navigate(`/platform/work-orders?ticket=${encodeURIComponent(ticket.ticketId)}`)}>打开工单</Button>
-            </section>)}
-          </> },
+          { key: 'trajectory', label: '服务轨迹', children: selected && <RiskTrajectory detail={selected} onOpen={openConversation}
+            onCreateTicket={(cid) => navigate(`/platform/work-orders?conversation=${encodeURIComponent(cid)}&create=1`)} /> },
+          { key: 'work', label: `关联工单 ${selected.tickets.length}`, children: <RiskTicketList tickets={selected.tickets} primaryId={primaryId}
+            onNavigate={navigate} /> },
         ]} />
       </>}
       </aside>}
