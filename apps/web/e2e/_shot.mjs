@@ -74,13 +74,13 @@ try {
     await page.goto(`${BASE}${view.path}`)
     await page.waitForTimeout(1500)
 
-    // 客服视角额外生成一次话术候选，用来核对该面板的视觉（真实模型调用，约 2 秒）
+    // 客服视角额外生成一次接待辅助，用来核对该面板的视觉（真实模型调用，约 2 秒）
     if (view.name.startsWith('support')) {
       const generated = await page.request.post(
-        `${BASE}/api/support/conversations/${conversationId}/suggestions/generate`,
+        `${BASE}/api/support/reception/${conversationId}/assistant`,
         { headers: { 'X-Demo-View-Role': 'support' } },
       )
-      console.log('suggestions:', generated.status())
+      console.log('assistant:', generated.status())
     }
 
     // 选中本次造的会话（窄屏先展开列表）

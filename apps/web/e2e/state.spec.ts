@@ -21,7 +21,7 @@ import {
 const HERE = dirname(fileURLToPath(import.meta.url))
 
 /**
- * 刷新恢复与跨会话竞态回归（AC-23、AC-25、AC-29）。
+ * 刷新恢复与跨会话竞态回归（AC-23、AC-29）。
  *
  * 关键原则：已发送消息以**服务端**为准；浏览器只保留偏好与未发送草稿。
  * 刷新、切换会话都不能造成重复消息或串线。
@@ -341,60 +341,5 @@ test.describe('托管与候选竞态', () => {
     const items = (await queue.json()) as { conversationId: string; serviceMode: string }[]
     const target = items.find((item) => item.conversationId === conversationId)
     expect(target?.serviceMode).toBe('operator_assisted')
-  })
-
-  test('新客户消息使旧候选过期（AC-25）', async ({ page }) => {
-    const marker = runMarker()
-    const conversationId = await createConversation(page)
-    await sendCustomerMessage(page, conversationId, msg('候选过期测试：吸力弱', marker), `exp-1-${marker}`)
-
-    const generated = await page.request.post(
-      `/api/support/conversations/${conversationId}/suggestions/generate`,
-      { headers: SUPPORT },
-    )
-    expect(generated.ok()).toBeTruthy()
-    expect((await generated.json()).expires).toBe(false)
-
-    // 客户追问。AI 回复是异步落库的：currentRevision 会从 3（客户消息）
-    // 走到 4（助手回复）。直接读一次会在 3 的瞬间拿到未过期的中间态，
-    // 因此轮询到终态再断言，而不是假设回复已经写完。
-    await sendCustomerMessage(
-      page,
-      conversationId,
-      msg('补充：还在保修期内吗', marker),
-      `exp-2-${marker}`,
-    )
-
-    type SuggestionPayload = {
-      expires: boolean
-      messageRevision: number
-      currentRevision: number
-      items: { messageRevision: number; expires: boolean }[]
-    }
-    let payload: SuggestionPayload | null = null
-    // 轮询到「会话版本已推进且候选已过期」这一稳定终态。
-    // 不断言具体的 revision 数值：候选在追问后可能被重新生成或被清理，
-    // 数值会随实现变化；AC-25 要求的是**旧候选不可再直接发送**这一不变量。
-    await expect
-      .poll(
-        async () => {
-          const after = await page.request.get(
-            `/api/support/conversations/${conversationId}/suggestions`,
-            { headers: SUPPORT },
-          )
-          payload = (await after.json()) as SuggestionPayload
-          return payload.currentRevision > 2 && payload.expires === true
-        },
-        { timeout: 20_000, message: '客户追问后候选未进入「已过期」终态' },
-      )
-      .toBe(true)
-
-    expect(payload).not.toBeNull()
-    // 候选整体过期
-    expect(payload?.expires).toBe(true)
-    // 会话版本确实因新消息推进
-    expect(payload?.currentRevision).toBeGreaterThan(payload?.messageRevision ?? 0)
-    // 每一条候选都带 expires=true，不存在仍可直接发送的候选
-    expect(payload?.items.every((item) => item.expires)).toBe(true)
   })
 })
