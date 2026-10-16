@@ -391,7 +391,11 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-detail .ant-timeline-item-tail { border-color: var(--m-line-2); }
 .yt-risk-detail .ant-select-selector { background: var(--m-bg) !important; border-color: var(--m-line-2) !important; color: var(--m-ink-2) !important; }
 .yt-risk-detail .ant-skeleton-title, .yt-risk-detail .ant-skeleton-paragraph > li { background: var(--m-raised) !important; }
-@media (max-width: 1200px) { .yt-risk-md.has-detail { grid-template-columns: 1fr; } .yt-risk-detail { position: static; max-height: none; } }
+@media (max-width: 1360px) { .yt-risk-md.has-detail { grid-template-columns: minmax(0, 1fr) 420px; } }
+@media (max-width: 1179px) {
+  .yt-risk-md.has-detail { grid-template-columns: minmax(0, 1fr); }
+  .yt-risk-detail { position: fixed; top: 0; right: 0; bottom: 0; z-index: 1000; width: min(420px, 100vw); max-height: none; border-radius: 0; box-shadow: -12px 0 32px rgba(0, 0, 0, 0.45); }
+}
 .yt-risk-id { display: flex; align-items: center; gap: 12px; padding-right: 28px; }
 .yt-risk-avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: var(--m-ink);
   background: linear-gradient(140deg, #4a3557, #2e2238); border: 1px solid var(--m-line-2); flex: none; }

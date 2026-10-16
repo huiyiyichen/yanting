@@ -139,6 +139,16 @@ export function RiskDashboardPage() {
   }, [requestedConversation, requestedType, requestedIncident, rows])
   const openConversation = (id: string) => navigate(`/support?conversation=${encodeURIComponent(id)}`)
   const closeDetail = () => { setSelectedId(null); setAction(null) }
+  useEffect(() => {
+    if (!selectedId) return
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (event.key !== 'Escape' || target?.closest('input, textarea, [contenteditable="true"], .ant-modal')) return
+      setSelectedId(null); setAction(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selectedId])
   const refreshDetail = async (incidentId: string, request = detailRequest.current) => {
     const detail = await deskApi.risk(incidentId)
     if (request === detailRequest.current) setSelected(detail)

@@ -191,6 +191,17 @@ describe('风险服务断点', () => {
     expect(api.risk).toHaveBeenCalledTimes(openedRequests)
   }, 15000)
 
+  it('F4 抽屉/详情可用 Esc 关闭，输入框内按 Esc 不关闭', async () => {
+    const user = userEvent.setup()
+    api.risks.mockResolvedValue([incident])
+    api.risk.mockResolvedValue(detail)
+    renderPage()
+    await user.click(await screen.findByTestId('risk-open-incident-1'))
+    expect(await screen.findByRole('complementary', { name: '风险详情' })).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: '风险详情' })).not.toBeInTheDocument())
+  }, 15000)
+
   it('通过明确关联订单跳转时按事件编号打开，不要求来源会话相同', async () => {
     renderPage('/risk?incident=incident-1&conversation=new-conversation&type=service_breakpoint')
     await waitFor(() => expect(api.risk).toHaveBeenCalledWith('incident-1'))
