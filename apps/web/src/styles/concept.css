@@ -584,3 +584,19 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .yt-khit-head b { flex: 0 0 auto; min-width: 22px; text-align: right; font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--yt-ink); }
 .yt-khit p.is-full { white-space: pre-wrap; }
 .yt-khit-foot { display: flex; align-items: center; justify-content: space-between; }
+
+/* 工单看板 */
+.yt-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.yt-board-col { min-width: 0; display: flex; flex-direction: column; background: #f7f5f9; border-radius: 10px; padding: 10px; }
+.yt-board-col h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--yt-ink); display: flex; align-items: center; gap: 6px; }
+.yt-board-col h3 span { font-weight: 400; color: #958ba1; font-variant-numeric: tabular-nums; }
+.yt-board-list { display: grid; gap: 8px; align-content: start; }
+.yt-board-card { display: grid; gap: 6px; width: 100%; text-align: left; font: inherit; cursor: pointer; padding: 10px 12px; border: 1px solid var(--yt-hair); border-left: 3px solid transparent; border-radius: 8px; background: #fff; }
+.yt-board-card:hover { border-color: #cfc5d8; }
+.yt-board-card.is-overdue { border-left-color: var(--yt-fury); }
+.yt-board-card strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-board-meta, .yt-board-who { font-size: 12px; color: #958ba1; }
+.yt-board-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.yt-board-foot .ant-tag { margin: 0; }
+.yt-board-who { margin-left: auto; }
+.desk-filterbar .yt-view-toggle { margin-left: auto; }

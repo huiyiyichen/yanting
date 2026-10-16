@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons'
-import { Alert, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Select, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
+import { Alert, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Segmented, Select, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceContextView, type ReceptionItem, type TicketCreateRequest, type TicketUpdateRequest, type TicketView } from '../api/client'
@@ -8,6 +8,7 @@ import { OrderFacts, TicketStatus, dateLabel, optionsOf, priorities, ticketStatu
 import { getDemoOperator, useDemoOperator } from '../features/service-desk/operator'
 import { TicketDetailFields, newTicketDetail } from '../features/service-desk/TicketDetailFields'
 import { ticketDeadline } from '../features/service-desk/ticketDeadline'
+import { TicketBoard } from '../features/service-desk/TicketBoard'
 import { visibleInterval } from '../hooks/visibleInterval'
 
 const detailLabels: Record<string, string> = {
@@ -63,6 +64,7 @@ export function WorkOrderPage() {
   const [createContext, setCreateContext] = useState<ConsumerServiceContextView | null>(null)
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('all')
+  const [view, setView] = useState<string>('列表')
   const [type, setType] = useState<string>()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -181,8 +183,9 @@ export function WorkOrderPage() {
         <Input aria-label="搜索工单" prefix={<SearchOutlined />} placeholder="工单、订单、客户、负责人" value={query} onChange={(e) => setQuery(e.target.value)} allowClear />
         <Select aria-label="工单类型" placeholder="工单类型" value={type} options={optionsOf(ticketTypes)} onChange={setType} allowClear />
         {conversationId && <Tag closable onClose={() => setParams({})}>{conversationId}</Tag>}
+        <Segmented className="yt-view-toggle" aria-label="工单视图" value={view} onChange={setView} options={['列表', '看板']} />
       </div>
-      <Table<TicketView> rowKey="ticketId" size="small" dataSource={filtered} loading={loading} scroll={{ x: 1020 }}
+      {view === '看板' ? <TicketBoard rows={filtered} now={clock} onOpen={(ticket) => setParams({ ticket })} /> : <Table<TicketView> rowKey="ticketId" size="small" dataSource={filtered} loading={loading} scroll={{ x: 1020 }}
         pagination={{ pageSize: 12, showSizeChanger: false }} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无工单" /> }}
         columns={[
           { title: '工单 / 事项', width: 250, render: (_, row) => <Button type="link" className="table-title-link" onClick={() => setParams({ ticket: row.ticketId })}><strong>{row.title}</strong><small>{row.ticketId}</small></Button> },
@@ -196,7 +199,7 @@ export function WorkOrderPage() {
             {ticketDeadline(row, clock) === 'soon' && <Tag color="warning">即将到期</Tag>}
           </div> },
           { title: '更新时间', width: 140, render: (_, row) => dateLabel(row.updatedAt) },
-        ]} />
+        ]} />}
     </div>
     <Drawer title={selected?.title ?? '工单详情'} size={620} open={Boolean(ticketId)} onClose={() => setParams({})}>
       {selected && <>
