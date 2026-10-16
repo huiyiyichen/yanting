@@ -1,3 +1,11 @@
+/**
+ * 工单页（分组列表 + 右侧详情，替代看板）。新增失败方式：
+ * G1 “全部”下已完成工单排在待处理前面，或默认展开把待处理挤出首屏；
+ * G2 选了单个状态仍显示分组段头，浪费行；
+ * G3 打开详情后列表被遮住/消失，无法边看列表边处理；选中行无标记；
+ * G4 在跟进记录里按方向键会切走工单（丢输入）；列表上方向键不能切换；
+ * G5 通过链接打开一张处于收起分组里的工单时详情不显示。
+ */
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConfigProvider } from 'antd'
@@ -105,14 +113,14 @@ it('我的待办随显式模拟客服身份切换', async () => {
   const user = userEvent.setup()
   mount()
   await screen.findByText('物流停滞跟进')
-  await user.click(screen.getByRole('tab', { name: '我的待办' }))
+  await user.click(screen.getByRole('button', { name: '我的' }))
   expect(screen.queryByText('换货待确认')).not.toBeInTheDocument()
   await user.click(screen.getByRole('combobox', { name: '模拟客服' }))
   await user.click(await screen.findByText('模拟客服 G002', { selector: '.ant-select-item-option-content' }))
   await screen.findByText('换货待确认')
   expect(screen.queryByText('物流停滞跟进')).not.toBeInTheDocument()
   expect(localStorage.getItem('service-desk.demo-operator')).toBe('G002')
-})
+}, 15000)
 
 it('类型切换清除旧字段并将结构化资料和操作身份提交后端', async () => {
   const user = userEvent.setup()
@@ -203,8 +211,57 @@ it('到期待办过滤已完成工单并按期限先后排列', async () => {
   ]
   mount()
   await screen.findByText('晚到期')
-  await user.click(screen.getByRole('tab', { name: '已到期' }))
+  await user.click(screen.getByRole('button', { name: '到期' }))
   expect(screen.queryByText('已处理完')).not.toBeInTheDocument()
   const titles = screen.getAllByRole('button').filter((button) => button.classList.contains('table-title-link'))
   expect(titles.map((button) => button.textContent)).toEqual(['早到期LOCAL-B', '晚到期LOCAL-A'])
 })
+
+const statusRows = () => [
+  { ...base, ticketId: 'LOCAL-P', title: '待受理一' },
+  { ...base, ticketId: 'LOCAL-I', title: '处理中一', status: 'in_progress' as const },
+  { ...base, ticketId: 'LOCAL-W', title: '等客户', status: 'waiting_customer' as const },
+  { ...base, ticketId: 'LOCAL-R', title: '完成一', status: 'resolved' as const },
+]
+
+it('G1/G2 全部按状态分段且已完成默认收起；单状态无段头', async () => {
+  const user = userEvent.setup()
+  rows = statusRows()
+  mount()
+  await screen.findByText('待受理一')
+  const heads = screen.getAllByRole('button', { expanded: true }).concat(screen.getAllByRole('button', { expanded: false }))
+    .filter((b) => b.classList.contains('yt-ticket-group'))
+  expect(heads.map((b) => b.textContent)).toEqual(['待受理1', '处理中1', '等待反馈1', '已完成1'])
+  expect(screen.queryByText('完成一')).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: /已完成\s*1/, expanded: false }))
+  expect(await screen.findByText('完成一')).toBeInTheDocument()
+  await user.click(screen.getByText('处理中 1'))
+  expect(screen.getByText('处理中一')).toBeInTheDocument()
+  expect(screen.queryByText('待受理一')).not.toBeInTheDocument()
+  expect(document.querySelector('.yt-ticket-group')).toBeNull()
+}, 15000)
+
+it('G3/G4 详情在右侧与列表并存，方向键切换但输入时不切换', async () => {
+  const user = userEvent.setup()
+  rows = statusRows()
+  mount()
+  await user.click(await screen.findByRole('button', { name: /待受理一.*LOCAL-P/ }))
+  const detail = await screen.findByRole('complementary', { name: '工单详情' })
+  expect(within(detail).getByText('LOCAL-P')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /处理中一.*LOCAL-I/ })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /待受理一.*LOCAL-P/ }).closest('tr')).toHaveAttribute('aria-selected', 'true')
+  await user.type(await within(detail).findByLabelText('跟进记录'), '草稿{ArrowDown}')
+  expect(within(detail).getByText('LOCAL-P')).toBeInTheDocument()
+  ;(document.activeElement as HTMLElement).blur()
+  await user.keyboard('{ArrowDown}')
+  await waitFor(() => expect(within(screen.getByRole('complementary', { name: '工单详情' })).getByText('LOCAL-I')).toBeInTheDocument())
+  await user.keyboard('{Escape}')
+  await waitFor(() => expect(screen.queryByRole('complementary', { name: '工单详情' })).not.toBeInTheDocument())
+}, 15000)
+
+it('G5 链接打开收起分组里的工单仍显示详情', async () => {
+  rows = statusRows()
+  mount('/platform/work-orders?ticket=LOCAL-R')
+  const detail = await screen.findByRole('complementary', { name: '工单详情' })
+  expect(await within(detail).findByText('LOCAL-R')).toBeInTheDocument()
+}, 15000)

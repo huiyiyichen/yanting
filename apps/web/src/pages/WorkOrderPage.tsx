@@ -1,14 +1,15 @@
-import { ArrowLeftOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons'
-import { Alert, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Segmented, Select, Space, Table, Tabs, Tag, Timeline, message } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowLeftOutlined, CloseOutlined, PlusOutlined, ReloadOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons'
+import { Alert, Button, Descriptions, Form, Input, Modal, Segmented, Select, Space, Tabs, Tag, Timeline, message } from 'antd'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceContextView, type ReceptionItem, type TicketCreateRequest, type TicketUpdateRequest, type TicketView } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
-import { OrderFacts, TicketStatus, dateLabel, optionsOf, priorities, ticketStatuses, ticketTypes } from '../features/service-desk/shared'
+import { OrderFacts, dateLabel, optionsOf, priorities, ticketStatuses, ticketTypes } from '../features/service-desk/shared'
 import { getDemoOperator, useDemoOperator } from '../features/service-desk/operator'
 import { TicketDetailFields, newTicketDetail } from '../features/service-desk/TicketDetailFields'
 import { ticketDeadline } from '../features/service-desk/ticketDeadline'
-import { TicketBoard } from '../features/service-desk/TicketBoard'
+import { TicketTable } from '../features/service-desk/TicketTable'
+import { compareTickets, groupOf, matchesQuick, statusGroups, type QuickFilter, type StatusGroup } from '../features/service-desk/ticketList'
 import { visibleInterval } from '../hooks/visibleInterval'
 
 const detailLabels: Record<string, string> = {
@@ -63,8 +64,9 @@ export function WorkOrderPage() {
   const [queue, setQueue] = useState<ReceptionItem[]>([])
   const [createContext, setCreateContext] = useState<ConsumerServiceContextView | null>(null)
   const [query, setQuery] = useState('')
-  const [mode, setMode] = useState('all')
-  const [view, setView] = useState<string>('列表')
+  const [status, setStatus] = useState<'all' | StatusGroup>('all')
+  const [quick, setQuick] = useState<QuickFilter[]>([])
+  const [collapsed, setCollapsed] = useState<ReadonlySet<StatusGroup>>(() => new Set(['resolved']))
   const [type, setType] = useState<string>()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -152,16 +154,35 @@ export function WorkOrderPage() {
     } catch (err) { void toast.error((err as Error).message) }
     finally { setSaving(false) }
   }
-  const filtered = rows.filter((row) => (!type || row.workOrderType === type)
+  const scoped = useMemo(() => rows.filter((row) => (!type || row.workOrderType === type)
     && (!conversationId || row.conversationId === conversationId)
-    && `${row.ticketId} ${row.title} ${row.buyerAlias} ${row.orderId} ${row.assignee}`.includes(query)
-    && (mode === 'all' || (mode === 'mine' ? row.assignee === operator && row.status !== 'resolved'
-      : mode === 'unassigned' ? !row.assignee && row.status !== 'resolved'
-        : mode === 'overdue' ? ticketDeadline(row, clock) === 'overdue'
-          : mode === 'soon' ? ticketDeadline(row, clock) === 'soon'
-            : mode === 'waiting' ? row.status.startsWith('waiting_') : row.status === mode)))
-    .sort((a, b) => mode === 'overdue' || mode === 'soon'
-      ? new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime() : 0)
+    && `${row.ticketId} ${row.title} ${row.buyerAlias} ${row.orderId ?? ''} ${row.assignee}`.includes(query)
+    && matchesQuick(row, quick, operator, clock)), [rows, type, conversationId, query, quick, operator, clock])
+  const filtered = useMemo(() => scoped.filter((row) => status === 'all' || groupOf(row.status) === status)
+    .sort((a, b) => compareTickets(a, b, clock)), [scoped, status, clock])
+  const grouped = status === 'all'
+  const navOrder = useMemo(() => filtered.filter((row) => !grouped || !collapsed.has(groupOf(row.status))).map((row) => row.ticketId),
+    [filtered, grouped, collapsed])
+  const open = useCallback((id: string | null) => setParams(id ? { ticket: id } : {}), [setParams])
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, select, [contenteditable="true"], .ant-select, .ant-modal')) return
+      if (event.key === 'Escape' && ticketId) { open(null); return }
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+      if (!navOrder.length) return
+      const at = ticketId ? navOrder.indexOf(ticketId) : -1
+      const next = event.key === 'ArrowDown' ? Math.min(navOrder.length - 1, at + 1) : Math.max(0, at - 1)
+      if (navOrder[next] !== ticketId) { event.preventDefault(); open(navOrder[next]) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOrder, ticketId, open])
+  const toggleQuick = (key: QuickFilter) => setQuick((cur) => cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key])
+  const toggleGroup = (group: StatusGroup) => setCollapsed((cur) => {
+    const next = new Set(cur); if (next.has(group)) next.delete(group); else next.add(group); return next
+  })
+  const countOf = (group: StatusGroup) => scoped.filter((row) => groupOf(row.status) === group).length
 
   return <div className="desk-workbench">{holder}
     <PageHeader title="工单管理" stats={[
@@ -172,58 +193,50 @@ export function WorkOrderPage() {
       { label: '已完成', value: rows.filter((r) => r.status === 'resolved').length },
     ]} actions={<Space><Button icon={<ReloadOutlined />} aria-label="刷新工单" loading={loading} onClick={() => void load()} />
       <Button type="primary" icon={<PlusOutlined />} aria-label="新建工单" onClick={() => setCreateOpen(true)}>新建工单</Button></Space>} />
-    <div className="desk-page-body">
-      {error && <Alert type="error" title={error} showIcon />}
-      <Tabs activeKey={mode} onChange={setMode} items={[
-        { key: 'all', label: '全部' }, { key: 'mine', label: '我的待办' }, { key: 'unassigned', label: '待分配' },
-        { key: 'overdue', label: '已到期' }, { key: 'soon', label: '24小时内到期' },
-        { key: 'pending', label: '待受理' }, { key: 'in_progress', label: '处理中' }, { key: 'waiting', label: '等待反馈' }, { key: 'resolved', label: '已完成' },
-      ]} />
-      <div className="desk-filterbar">
-        <Input aria-label="搜索工单" prefix={<SearchOutlined />} placeholder="工单、订单、客户、负责人" value={query} onChange={(e) => setQuery(e.target.value)} allowClear />
-        <Select aria-label="工单类型" placeholder="工单类型" value={type} options={optionsOf(ticketTypes)} onChange={setType} allowClear />
-        {conversationId && <Tag closable onClose={() => setParams({})}>{conversationId}</Tag>}
-        <Segmented className="yt-view-toggle" aria-label="工单视图" value={view} onChange={setView} options={['列表', '看板']} />
+    <div className={`desk-page-body yt-ticket-page${ticketId ? ' has-detail' : ''}`}>
+      <div className="yt-ticket-list">
+        {error && <Alert type="error" title={error} showIcon />}
+        <div className="desk-filterbar">
+          <Segmented aria-label="处理状态" value={status} onChange={(v) => setStatus(v as typeof status)} options={[
+            { value: 'all', label: `全部 ${scoped.length}` },
+            ...statusGroups.map(({ key, label }) => ({ value: key, label: `${label} ${countOf(key)}` })),
+          ]} />
+          {([['mine', '我的'], ['unassigned', '待分配'], ['due', '到期']] as const).map(([key, label]) =>
+            <button key={key} type="button" className="yt-quick" aria-pressed={quick.includes(key)} onClick={() => toggleQuick(key)}>{label}</button>)}
+          <Input aria-label="搜索工单" prefix={<SearchOutlined />} placeholder="工单、订单、客户、负责人" value={query} onChange={(e) => setQuery(e.target.value)} allowClear />
+          <Select aria-label="工单类型" placeholder="工单类型" value={type} options={optionsOf(ticketTypes)} onChange={setType} allowClear />
+          {conversationId && <Tag closable onClose={() => setParams({})}>{conversationId}</Tag>}
+        </div>
+        <TicketTable rows={filtered} grouped={grouped} collapsed={collapsed} onToggle={toggleGroup} selectedId={ticketId}
+          onOpen={open} now={clock} compact={Boolean(ticketId)} loading={loading} />
       </div>
-      {view === '看板' ? <TicketBoard rows={filtered} now={clock} onOpen={(ticket) => setParams({ ticket })} /> : <Table<TicketView> rowKey="ticketId" size="small" dataSource={filtered} loading={loading} scroll={{ x: 1020 }}
-        pagination={{ pageSize: 12, showSizeChanger: false }} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无工单" /> }}
-        columns={[
-          { title: '工单 / 事项', width: 250, render: (_, row) => <Button type="link" className="table-title-link" onClick={() => setParams({ ticket: row.ticketId })}><strong>{row.title}</strong><small>{row.ticketId}</small></Button> },
-          { title: '类型', width: 110, render: (_, row) => ticketTypes[row.workOrderType] },
-          { title: '客户', dataIndex: 'buyerAlias', width: 110 },
-          { title: '优先级', width: 80, render: (_, row) => <Tag color={['urgent', 'high'].includes(row.priority) ? 'error' : 'default'}>{priorities[row.priority]}</Tag> },
-          { title: '处理状态', width: 120, render: (_, row) => <TicketStatus status={row.status} /> },
-          { title: '负责人', dataIndex: 'assignee', width: 100, render: (v: string) => v || '待分配' },
-          { title: '下次跟进', width: 140, render: (_, row) => <div>{dateLabel(row.dueAt)}
-            {ticketDeadline(row, clock) === 'overdue' && <Tag color="error">已到期</Tag>}
-            {ticketDeadline(row, clock) === 'soon' && <Tag color="warning">即将到期</Tag>}
-          </div> },
-          { title: '更新时间', width: 140, render: (_, row) => dateLabel(row.updatedAt) },
-        ]} />}
+      {ticketId && <aside className="yt-ticket-detail" aria-label="工单详情">
+        <header><h2>{selected?.title ?? '工单详情'}</h2>
+          {selected && <Tag>{selected.ticketId}</Tag>}
+          {selected && <Button size="small" icon={<ArrowLeftOutlined />} onClick={() => navigate(`/support?conversation=${selected.conversationId}`)}>打开会话</Button>}
+          <Button type="text" size="small" aria-label="关闭" icon={<CloseOutlined />} onClick={() => open(null)} /></header>
+        {selected && <div className="yt-ticket-detail-body">
+          <Tabs items={[
+            { key: 'handling', label: '处理与跟进', children: <>
+              <Descriptions column={2} size="small" items={[
+                { key: 'type', label: '类型', children: ticketTypes[selected.workOrderType] },
+                { key: 'source', label: '源工单状态', children: selected.sourceStatus || '本地新建' },
+                { key: 'customer', label: '客户', children: selected.buyerAlias },
+                { key: 'order', label: '订单', children: selected.orderId || '未关联' },
+              ]} />
+              <TicketHandlingForm key={selected.ticketId} ticket={selected} operator={operator} saving={saving} onSave={save} />
+              <section className="service-section"><h3>处理记录</h3><Timeline items={(selected.events ?? []).map((e) => ({
+                key: e.eventId, content: <div><small>{dateLabel(e.createdAt)} · {e.actor}</small><p>{e.note}</p></div>,
+              }))} /></section>
+            </> },
+            ...(selected.sourceRecordId ? [{ key: 'source', label: '源工单', children: <Descriptions column={1} bordered size="small" items={Object.entries(detailLabels).filter(([key]) => selected.detail?.[key] != null).map(([key, label]) => ({
+              key, label, children: String(selected.detail?.[key]),
+            }))} /> }] : []),
+            { key: 'order', label: '订单商品', children: <OrderFacts context={context} /> },
+          ]} />
+        </div>}
+      </aside>}
     </div>
-    <Drawer title={selected?.title ?? '工单详情'} size={620} open={Boolean(ticketId)} onClose={() => setParams({})}>
-      {selected && <>
-        <div className="section-title-row"><Tag>{selected.ticketId}</Tag><Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/support?conversation=${selected.conversationId}`)}>打开会话</Button></div>
-        <Tabs items={[
-          { key: 'handling', label: '处理与跟进', children: <>
-            <Descriptions column={2} size="small" items={[
-              { key: 'type', label: '类型', children: ticketTypes[selected.workOrderType] },
-              { key: 'source', label: '源工单状态', children: selected.sourceStatus || '本地新建' },
-              { key: 'customer', label: '客户', children: selected.buyerAlias },
-              { key: 'order', label: '订单', children: selected.orderId || '未关联' },
-            ]} />
-            <TicketHandlingForm key={selected.ticketId} ticket={selected} operator={operator} saving={saving} onSave={save} />
-            <section className="service-section"><h3>处理记录</h3><Timeline items={(selected.events ?? []).map((e) => ({
-              key: e.eventId, content: <div><small>{dateLabel(e.createdAt)} · {e.actor}</small><p>{e.note}</p></div>,
-            }))} /></section>
-          </> },
-          ...(selected.sourceRecordId ? [{ key: 'source', label: '源工单', children: <Descriptions column={1} bordered size="small" items={Object.entries(detailLabels).filter(([key]) => selected.detail?.[key] != null).map(([key, label]) => ({
-            key, label, children: String(selected.detail?.[key]),
-          }))} /> }] : []),
-          { key: 'order', label: '订单商品', children: <OrderFacts context={context} /> },
-        ]} />
-      </>}
-    </Drawer>
     <Modal title="新建工单" open={createOpen} onCancel={() => { setCreateOpen(false); if (params.has('create')) setParams({}) }}
       onOk={() => createForm.submit()} confirmLoading={saving} okText="创建" cancelText="取消" width={640} forceRender>
       <Form name="ticket-create" form={createForm} layout="vertical" onFinish={(values) => void create(values)}>

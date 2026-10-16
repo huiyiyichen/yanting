@@ -585,18 +585,37 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .yt-khit p.is-full { white-space: pre-wrap; }
 .yt-khit-foot { display: flex; align-items: center; justify-content: space-between; }
 
-/* 工单看板 */
-.yt-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
-.yt-board-col { min-width: 0; display: flex; flex-direction: column; background: #f7f5f9; border-radius: 10px; padding: 10px; }
-.yt-board-col h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--yt-ink); display: flex; align-items: center; gap: 6px; }
-.yt-board-col h3 span { font-weight: 400; color: #958ba1; font-variant-numeric: tabular-nums; }
-.yt-board-list { display: grid; gap: 8px; align-content: start; }
-.yt-board-card { display: grid; gap: 6px; width: 100%; text-align: left; font: inherit; cursor: pointer; padding: 10px 12px; border: 1px solid var(--yt-hair); border-left: 3px solid transparent; border-radius: 8px; background: #fff; }
-.yt-board-card:hover { border-color: #cfc5d8; }
-.yt-board-card.is-overdue { border-left-color: var(--yt-fury); }
-.yt-board-card strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.yt-board-meta, .yt-board-who { font-size: 12px; color: #958ba1; }
-.yt-board-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-.yt-board-foot .ant-tag { margin: 0; }
-.yt-board-who { margin-left: auto; }
-.desk-filterbar .yt-view-toggle { margin-left: auto; }
+/* 工单：分组列表 + 右侧详情 */
+.yt-ticket-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+.yt-ticket-page.has-detail { grid-template-columns: minmax(0, 1fr) 560px; }
+.yt-ticket-list { min-width: 0; min-height: 0; overflow: auto; padding: 14px 22px 24px; }
+.yt-ticket-list .desk-filterbar { margin: 0 0 12px; gap: 8px; }
+.yt-ticket-list .desk-filterbar > .ant-input-affix-wrapper { width: 240px; margin-left: auto; }
+.yt-quick { font: inherit; font-size: 13px; height: 28px; padding: 0 12px; border: 1px solid var(--yt-hair); border-radius: 14px; background: #fff; color: #5d5468; cursor: pointer; }
+.yt-quick[aria-pressed="true"] { border-color: var(--yt-ink); background: var(--yt-ink); color: #fff; }
+.yt-ticket-table .ant-table-thead > tr > th { position: sticky; top: 0; z-index: 2; background: #faf9fb; font-weight: 500; color: #6f6680; }
+.yt-ticket-table .ant-table-tbody > tr > td { padding: 7px 8px; }
+.yt-ticket-table .ant-table-tbody > tr > td:first-child { box-shadow: inset 3px 0 0 transparent; }
+.yt-ticket-table tr.is-overdue > td:first-child { box-shadow: inset 3px 0 0 var(--yt-fury); }
+.yt-ticket-table tr.is-soon > td:first-child { box-shadow: inset 3px 0 0 #d99a2b; }
+.yt-ticket-table tr.is-selected > td { background: #f3eef8 !important; }
+.yt-ticket-table .table-title-link { display: grid; gap: 1px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; color: var(--yt-ink); }
+.yt-ticket-table .table-title-link strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-ticket-table .table-title-link small { font-size: 12px; color: #958ba1; font-variant-numeric: tabular-nums; }
+.yt-ticket-table .table-title-link:hover strong { text-decoration: underline; }
+.yt-ticket-group-row > td { background: #f4f1f7 !important; padding: 5px 8px !important; }
+.yt-ticket-group { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 0; font: inherit; font-size: 13px; cursor: pointer; color: var(--yt-ink); }
+.yt-ticket-group span { color: #958ba1; font-variant-numeric: tabular-nums; }
+.yt-ticket-group .anticon { font-size: 10px; color: #958ba1; }
+.yt-ticket-due { display: grid; gap: 1px; font-variant-numeric: tabular-nums; }
+.yt-ticket-due b { font-weight: 600; font-size: 12px; }
+.yt-ticket-due b.is-overdue { color: var(--yt-fury); }
+.yt-ticket-due b.is-soon { color: #b77a12; }
+.yt-ticket-due small { font-size: 12px; color: #958ba1; }
+.yt-ticket-table .yt-muted { color: #b8b0c2; }
+.yt-ticket-table .yt-warn { color: #b77a12; }
+.yt-ticket-detail { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--yt-hair); background: #fff; }
+.yt-ticket-detail > header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--yt-hair); }
+.yt-ticket-detail > header h2 { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.yt-ticket-detail > header .ant-tag { margin: 0; }
+.yt-ticket-detail-body { flex: 1; min-height: 0; overflow: auto; padding: 4px 16px 24px; }
