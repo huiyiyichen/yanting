@@ -123,6 +123,8 @@ class Settings(BaseSettings):
     risk_source_ticket_hours: int = Field(default=48, ge=1, le=720)
     risk_monitor_interval_seconds: int = Field(default=15, ge=5, le=300)
     risk_response_wait_seconds: int = Field(default=120, ge=0, le=3600)
+    #: AI 接待全景只显示最近活动在此窗口内的本地会话；0 表示不限（演示库）
+    panorama_active_window_minutes: int = Field(default=120, ge=0, le=100000)
     risk_followup_warning_minutes: int = Field(default=30, ge=0, le=1440)
 
     # 编码模型

@@ -934,6 +934,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/reception/panorama": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Panorama View */
+        get: operations["panorama_view_api_support_reception_panorama_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/reception/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -2804,6 +2821,90 @@ export interface components {
             emotionEscalation: number;
             /** Adversereaction */
             adverseReaction: number;
+        };
+        /** PanoramaItem */
+        PanoramaItem: {
+            /** Conversationid */
+            conversationId: string;
+            /** Buyeralias */
+            buyerAlias: string;
+            /**
+             * Scene
+             * @default
+             */
+            scene: string;
+            /** Productname */
+            productName?: string | null;
+            /**
+             * Lane
+             * @enum {string}
+             */
+            lane: "ai" | "wait" | "human";
+            /** Handler */
+            handler?: string | null;
+            /** Emotionbands */
+            emotionBands?: ("calm" | "dissatisfied" | "angry")[];
+            /**
+             * Highrisk
+             * @default false
+             */
+            highRisk: boolean;
+            /** Waitingsince */
+            waitingSince?: string | null;
+            /** Handoffreason */
+            handoffReason?: string | null;
+            /** Handoffquote */
+            handoffQuote?: string | null;
+            /** Aijob */
+            aiJob?: ("queued" | "running") | null;
+            currentRun?: components["schemas"]["PanoramaRun"] | null;
+            lastRun?: components["schemas"]["PanoramaRun"] | null;
+            /** Lastactivityat */
+            lastActivityAt: string;
+            /** Laneenteredat */
+            laneEnteredAt: string;
+        };
+        /** PanoramaRun */
+        PanoramaRun: {
+            /** Outcome */
+            outcome?: string | null;
+            /** Steps */
+            steps?: components["schemas"]["PanoramaStep"][];
+        };
+        /** PanoramaStep */
+        PanoramaStep: {
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "active" | "done" | "fail";
+            /**
+             * Durationms
+             * @default 0
+             */
+            durationMs: number;
+        };
+        /** PanoramaView */
+        PanoramaView: {
+            /** Items */
+            items: components["schemas"]["PanoramaItem"][];
+            /**
+             * Running
+             * @default 0
+             */
+            running: number;
+            /**
+             * Queued
+             * @default 0
+             */
+            queued: number;
+            /**
+             * Activewindowminutes
+             * @default 120
+             */
+            activeWindowMinutes: number;
         };
         /** PaymentTicketDetail */
         "PaymentTicketDetail-Input": {
@@ -6231,6 +6332,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceptionSnapshotView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    panorama_view_api_support_reception_panorama_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PanoramaView"];
                 };
             };
             /** @description Validation Error */

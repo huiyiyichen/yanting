@@ -7,6 +7,7 @@ from app.deps import get_context, get_session, require_support
 from app.domain.consumer_service.cited_text import ReplyStyle
 from app.domain.consumer_service.consumer_profile import ConsumerProfileView
 from app.domain.consumer_service.draft_review import DraftFinding
+from app.domain.consumer_service.panorama import PanoramaView, panorama
 from app.domain.consumer_service.product_cards import DeskProductCardView
 from app.domain.consumer_service.rewrite import RewriteRequest, RewriteView
 from app.domain.consumer_service.workspace import (
@@ -50,6 +51,11 @@ class SeenRequest(ApiModel):
 @router.get("/queue", response_model=ReceptionSnapshotView)
 def queue(session: Session = Depends(get_session)):
     return reception_snapshot(session)
+
+
+@router.get("/panorama", response_model=PanoramaView)
+def panorama_view(session: Session = Depends(get_session), context: RuntimeContext = Depends(get_context)):
+    return panorama(session, window_minutes=context.settings.panorama_active_window_minutes)
 
 
 @router.get("/{conversation_id}/messages", response_model=list[MessageView])

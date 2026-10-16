@@ -247,3 +247,11 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
   background: var(--yt-gold-wash); border: 1px solid var(--yt-gold-line); color: var(--yt-gold-ink); font-weight: 600; }
 .yt-ai-bar-icon { color: var(--yt-gold-ink); }
 .yt-ai-bar-sep { width: 1px; height: 14px; background: var(--yt-gold-line); }
+
+/* 情绪色号（全景方案 2.1） */
+.yt-swatch { position: relative; display: inline-block; flex: none; }
+.yt-swatch.is-md::after { content: ''; position: absolute; left: -3px; right: -3px; bottom: -6px; height: 7px; background: radial-gradient(closest-side, rgba(42, 31, 51, 0.16), transparent); }
+.yt-swatch-body { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--yt-card, #fff); }
+.yt-swatch-band { flex: none; display: block; transform-origin: 50% 100%; }
+.yt-swatch-risk { position: absolute; right: -4px; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--yt-fury); box-shadow: 0 0 0 2px var(--yt-card, #fff); }
+.yt-swatch.is-sm .yt-swatch-risk { width: 6px; height: 6px; right: -3px; top: -3px; box-shadow: 0 0 0 1.5px var(--yt-card, #fff); }

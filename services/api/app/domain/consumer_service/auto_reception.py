@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.audit.recorder import AuditContext, AuditRecorder
 from app.domain.case_state.models import ConversationRow, MessageRow, new_id
 from app.domain.consumer_service.models import AutoReplyJobRow, ReceptionHandoffRow
+from app.domain.consumer_service import job_progress as progress
 from app.domain.enums import SenderRole, ServiceMode
 from app.errors import ConflictError, ModelOutputInvalid, ProviderTimeout
 from app.repositories.conversation_repository import ConversationRepository
@@ -349,7 +350,10 @@ def process_job(runtime: Any, job_id: str) -> None:
             remaining = remaining_job_seconds(runtime, job)
             session.commit()
             context = ConsumerServiceRepository(session).context(conversation_id)
+            progress.begin(job_id, conversation_id)
+            progress.mark(job_id, "安全检查", "running")
             handoff = _safety_handoff(trigger.body or "")
+            progress.mark(job_id, "安全检查", "handoff" if handoff else "passed")
             attachments = json.loads(trigger.attachments_json or "[]")
         if remaining <= 0:
             _finish_handoff(runtime, job_id, "reply_timeout")
@@ -370,7 +374,8 @@ def process_job(runtime: Any, job_id: str) -> None:
                     runtime.model_provider,
                     runtime=runtime,
                 ).build(conversation_id, automatic=True, still_current=still_current,
-                        timeout_seconds=remaining_job_seconds(runtime, job))
+                        timeout_seconds=remaining_job_seconds(runtime, job),
+                        on_step=lambda name, status: progress.mark(job_id, name, status))
                 if assistant.is_mock and runtime.settings.run_mode != "mock":
                     raise ModelOutputInvalid("真实接待禁止发送Mock结果")
                 if assistant.verification_status == "partial":
@@ -449,6 +454,7 @@ def process_job(runtime: Any, job_id: str) -> None:
                 session.rollback()
                 _finish_handoff(runtime, job_id, "reply_timeout")
                 return
+            progress.mark(job_id, "发送", "running")
             # The conditional UPDATE holds the write lock through message insertion.
             claimed = session.execute(
                 update(ConversationRow)
@@ -496,6 +502,13 @@ def process_job(runtime: Any, job_id: str) -> None:
         _finish_handoff(runtime, job_id, "generation_failed")
     finally:
         lock.release()
+        with runtime.new_session() as final_session:
+            finished = final_session.get(AutoReplyJobRow, job_id)
+            status = finished.status if finished else "cancelled"
+        if status == "sent":
+            progress.mark(job_id, "发送", "passed")
+        if status != "queued":
+            progress.end(job_id, status)
 
 
 async def run_reply_worker(runtime: Any) -> None:
