@@ -9,6 +9,11 @@ const COLUMNS: { name: string; match: (status: TicketView['status']) => boolean 
   { name: '等待反馈', match: (s) => s.startsWith('waiting_') },
   { name: '已完成', match: (s) => s === 'resolved' },
 ]
+/** 卡片副行：标题已含的类型/客户不再重复，补上工单号。 */
+export function boardMeta(row: TicketView): string {
+  return [ticketTypes[row.workOrderType], row.buyerAlias].filter((part) => part && !row.title.includes(part))
+    .concat(row.ticketId).join(' · ')
+}
 const RANK = { overdue: 0, soon: 1, scheduled: 2, none: 3 } as const
 
 /** 工单看板：只读分组，状态修改仍走详情表单（带版本号）。列内到期优先，再按截止时间。 */
@@ -26,7 +31,7 @@ export function TicketBoard({ rows, now, onOpen }: { rows: TicketView[]; now: nu
             return <button key={row.ticketId} type="button" data-ticket={row.ticketId}
               className={`yt-board-card${deadline === 'overdue' ? ' is-overdue' : ''}`} onClick={() => onOpen(row.ticketId)}>
               <strong>{row.title}</strong>
-              <span className="yt-board-meta">{ticketTypes[row.workOrderType]} · {row.buyerAlias}</span>
+              <span className="yt-board-meta">{boardMeta(row)}</span>
               <span className="yt-board-foot">
                 {['urgent', 'high'].includes(row.priority) && <Tag color="error">{priorities[row.priority]}</Tag>}
                 {deadline === 'overdue' && <Tag color="error">已到期</Tag>}

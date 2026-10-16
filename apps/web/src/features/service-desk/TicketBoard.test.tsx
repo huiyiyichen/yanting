@@ -3,12 +3,13 @@
  * B1 等待客户与等待内部分散两列或丢失，“等待反馈”列不全；
  * B2 看板绕开筛选，显示与列表不同的工单；
  * B3 到期工单埋在列中间，没有标记；
+ * B5 副行重复标题里已有的类型与客户（标题常为“类型 · 客户”）；
  * B4 点卡片打不开详情；看板误把拖拽当状态修改（状态只能在详情里带版本号保存）。
  */
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { TicketView } from '../../api/client'
-import { TicketBoard } from './TicketBoard'
+import { TicketBoard, boardMeta } from './TicketBoard'
 
 const now = Date.parse('2026-10-16T06:00:00Z')
 const t = (ticketId: string, patch: Partial<TicketView>): TicketView => ({
@@ -40,5 +41,12 @@ describe('TicketBoard', () => {
     fireEvent.click(screen.getByRole('button'))
     expect(onOpen).toHaveBeenCalledWith('A')
     expect(screen.getByRole('button')).not.toHaveAttribute('draggable', 'true')
+  })
+})
+
+describe('boardMeta', () => {
+  it('不重复标题已有内容', () => {
+    expect(boardMeta(t('LOCAL-1', { title: '物流查询 · 郭a**', buyerAlias: '郭a**' }))).toBe('LOCAL-1')
+    expect(boardMeta(t('LOCAL-2', { title: '换货待确认', buyerAlias: '郭a**' }))).toBe('物流 · 郭a** · LOCAL-2')
   })
 })
