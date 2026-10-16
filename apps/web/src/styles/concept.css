@@ -582,3 +582,6 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .yt-arc-ticket { width: 100%; display: grid; grid-template-columns: 16px auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--yt-hair, #ebe5ef); border-radius: 10px; background: #fbf9fc; cursor: pointer; text-align: left; font-size: 12.5px; color: var(--yt-ink, #2a2230); }
 .yt-arc-ticket:hover { border-color: var(--yt-gold, #d9b47c); }
 .yt-arc-ticket span { color: var(--yt-ink-3, #958ba1); font-family: var(--yt-num); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 长队列：屏幕外的行跳过布局与绘制（浏览器原生虚拟化，不改行高与结构） */
+.reception-list > .reception-row-item.yt-qi { content-visibility: auto; contain-intrinsic-size: auto 64px; }

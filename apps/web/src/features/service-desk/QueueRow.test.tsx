@@ -9,7 +9,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { ReceptionItem } from '../../api/client'
-import { QueueRow, waitLabel } from './QueueRow'
+import { QueueRow, sameQueueRow, waitLabel } from './QueueRow'
 
 const base: ReceptionItem = {
   conversationId: 'c1', buyerAlias: '魏h**', title: 't', preview: '还没到账', updatedAt: '2026-05-07T10:00:00+00:00',
@@ -44,5 +44,28 @@ describe('QueueRow', () => {
   it('Q4 AI tag when autonomous without risk', () => {
     row({})
     expect(screen.getByTestId('queue-tag').textContent).toBe('AI')
+  })
+})
+
+/**
+ * 队列记忆化（P2-2）。
+ * M1 轮询每次返回新对象，内容不变也整列重渲，长队列卡顿；
+ * M2 只比引用会漏掉内容变化（新消息、风险标签、未读数）；
+ * M3 时钟每 30 秒跳动，等待文案没变也全部重渲。
+ */
+describe('sameQueueRow', () => {
+  const open = () => {}
+  const props = (patch: Partial<ReceptionItem> = {}, at = now) => ({ item: { ...base, ...patch }, active: false, now: at, onOpen: open })
+  it('内容相同的新对象不重渲', () => { expect(sameQueueRow(props(), props())).toBe(true) })
+  it('内容变化必须重渲', () => {
+    expect(sameQueueRow(props(), props({ unreadCount: 2 }))).toBe(false)
+    expect(sameQueueRow(props(), props({ activeRiskTypes: ['emotion_escalation'] }))).toBe(false)
+  })
+  it('时钟跳动但等待文案不变时不重渲，文案变化时重渲', () => {
+    const start = Date.parse('2026-05-07T10:00:00Z')
+    const waiting = { waitingSince: '2026-05-07T10:00:00Z' }
+    const at = start + 300_000
+    expect(sameQueueRow(props(waiting, at), props(waiting, at + 10_000))).toBe(true)
+    expect(sameQueueRow(props(waiting, at), props(waiting, at + 60_000))).toBe(false)
   })
 })

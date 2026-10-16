@@ -1,4 +1,5 @@
 import { Badge } from 'antd'
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import type { ReceptionItem } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
@@ -15,19 +16,29 @@ export function waitLabel(item: ReceptionItem, now: number): string | null {
   return seconds < 3600 ? `等待 ${Math.floor(seconds / 60)} 分` : `等待 ${Math.floor(seconds / 3600)} 小时`
 }
 
-export function QueueRow({ item, active, now, onOpen }: {
+type QueueRowProps = {
   item: ReceptionItem
   active: boolean
   now: number
-  onOpen: () => void
-}) {
+  onOpen: (conversationId: string) => void
+}
+
+/** 轮询每 1.5 秒换一批新对象：按内容比较，只有该行可见内容变了才重渲。 */
+export function sameQueueRow(prev: QueueRowProps, next: QueueRowProps): boolean {
+  return prev.active === next.active
+    && prev.onOpen === next.onOpen
+    && waitLabel(prev.item, prev.now) === waitLabel(next.item, next.now)
+    && JSON.stringify(prev.item) === JSON.stringify(next.item)
+}
+
+export const QueueRow = memo(function QueueRow({ item, active, now, onOpen }: QueueRowProps) {
   const risk = item.riskLevel === 'high' ? 'high' : item.activeRiskTypes?.length ? 'medium' : null
   const wait = waitLabel(item, now)
   const activeRisk = item.activeRiskTypes?.[0]
   const reviewRisk = activeRisk ? undefined : item.reviewRiskTypes?.[0]
   const tagRisk = activeRisk ?? reviewRisk
   return <div className={`reception-row-item yt-qi${active ? ' is-active' : ''}${risk ? ` is-risk-${risk}` : ''}`}>
-    <button className={`reception-row${active ? ' is-active' : ''}`} aria-label={`${item.buyerAlias} ${item.conversationId}`} onClick={onOpen}>
+    <button className={`reception-row${active ? ' is-active' : ''}`} aria-label={`${item.buyerAlias} ${item.conversationId}`} onClick={() => onOpen(item.conversationId)}>
       <Badge count={item.unreadCount} size="small" offset={[-2, 2]}>
         <span className="yt-queue-avatar">{item.buyerAlias.slice(0, 1)}
           {item.currentEmotion && <i className={`yt-emotion-dot is-${item.currentEmotion}`} />}</span>
@@ -43,4 +54,4 @@ export function QueueRow({ item, active, now, onOpen }: {
           {serviceRiskTypeLabels[tagRisk]}</span></Link>
       : item.serviceMode === 'autonomous' ? <span data-testid="queue-tag" className="yt-tag is-ai yt-qi-tag">AI</span> : null}
   </div>
-}
+})

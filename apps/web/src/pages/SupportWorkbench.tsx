@@ -249,11 +249,14 @@ export function SupportWorkbench() {
 
   const emotionsById = useMemo(() => messageEmotions(profile, id), [profile, id])
   const escalationId = useMemo(() => escalationMessage(profile, id), [profile, id])
-  const queueItems = (snapshot?.items ?? []).filter((item) =>
+  const queueItems = useMemo(() => (snapshot?.items ?? []).filter((item) =>
     (mode !== '未读' || item.unreadCount > 0)
     && (mode !== '人工' || item.serviceMode === 'operator_assisted')
     && (mode !== '风险' || Boolean(item.activeRiskTypes?.length || item.reviewRiskTypes?.length))
-    && `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query))
+    && `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query)), [snapshot, mode, query])
+  const openConversation = useCallback((conversationId: string) => {
+    setParams({ conversation: conversationId }); setQueueOpen(false)
+  }, [setParams])
   const allItems = snapshot?.items ?? []
   const queueCounts: Record<string, number> = {
     人工: allItems.filter((item) => item.serviceMode === 'operator_assisted').length,
@@ -266,8 +269,7 @@ export function SupportWorkbench() {
         label: <>{value}{queueCounts[value] ? <span className="n">{queueCounts[value]}</span> : null}</> }))} value={mode} onChange={setMode} />
     </div>
     <div className="reception-list">{queueItems.length ? <div className="yt-queue-group"><span>正在接待</span><span>最近消息</span></div> : null}
-      {queueItems.map((item) => <QueueRow key={item.conversationId} item={item} active={id === item.conversationId} now={now}
-        onOpen={() => { setParams({ conversation: item.conversationId }); setQueueOpen(false) }} />)}
+      {queueItems.map((item) => <QueueRow key={item.conversationId} item={item} active={id === item.conversationId} now={now} onOpen={openConversation} />)}
       {!queueItems.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无会话" />}
     </div>
   </div>
