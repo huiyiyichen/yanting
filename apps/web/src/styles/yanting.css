@@ -207,7 +207,7 @@ mark.yt-trigger.is-angry, mark.yt-trigger.is-complaint { text-decoration-color: 
 mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 
 /* 商品卡（P1-4）：白底圆角 14，左侧 52px 商品图 */
-.yt-product-card, .yt-desk-product { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 8px 10px; text-align: left; }
+.yt-product-card, .yt-desk-product { display: flex; align-items: center; gap: 10px; background: var(--yt-card); border-radius: 14px; padding: 8px 10px; text-align: left; }
 .yt-product-card img, .yt-desk-product img, .yt-product-card-ph { width: 52px; height: 52px; border-radius: 10px; object-fit: cover; flex: none; background: #f4f2f7; display: inline-flex; align-items: center; justify-content: center; }
 .yt-product-card-text, .yt-desk-product-main { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 .yt-product-card-text strong, .yt-desk-product-main strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -231,7 +231,7 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 .reception-row-item.is-risk-high::before { background: var(--yt-fury); }
 .reception-row-item.is-risk-medium::before { background: var(--yt-upset); }
 .yt-queue-avatar { position: relative; display: inline-flex; }
-.yt-emotion-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid #fff; }
+.yt-emotion-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--yt-card); }
 .yt-emotion-dot.is-calm { background: var(--yt-calm); }
 .yt-emotion-dot.is-dissatisfied { background: var(--yt-upset); }
 .yt-emotion-dot.is-angry { background: var(--yt-fury); }
@@ -251,8 +251,48 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 /* 情绪色号（全景方案 2.1） */
 .yt-swatch { position: relative; display: inline-block; flex: none; }
 .yt-swatch.is-md::after { content: ''; position: absolute; left: -3px; right: -3px; bottom: -6px; height: 7px; background: radial-gradient(closest-side, rgba(42, 31, 51, 0.16), transparent); }
-.yt-swatch-body { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--yt-card, #fff); }
+.yt-swatch-body { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--yt-card, var(--yt-card)); }
 .yt-swatch-band { flex: none; display: block; transform-origin: 50% 100%; }
 .yt-swatch-risk { position: absolute; right: -4px; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--yt-fury); box-shadow: 0 0 0 2px var(--yt-card, #fff); }
 .yt-swatch.is-sm .yt-swatch-risk { width: 6px; height: 6px; right: -3px; top: -3px; box-shadow: 0 0 0 1.5px var(--yt-card, #fff); }
 .yt-swatch.is-empty .yt-swatch-body { background: var(--yt-staff, #e3dce9); }
+
+/* 全局明暗（全景方案 1.4）：深色令牌；客户页由 App 强制浅色 */
+:root { --yt-wash: #faf8fb; --yt-hair-2: #f0ecf3; --yt-bubble-own: #ece6f3; --yt-bubble-own-line: #e0d7ea; }
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --yt-porcelain: #1f1726; --yt-desk: #1a1320; --yt-card: #251b2e; --yt-wash: #2d2238;
+  --yt-hair: rgba(236, 224, 245, 0.10); --yt-hair-2: rgba(236, 224, 245, 0.06);
+  --yt-ink: #f3eef6; --yt-ink-2: #c3b8cc; --yt-ink-3: #8f839b;
+  --yt-plum: #4c3a5c; --yt-plum-2: #5c4870;
+  --yt-gold-ink: #d9b47c; --yt-gold-wash: rgba(217, 180, 124, 0.14); --yt-gold-line: rgba(217, 180, 124, 0.35);
+  --yt-fury-wash: rgba(221, 74, 95, 0.16); --yt-upset-wash: rgba(201, 130, 22, 0.16);
+  --yt-staff: rgba(236, 224, 245, 0.12); --yt-silent: #5a4d66; --yt-service: #d9b47c;
+  --yt-bubble-own: #3a2c48; --yt-bubble-own-line: #4a3a5a;
+  --yt-container: #251b2e; --yt-layout-bg: #1a1320; --yt-mint-soft: #2d2238;
+  --yt-text: rgba(243, 238, 246, 0.92); --yt-text-secondary: rgba(243, 238, 246, 0.7); --yt-text-tertiary: rgba(243, 238, 246, 0.5);
+  --yt-border: rgba(236, 224, 245, 0.16); --yt-border-secondary: rgba(236, 224, 245, 0.08);
+}
+html[data-theme='dark'] body { background: var(--yt-desk); color: var(--yt-ink); }
+html[data-theme='dark'] .desk-main, html[data-theme='dark'] .desk-workbench, html[data-theme='dark'] .desk-topbar { background: var(--yt-desk); color: var(--yt-ink); }
+html[data-theme='dark'] .desk-topbar { background: var(--yt-card); }
+.yt-theme-toggle { color: var(--yt-ink-3); }
+
+/* 深色下浅色底的小块（标签、头像、承诺卡等）改用半透明底 */
+html[data-theme='dark'] .yt-qi .yt-queue-avatar .ant-avatar, html[data-theme='dark'] .yt-qi .yt-queue-avatar { background: var(--yt-wash) !important; color: var(--yt-ink-2) !important; }
+html[data-theme='dark'] .knowledge-bases, html[data-theme='dark'] .reply-candidate, html[data-theme='dark'] .evidence-quote,
+html[data-theme='dark'] .chat-message-surface, html[data-theme='dark'] .reception-queue { background: var(--yt-card); border-color: var(--yt-hair); }
+html[data-theme='dark'] .yt-tag.is-review, html[data-theme='dark'] .yt-chip.is-review { background: rgba(141, 147, 201, 0.18); color: #b8bce6; }
+html[data-theme='dark'] .reception-plugin .yt-mem .yt-memory-tag, html[data-theme='dark'] .yt-arc-order .st, html[data-theme='dark'] .yt-arc-hist .tags i { background: var(--yt-wash); color: var(--yt-ink-2); }
+html[data-theme='dark'] .reception-plugin .yt-mem .yt-memory-tag.is-rejected { background: var(--yt-wash); color: var(--yt-ink-3); }
+html[data-theme='dark'] .reception-plugin .yt-promise.is-due { background: var(--yt-fury-wash); border-color: rgba(221, 74, 95, 0.35); }
+html[data-theme='dark'] .reception-plugin .yt-promise.is-fulfilled { background: rgba(52, 160, 127, 0.14); border-color: rgba(52, 160, 127, 0.35); }
+html[data-theme='dark'] .reception-plugin .yt-chip-x.mid { background: var(--yt-upset-wash); color: #e8b25a; }
+html[data-theme='dark'] .yt-pm.is-o .bb { background: var(--yt-bubble-own); border-color: var(--yt-bubble-own-line); }
+html[data-theme='dark'] .yt-product-card img, html[data-theme='dark'] .yt-product-card-ph, html[data-theme='dark'] .yt-product-picker button:hover .yt-product-card { background: var(--yt-wash); }
+html[data-theme='dark'] .yt-lane-chip.is-ai { background: rgba(141, 111, 176, 0.22); color: #d6c6ea; }
+html[data-theme='dark'] .yt-lane-chip.is-human { background: rgba(52, 160, 127, 0.18); color: #6cc9a6; }
+html[data-theme='dark'] .yt-ptile:hover { background: var(--yt-wash); }
+html[data-theme='dark'] .reception-row-item.is-active { background: var(--yt-wash); }
+html[data-theme='dark'] .yt-tag.is-ai { background: rgba(141, 111, 176, 0.22); color: #d6c6ea; }
+html[data-theme='dark'] .yt-chead-av, html[data-theme='dark'] .chat-message-surface .ant-avatar { background: var(--yt-wash) !important; color: var(--yt-ink-2) !important; }

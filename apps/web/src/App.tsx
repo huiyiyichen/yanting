@@ -2,7 +2,7 @@ import {
   AlertOutlined, BookOutlined, CustomerServiceOutlined, FileTextOutlined,
   MessageOutlined, SettingOutlined, CodeOutlined,
 } from '@ant-design/icons'
-import { Badge, Tooltip } from 'antd'
+import { Badge, ConfigProvider, Tooltip, theme } from 'antd'
 import { useEffect, useState } from 'react'
 import { deskApi } from './api/client'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
@@ -14,6 +14,7 @@ import { KnowledgePage } from './pages/PlatformPages'
 import { PromptTemplatePage } from './pages/PromptTemplatePage'
 import { ModelConfigPage } from './pages/ModelConfigPage'
 import { visibleInterval } from './hooks/visibleInterval'
+import { useTheme } from './hooks/themeMode'
 
 const navigation = [
   { path: '/customer', label: '客户视角', short: '客户', icon: <MessageOutlined /> },
@@ -52,10 +53,19 @@ function useHighRiskCount(enabled: boolean) {
   return enabled ? count : 0
 }
 
+const LIGHT_THEME = { algorithm: theme.defaultAlgorithm }
+/** 深色：父级显式设了浅色容器色，需在这里覆盖，否则 darkAlgorithm 不生效（表格、输入框仍白底）。 */
+const DARK_THEME = { algorithm: theme.darkAlgorithm, token: {
+  colorBgContainer: '#251b2e', colorBgElevated: '#2d2238', colorBgLayout: '#1a1320', colorPrimary: '#8d6fb0', colorLink: '#d9b47c',
+  colorBorder: 'rgba(236, 224, 245, 0.16)', colorBorderSecondary: 'rgba(236, 224, 245, 0.08)',
+} }
+
 export function App() {
   const { pathname } = useLocation()
   const highRisk = useHighRiskCount(!pathname.startsWith('/customer'))
-  return <div className="yt-shell desk-shell">
+  const { mode } = useTheme(pathname.startsWith('/customer'))
+  return <ConfigProvider theme={mode === 'dark' ? DARK_THEME : LIGHT_THEME}>
+  <div className="yt-shell desk-shell">
     <nav className="desk-nav yt-rail" aria-label="主导航">
       <div className="desk-brand"><VoiceprintLogo /><strong>颜听</strong></div>
       {navigation.map((item, index) => <Tooltip title={item.label} placement="right" key={item.path}>
@@ -79,4 +89,5 @@ export function App() {
       </Routes>
     </main>
   </div>
+  </ConfigProvider>
 }

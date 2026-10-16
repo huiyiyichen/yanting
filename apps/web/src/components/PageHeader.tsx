@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { DemoOperatorSelect } from '../features/service-desk/DemoOperatorSelect'
+import { ThemeToggle } from './ThemeToggle'
 
 /** 所有业务页统一页头：标题、可选范围切换、指标、操作区（含演示客服切换）。 */
 export function PageHeader({ title, stats, actions, extra }: {
@@ -15,6 +16,6 @@ export function PageHeader({ title, stats, actions, extra }: {
         <span>{stat.label}</span><strong>{stat.value}</strong>
       </div>)}
     </div>
-    <div className="desk-topbar-actions"><DemoOperatorSelect />{actions}</div>
+    <div className="desk-topbar-actions"><DemoOperatorSelect />{actions}<ThemeToggle /></div>
   </header>
 }

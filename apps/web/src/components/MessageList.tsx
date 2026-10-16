@@ -212,13 +212,13 @@ export const MessageList = memo(function MessageList({
                     content: {
                       background:
                         internal && side !== 'center'
-                          ? (side === 'end' ? '#ece6f3' : '#fff')
+                          ? (side === 'end' ? 'var(--yt-bubble-own)' : 'var(--yt-card)')
                           : side === 'end'
                             ? 'var(--yt-bubble-out)'
                             : 'var(--yt-bubble-in)',
                       boxShadow: emotion && emotion !== 'calm' ? `inset 3px 0 0 ${EMOTION_COLOR[emotion]}` : undefined,
                       ...(internal && side !== 'center' ? {
-                        border: `1px solid ${side === 'end' ? '#e0d7ea' : 'var(--yt-hair)'}`,
+                        border: `1px solid ${side === 'end' ? 'var(--yt-bubble-own-line)' : 'var(--yt-hair)'}`,
                         borderRadius: side === 'end' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
                         padding: '9px 13px',
                         maxWidth: 520,

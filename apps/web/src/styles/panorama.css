@@ -34,7 +34,7 @@
 .yt-plane-tiles { display: flex; flex-wrap: wrap; gap: 4px 2px; min-height: 104px; align-content: flex-start; }
 
 .yt-ptile { width: 72px; padding: 4px 3px 6px; border: 1px solid transparent; border-radius: 10px; background: none; display: grid; justify-items: center; gap: 2px; position: relative; cursor: pointer; font-family: inherit; color: var(--yt-ink); }
-.yt-ptile:hover { background: #faf8fb; }
+.yt-ptile:hover { background: var(--yt-wash); }
 .yt-ptile.is-selected { background: var(--yt-gold-wash); border-color: var(--yt-gold-line); }
 .yt-ptile.is-selected .yt-swatch-body { background: var(--yt-gold-wash); }
 .yt-ptile.is-dim { opacity: 0.22; }

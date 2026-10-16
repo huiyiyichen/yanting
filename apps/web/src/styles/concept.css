@@ -49,7 +49,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-row-item.yt-qi.is-risk-high { border-left-color: var(--yt-fury); }
 .reception-row-item.yt-qi.is-risk-medium { border-left-color: var(--yt-upset); }
 .reception-row-item.yt-qi.is-active { background: var(--yt-gold-wash); }
-.reception-row-item.yt-qi:hover:not(.is-active) { background: #faf8fb; }
+.reception-row-item.yt-qi:hover:not(.is-active) { background: var(--yt-wash); }
 .yt-qi .reception-row, .yt-qi .reception-row.is-active {
   display: grid; grid-template-columns: 36px 1fr auto; grid-template-rows: auto auto; gap: 2px 10px; align-items: center;
   width: 100%; height: auto; min-height: 0; padding: 10px 14px 10px 11px; border: 0; background: none; text-align: left;
@@ -187,12 +187,12 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-mem .yt-memory-tag { padding: 0 7px; border-radius: 5px; background: #f1edf3; color: #5b5162; line-height: 20px; border: 0; }
 .reception-plugin .yt-mem .yt-memory-tag.is-rejected { background: #f3eef6; color: #6b5580; text-decoration: line-through; text-decoration-color: rgba(76, 58, 92, 0.45); }
 .reception-plugin .yt-promise { margin-top: 10px; display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center;
-  padding: 8px 10px; border-radius: 10px; background: #f7efe1; border: 1px solid #e8d3b0; }
-.reception-plugin .yt-promise-ic { width: 26px; height: 26px; border-radius: 8px; background: #fff; color: #8a6532; display: grid; place-items: center; font-size: 14px; }
+  padding: 8px 10px; border-radius: 10px; background: var(--yt-gold-wash); border: 1px solid var(--yt-gold-line); }
+.reception-plugin .yt-promise-ic { width: 26px; height: 26px; border-radius: 8px; background: var(--yt-card); color: #8a6532; display: grid; place-items: center; font-size: 14px; }
 .reception-plugin .yt-promise-body { min-width: 0; }
 .reception-plugin .yt-promise-body b { font-size: 13px; display: block; line-height: 1.35; }
 .reception-plugin .yt-promise-body span { font-size: 12px; color: #5b5162; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.reception-plugin .yt-promise-due { font-weight: 600; font-size: 13px; color: #8a6532; text-align: right; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-promise-due { font-weight: 600; font-size: 13px; color: var(--yt-gold-ink); text-align: right; line-height: 1.3; font-variant-numeric: tabular-nums; }
 .reception-plugin .yt-promise-due small { display: block; font-weight: 400; font-size: 11px; color: #8f8496; }
 .reception-plugin .yt-promise.is-due { background: #fbecee; border-color: #f0c4cb; }
 .reception-plugin .yt-promise.is-due .yt-promise-ic, .reception-plugin .yt-promise.is-due .yt-promise-due { color: #c43d52; }
@@ -200,41 +200,41 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-promise.is-fulfilled .yt-promise-ic, .reception-plugin .yt-promise.is-fulfilled .yt-promise-due { color: #2f8a6c; }
 
 /* ---------- 插件辅助：卡片、诉求、回复卡、风险关注、下一步、依据折叠（概念稿数值） ---------- */
-.reception-plugin .yt-card { background: #fff; border: 1px solid #e8e3ed; border-radius: 14px; padding: 13px 14px; }
-.reception-plugin .yt-card > h3 { margin: 0; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: #231a2b; }
-.reception-plugin .yt-card > h3 .r { margin-left: auto; font-weight: 400; font-size: 12px; color: #958ba1; display: inline-flex; align-items: center; gap: 6px; }
-.reception-plugin .yt-card p { margin: 6px 0 0; font-size: 13px; color: #5e5468; line-height: 1.6; }
-.reception-plugin .yt-empty { margin: 8px 0 0; font-size: 12px; color: #958ba1; }
+.reception-plugin .yt-card { background: var(--yt-card); border: 1px solid var(--yt-hair); border-radius: 14px; padding: 13px 14px; }
+.reception-plugin .yt-card > h3 { margin: 0; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--yt-ink); }
+.reception-plugin .yt-card > h3 .r { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--yt-ink-3); display: inline-flex; align-items: center; gap: 6px; }
+.reception-plugin .yt-card p { margin: 6px 0 0; font-size: 13px; color: var(--yt-ink-2); line-height: 1.6; }
+.reception-plugin .yt-empty { margin: 8px 0 0; font-size: 12px; color: var(--yt-ink-3); }
 .reception-plugin .yt-intent { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 0 2px; }
-.reception-plugin .yt-intent .lb { font-size: 12px; color: #958ba1; margin-right: 2px; }
-.reception-plugin .yt-chip-x { font-size: 12px; padding: 1px 9px; border-radius: 6px; background: #f0ecf3; color: #5e5468; line-height: 20px; }
-.reception-plugin .yt-chip-x.ink { background: #2a1f33; color: #fff; }
+.reception-plugin .yt-intent .lb { font-size: 12px; color: var(--yt-ink-3); margin-right: 2px; }
+.reception-plugin .yt-chip-x { font-size: 12px; padding: 1px 9px; border-radius: 6px; background: var(--yt-hair-2); color: var(--yt-ink-2); line-height: 20px; }
+.reception-plugin .yt-chip-x.ink { background: var(--yt-plum); color: #fff; }
 .reception-plugin .yt-chip-x.mid { background: #fbf0dc; color: #a8670a; }
 /* 回复建议卡 */
-.reception-plugin .yt-reply { position: relative; padding: 0; overflow: hidden; background: #fff; border: 1px solid #e8d3b0; border-radius: 14px;
+.reception-plugin .yt-reply { position: relative; padding: 0; overflow: hidden; background: var(--yt-card); border: 1px solid var(--yt-gold-line); border-radius: 14px;
   box-shadow: 0 8px 24px -14px rgba(138, 101, 50, 0.45); display: block; }
 .reception-plugin .yt-reply::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, #c99a5b, #ecd3a6 50%, #c99a5b); }
 .reception-plugin .yt-reply-head { display: flex; align-items: center; gap: 8px; padding: 13px 14px 0; }
-.reception-plugin .yt-reply-head h3 { margin: 0; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; color: #231a2b; }
-.reception-plugin .yt-reply-head h3 .anticon { color: #8a6532; font-size: 15px; }
-.reception-plugin .yt-reply-styles { margin-left: auto; display: inline-flex; padding: 2px; background: #f6f3f8; border-radius: 8px; }
-.reception-plugin .yt-reply-styles button { border: 0; background: none; font-size: 12px; padding: 1px 9px; border-radius: 6px; color: #958ba1; cursor: pointer; line-height: 20px; }
-.reception-plugin .yt-reply-styles button.on { background: #fff; color: #231a2b; box-shadow: 0 1px 2px rgba(42, 31, 51, 0.12); }
-.reception-plugin .yt-reply-head .ant-btn { color: #958ba1; }
-.reception-plugin .yt-reply-body { padding: 10px 14px 4px; margin: 0; font-size: 14px; line-height: 1.75; color: #231a2b; }
+.reception-plugin .yt-reply-head h3 { margin: 0; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; color: var(--yt-ink); }
+.reception-plugin .yt-reply-head h3 .anticon { color: var(--yt-gold-ink); font-size: 15px; }
+.reception-plugin .yt-reply-styles { margin-left: auto; display: inline-flex; padding: 2px; background: var(--yt-wash); border-radius: 8px; }
+.reception-plugin .yt-reply-styles button { border: 0; background: none; font-size: 12px; padding: 1px 9px; border-radius: 6px; color: var(--yt-ink-3); cursor: pointer; line-height: 20px; }
+.reception-plugin .yt-reply-styles button.on { background: var(--yt-card); color: var(--yt-ink); box-shadow: 0 1px 2px rgba(42, 31, 51, 0.12); }
+.reception-plugin .yt-reply-head .ant-btn { color: var(--yt-ink-3); }
+.reception-plugin .yt-reply-body { padding: 10px 14px 4px; margin: 0; font-size: 14px; line-height: 1.75; color: var(--yt-ink); }
 .reception-plugin .yt-reply-ref { color: inherit; border-bottom: 1px dashed #c99a5b; }
 .reception-plugin .yt-reply > .ant-input-textarea-affix-wrapper, .reception-plugin .yt-reply > textarea { margin: 10px 14px 4px; width: calc(100% - 28px); }
-.reception-plugin .yt-reply-empathy { display: flex; gap: 12px; padding: 4px 14px 0; font-size: 12px; color: #5e5468; }
+.reception-plugin .yt-reply-empathy { display: flex; gap: 12px; padding: 4px 14px 0; font-size: 12px; color: var(--yt-ink-2); }
 .reception-plugin .yt-reply-empathy span { display: inline-flex; align-items: center; gap: 4px; }
 .reception-plugin .yt-reply-empathy .is-present .anticon { color: #22906f; }
-.reception-plugin .yt-reply-empathy .is-missing { color: #958ba1; }
+.reception-plugin .yt-reply-empathy .is-missing { color: var(--yt-ink-3); }
 .reception-plugin .yt-reply-basis { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 14px 0; margin: 0; list-style: none; }
-.reception-plugin .yt-reply-basis li { font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 5px; border: 1px solid #e8e3ed; color: #958ba1; font-variant-numeric: tabular-nums; }
-.reception-plugin .yt-reply-actions { display: flex; gap: 6px; align-items: center; padding: 12px 14px 13px; margin: 10px 0 0; border-top: 1px solid #f0ecf3; background: #fcfbfd; }
+.reception-plugin .yt-reply-basis li { font-size: 11px; line-height: 18px; padding: 0 7px; border-radius: 5px; border: 1px solid var(--yt-hair); color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-reply-actions { display: flex; gap: 6px; align-items: center; padding: 12px 14px 13px; margin: 10px 0 0; border-top: 1px solid var(--yt-hair-2); background: var(--yt-wash); }
 .reception-plugin .yt-reply-actions .ant-btn { height: 30px; border-radius: 8px; font-size: 13px; padding: 0 12px; }
-.reception-plugin .yt-reply-actions .ant-btn-primary { background: #2a1f33; border-color: #2a1f33; font-weight: 600; }
+.reception-plugin .yt-reply-actions .ant-btn-primary { background: var(--yt-plum); border-color: var(--yt-plum); font-weight: 600; }
 .reception-plugin .yt-reply-actions > :last-child { margin-left: auto; }
-.reception-plugin .yt-reply-empty { border-color: #e8d3b0; }
+.reception-plugin .yt-reply-empty { border-color: var(--yt-gold-line); }
 /* 风险关注 */
 .reception-plugin .yt-risks { display: grid; gap: 8px; margin-top: 10px; }
 .reception-plugin .yt-rk { display: grid; grid-template-columns: 3px 1fr auto; gap: 10px; align-items: center; }
@@ -253,21 +253,21 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-rk-link { height: 26px; line-height: 24px; padding: 0 10px; border-radius: 8px; border: 1px solid #e8e3ed; font-size: 12px; color: #5e5468; }
 /* 下一步 */
 .reception-plugin .yt-todo { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
-.reception-plugin .yt-todo label { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 13px; color: #5e5468; line-height: 1.5; cursor: pointer; }
+.reception-plugin .yt-todo label { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 13px; color: var(--yt-ink-2); line-height: 1.5; cursor: pointer; }
 .reception-plugin .yt-todo input { appearance: none; width: 13px; height: 13px; margin: 4px 0 0; border-radius: 4px; border: 1.5px solid #c9c0d2; cursor: pointer; display: grid; place-items: center; }
 .reception-plugin .yt-todo input:checked { background: #22906f; border-color: #22906f; }
-.reception-plugin .yt-todo input:checked::after { content: ''; width: 5px; height: 8px; border: solid #fff; border-width: 0 1.5px 1.5px 0; transform: translateY(-1px) rotate(45deg); }
+.reception-plugin .yt-todo input:checked::after { content: ''; width: 5px; height: 8px; border: solid var(--yt-card); border-width: 0 1.5px 1.5px 0; transform: translateY(-1px) rotate(45deg); }
 .reception-plugin .yt-todo .is-done span { color: #b3aabd; text-decoration: line-through; }
 /* 依据折叠 */
 .reception-plugin .yt-folds { padding: 4px 0; display: grid; }
-.reception-plugin .yt-fold + .yt-fold { border-top: 1px solid #f0ecf3; }
-.reception-plugin .yt-fold > button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 14px; font-size: 13px; color: #5e5468; cursor: pointer; }
-.reception-plugin .yt-fold > button .anticon { color: #958ba1; font-size: 14px; }
-.reception-plugin .yt-fold > button .n { margin-left: auto; color: #958ba1; font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-fold + .yt-fold { border-top: 1px solid var(--yt-hair-2); }
+.reception-plugin .yt-fold > button { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 14px; font-size: 13px; color: var(--yt-ink-2); cursor: pointer; }
+.reception-plugin .yt-fold > button .anticon { color: var(--yt-ink-3); font-size: 14px; }
+.reception-plugin .yt-fold > button .n { margin-left: auto; color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
 .reception-plugin .yt-fold > button .chev { font-size: 10px; transition: transform 0.15s; }
 .reception-plugin .yt-fold.is-open > button .chev { transform: rotate(90deg); }
 .reception-plugin .yt-fold > button:focus-visible { outline: 2px solid #d9b47c; outline-offset: -2px; }
-.reception-plugin .yt-fold-body { padding: 0 14px 12px; font-size: 13px; color: #5e5468; display: grid; gap: 8px; }
+.reception-plugin .yt-fold-body { padding: 0 14px 12px; font-size: 13px; color: var(--yt-ink-2); display: grid; gap: 8px; }
 
 /* ---------- 风险预警：整页深色监控屏（yanting-concept-risk.html） ---------- */
 .yt-risk-page { --m-bg: #1d1524; --m-panel: #251b2e; --m-raised: #2d2238; --m-hi: #382b45; --m-line: rgba(236, 224, 245, 0.08);
@@ -462,30 +462,30 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-journey { display: grid; gap: 10px; }
 .reception-plugin .yt-card > h3 .r.is-fury { color: #cc3550; }
 .reception-plugin .yt-jcontacts { position: relative; height: 40px; margin-top: 8px; }
-.reception-plugin .yt-jcontacts .axis { position: absolute; left: 4%; right: 4%; top: 10px; height: 1px; background: #e8e3ed; }
-.reception-plugin .yt-jcontacts .dot { position: absolute; top: 5px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #fff; border: 2px solid #c9c0d2; box-sizing: border-box; }
-.reception-plugin .yt-jcontacts .dot.is-same { border-color: #d9b47c; background: #f7efe1; }
-.reception-plugin .yt-jcontacts .dot.is-current { border-color: #2a1f33; background: #2a1f33; box-shadow: 0 0 0 3px rgba(42, 31, 51, 0.12); }
-.reception-plugin .yt-jcontacts small { position: absolute; top: 22px; font-size: 11px; color: #958ba1; font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-jcontacts .axis { position: absolute; left: 4%; right: 4%; top: 10px; height: 1px; background: var(--yt-hair); }
+.reception-plugin .yt-jcontacts .dot { position: absolute; top: 5px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--yt-card); border: 2px solid #c9c0d2; box-sizing: border-box; }
+.reception-plugin .yt-jcontacts .dot.is-same { border-color: #d9b47c; background: var(--yt-gold-wash); }
+.reception-plugin .yt-jcontacts .dot.is-current { border-color: var(--yt-plum); background: var(--yt-plum); box-shadow: 0 0 0 3px rgba(42, 31, 51, 0.12); }
+.reception-plugin .yt-jcontacts small { position: absolute; top: 22px; font-size: 11px; color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
 .reception-plugin .yt-jcontacts .from { left: 0; } .reception-plugin .yt-jcontacts .to { right: 0; }
 .reception-plugin .yt-jnodes { list-style: none; margin: 10px 0 0; padding: 0; display: grid; }
 .reception-plugin .yt-jnodes li { position: relative; display: grid; grid-template-columns: 38px 36px 14px 1fr auto; align-items: start; gap: 4px; padding: 5px 0; font-size: 12px; }
-.reception-plugin .yt-jnodes li::before { content: ''; position: absolute; left: 84px; top: 0; bottom: 0; width: 1px; background: #f0ecf3; }
+.reception-plugin .yt-jnodes li::before { content: ''; position: absolute; left: 84px; top: 0; bottom: 0; width: 1px; background: var(--yt-hair-2); }
 .reception-plugin .yt-jnodes li:first-child::before { top: 12px; } .reception-plugin .yt-jnodes li:last-child::before { bottom: calc(100% - 12px); }
-.reception-plugin .yt-jnodes .d { color: #231a2b; font-weight: 600; font-variant-numeric: tabular-nums; }
-.reception-plugin .yt-jnodes .t { color: #958ba1; font-variant-numeric: tabular-nums; }
-.reception-plugin .yt-jnodes .pin { position: relative; z-index: 1; width: 9px; height: 9px; margin: 3px 0 0 1px; border-radius: 50%; background: #fff; border: 2px solid #c9c0d2; box-sizing: border-box; }
+.reception-plugin .yt-jnodes .d { color: var(--yt-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-jnodes .t { color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-jnodes .pin { position: relative; z-index: 1; width: 9px; height: 9px; margin: 3px 0 0 1px; border-radius: 50%; background: var(--yt-card); border: 2px solid #c9c0d2; box-sizing: border-box; }
 .reception-plugin .yt-jnodes .body { min-width: 0; display: flex; gap: 6px; align-items: baseline; }
-.reception-plugin .yt-jnodes .body b { font-weight: 600; color: #231a2b; white-space: nowrap; }
-.reception-plugin .yt-jnodes .ttl { color: #5e5468; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.reception-plugin .yt-jnodes .st { font-size: 11px; padding: 0 6px; border-radius: 5px; background: #f0ecf3; color: #5e5468; line-height: 18px; white-space: nowrap; }
+.reception-plugin .yt-jnodes .body b { font-weight: 600; color: var(--yt-ink); white-space: nowrap; }
+.reception-plugin .yt-jnodes .ttl { color: var(--yt-ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.reception-plugin .yt-jnodes .st { font-size: 11px; padding: 0 6px; border-radius: 5px; background: var(--yt-hair-2); color: var(--yt-ink-2); line-height: 18px; white-space: nowrap; }
 .reception-plugin .yt-jnodes .is-ticket .pin { border-color: #4c3a5c; }
-.reception-plugin .yt-jnodes .is-contact .pin { border-color: #2a1f33; background: #2a1f33; }
+.reception-plugin .yt-jnodes .is-contact .pin { border-color: var(--yt-plum); background: var(--yt-plum); }
 .reception-plugin .yt-jnodes .is-fury .pin { border-color: #cc3550; background: #cc3550; } .reception-plugin .yt-jnodes .is-fury b { color: #cc3550; }
-.reception-plugin .yt-jnodes .is-promise .pin { border-color: #d9b47c; } .reception-plugin .yt-jnodes .is-promise b { color: #8a6532; }
-.reception-plugin .yt-jnodes .is-due .pin { border-color: #d9b47c; border-style: dashed; } .reception-plugin .yt-jnodes .is-due b { color: #8a6532; }
-.reception-plugin .yt-jnodes .is-due .st { background: #f7efe1; color: #8a6532; }
-.reception-plugin .yt-handoff p { margin: 0; font-size: 13px; line-height: 1.65; color: #231a2b; }
+.reception-plugin .yt-jnodes .is-promise .pin { border-color: #d9b47c; } .reception-plugin .yt-jnodes .is-promise b { color: var(--yt-gold-ink); }
+.reception-plugin .yt-jnodes .is-due .pin { border-color: #d9b47c; border-style: dashed; } .reception-plugin .yt-jnodes .is-due b { color: var(--yt-gold-ink); }
+.reception-plugin .yt-jnodes .is-due .st { background: var(--yt-gold-wash); color: #8a6532; }
+.reception-plugin .yt-handoff p { margin: 0; font-size: 13px; line-height: 1.65; color: var(--yt-ink); }
 
 /* 风险队列行：迷你声纹、状态胶囊、长昵称单行 */
 .yt-risk-queue .yt-rk-name { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -517,33 +517,33 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-arc-kpi div { display: grid; gap: 2px; }
 .yt-arc-kpi dt { font-size: 11px; color: #a89cb4; }
 .yt-arc-kpi dd { margin: 0; font: 600 18px/1.2 var(--yt-num); color: #fff; }
-.yt-arc-sec { padding: 14px 16px; border-radius: 14px; background: #fff; border: 1px solid var(--yt-hair, #ebe5ef); }
+.yt-arc-sec { padding: 14px 16px; border-radius: 14px; background: var(--yt-card); border: 1px solid var(--yt-hair, #ebe5ef); }
 .yt-arc-sec h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--yt-ink, #2a2230); }
-.yt-arc-sec h3 .r { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--yt-ink-3, #958ba1); }
+.yt-arc-sec h3 .r { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--yt-ink-3, var(--yt-ink-3)); }
 .yt-arc-sec h3 .r.is-stale { color: #c98216; }
 .yt-arc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.yt-arc-order { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--yt-hair-2, #f0ecf3); }
+.yt-arc-order { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--yt-hair-2, var(--yt-hair-2)); }
 .yt-arc-order:last-child { border-bottom: 0; padding-bottom: 0; }
 .yt-arc-order b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yt-arc-order .amt { font: 600 13px var(--yt-num); color: var(--yt-ink, #2a2230); }
-.yt-arc-order .sub { font-size: 12px; color: var(--yt-ink-3, #958ba1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-arc-order .sub { font-size: 12px; color: var(--yt-ink-3, var(--yt-ink-3)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yt-arc-order .st { justify-self: end; font-size: 11px; padding: 0 7px; border-radius: 999px; background: #f4f0f7; color: #6b5f78; }
-.yt-arc-hist { list-style: none; margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--yt-hair-2, #f0ecf3); display: grid; gap: 10px; }
+.yt-arc-hist { list-style: none; margin: 0; padding: 0 0 0 12px; border-left: 2px solid var(--yt-hair-2, var(--yt-hair-2)); display: grid; gap: 10px; }
 .yt-arc-hist li { position: relative; display: grid; gap: 2px; }
 .yt-arc-hist li::before { content: ""; position: absolute; left: -17px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--yt-gold, #d9b47c); box-shadow: 0 0 0 2px #fff; }
-.yt-arc-hist .t { font: 12px var(--yt-num); color: var(--yt-ink-3, #958ba1); }
+.yt-arc-hist .t { font: 12px var(--yt-num); color: var(--yt-ink-3, var(--yt-ink-3)); }
 .yt-arc-hist .b { display: grid; gap: 3px; min-width: 0; }
 .yt-arc-hist .tags { display: flex; gap: 4px; }
 .yt-arc-hist .tags i { font-style: normal; font-size: 11px; padding: 0 7px; border-radius: 6px; background: #f4f0f7; color: #6b5f78; }
 .yt-arc-hist .tags i.is-topic { background: var(--yt-upset-wash, #fcf1df); color: #9a6410; }
-.yt-arc-hist p { margin: 0; font-size: 12.5px; color: var(--yt-ink-2, #5e5468); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.yt-arc-hist p { margin: 0; font-size: 12.5px; color: var(--yt-ink-2, var(--yt-ink-2)); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .yt-arc-mem { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; padding: 4px 0; }
-.yt-arc-mem .k { font-size: 12px; color: var(--yt-ink-3, #958ba1); padding-top: 2px; }
+.yt-arc-mem .k { font-size: 12px; color: var(--yt-ink-3, var(--yt-ink-3)); padding-top: 2px; }
 .yt-arc-mem .v { display: flex; flex-wrap: wrap; gap: 6px; }
 .yt-arc-new { margin-left: 4px; height: 22px; padding: 0 6px; font-size: 12px; color: var(--yt-gold-ink, #9a7438); }
 .yt-arc-ticket { width: 100%; display: grid; grid-template-columns: 16px auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--yt-hair, #ebe5ef); border-radius: 10px; background: #fbf9fc; cursor: pointer; text-align: left; font-size: 12.5px; color: var(--yt-ink, #2a2230); }
 .yt-arc-ticket:hover { border-color: var(--yt-gold, #d9b47c); }
-.yt-arc-ticket span { color: var(--yt-ink-3, #958ba1); font-family: var(--yt-num); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-arc-ticket span { color: var(--yt-ink-3, var(--yt-ink-3)); font-family: var(--yt-num); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 长队列：屏幕外的行跳过布局与绘制（浏览器原生虚拟化，不改行高与结构） */
 .reception-list > .reception-row-item.yt-qi { content-visibility: auto; contain-intrinsic-size: auto 64px; }
@@ -563,30 +563,30 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-ticket-list { min-width: 0; min-height: 0; overflow: auto; padding: 14px 22px 24px; }
 .yt-ticket-list .desk-filterbar { margin: 0 0 12px; gap: 8px; }
 .yt-ticket-list .desk-filterbar > .ant-input-affix-wrapper { width: 240px; margin-left: auto; }
-.yt-quick { font: inherit; font-size: 13px; height: 28px; padding: 0 12px; border: 1px solid var(--yt-hair); border-radius: 14px; background: #fff; color: #5d5468; cursor: pointer; }
+.yt-quick { font: inherit; font-size: 13px; height: 28px; padding: 0 12px; border: 1px solid var(--yt-hair); border-radius: 14px; background: var(--yt-card); color: #5d5468; cursor: pointer; }
 .yt-quick[aria-pressed="true"] { border-color: var(--yt-ink); background: var(--yt-ink); color: #fff; }
-.yt-ticket-table .ant-table-thead > tr > th { position: sticky; top: 0; z-index: 2; background: #faf9fb; font-weight: 500; color: #6f6680; }
+.yt-ticket-table .ant-table-thead > tr > th { position: sticky; top: 0; z-index: 2; background: var(--yt-wash); font-weight: 500; color: var(--yt-ink-3); }
 .yt-ticket-table .ant-table-tbody > tr > td { padding: 7px 8px; }
 .yt-ticket-table .ant-table-tbody > tr > td:first-child { box-shadow: inset 3px 0 0 transparent; }
 .yt-ticket-table tr.is-overdue > td:first-child { box-shadow: inset 3px 0 0 var(--yt-fury); }
 .yt-ticket-table tr.is-soon > td:first-child { box-shadow: inset 3px 0 0 #d99a2b; }
-.yt-ticket-table tr.is-selected > td { background: #f3eef8 !important; }
+.yt-ticket-table tr.is-selected > td { background: var(--yt-bubble-own) !important; }
 .yt-ticket-table .table-title-link { display: grid; gap: 1px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; color: var(--yt-ink); }
 .yt-ticket-table .table-title-link strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.yt-ticket-table .table-title-link small { font-size: 12px; color: #958ba1; font-variant-numeric: tabular-nums; }
+.yt-ticket-table .table-title-link small { font-size: 12px; color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
 .yt-ticket-table .table-title-link:hover strong { text-decoration: underline; }
-.yt-ticket-group-row > td { background: #f4f1f7 !important; padding: 5px 8px !important; }
+.yt-ticket-group-row > td { background: var(--yt-wash) !important; padding: 5px 8px !important; }
 .yt-ticket-group { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 0; font: inherit; font-size: 13px; cursor: pointer; color: var(--yt-ink); }
-.yt-ticket-group span { color: #958ba1; font-variant-numeric: tabular-nums; }
-.yt-ticket-group .anticon { font-size: 10px; color: #958ba1; }
+.yt-ticket-group span { color: var(--yt-ink-3); font-variant-numeric: tabular-nums; }
+.yt-ticket-group .anticon { font-size: 10px; color: var(--yt-ink-3); }
 .yt-ticket-due { display: grid; gap: 1px; font-variant-numeric: tabular-nums; }
 .yt-ticket-due b { font-weight: 600; font-size: 12px; }
 .yt-ticket-due b.is-overdue { color: var(--yt-fury); }
 .yt-ticket-due b.is-soon { color: #b77a12; }
-.yt-ticket-due small { font-size: 12px; color: #958ba1; }
+.yt-ticket-due small { font-size: 12px; color: var(--yt-ink-3); }
 .yt-ticket-table .yt-muted { color: #b8b0c2; }
 .yt-ticket-table .yt-warn { color: #b77a12; }
-.yt-ticket-detail { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--yt-hair); background: #fff; }
+.yt-ticket-detail { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-left: 1px solid var(--yt-hair); background: var(--yt-card); }
 .yt-ticket-detail > header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--yt-hair); }
 .yt-ticket-detail > header h2 { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .yt-ticket-detail > header .ant-tag { margin: 0; }
@@ -619,20 +619,20 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 
 .yt-score { overflow-x: auto; padding: 4px 0 6px; }
 .yt-score svg { display: block; }
-.yt-score-label { font-size: 10px; fill: var(--m-ink-3, #958ba1); }
+.yt-score-label { font-size: 10px; fill: var(--m-ink-3, var(--yt-ink-3)); }
 .yt-score-staff { stroke: var(--m-line-2, #e3dce9); stroke-width: 1; }
-.yt-score-head { stroke: var(--m-panel, #fff); stroke-width: 2; cursor: pointer; }
+.yt-score-head { stroke: var(--m-panel, var(--yt-card)); stroke-width: 2; cursor: pointer; }
 .yt-score-note.is-on .yt-score-head { stroke: #d9b47c; }
 .yt-score-accent { fill: none; stroke: var(--m-fury, #cc3550); stroke-width: 1.6; stroke-linecap: round; }
 .yt-score-up, .yt-score-down { fill: none; stroke-width: 1.2; }
 .yt-score-up { stroke: var(--m-fury, #cc3550); } .yt-score-down { stroke: var(--m-calm, #22906f); }
 .yt-score-svc { fill: #d9b47c; stroke: #d9b47c; stroke-width: 1.4; cursor: pointer; }
-.yt-score-svc.is-ai { fill: var(--m-panel, #fff); }
-.yt-score-svc.is-on { stroke: var(--m-ink, #231a2b); }
-.yt-score-rest { fill: var(--m-ink-3, #958ba1); opacity: 0.55; }
+.yt-score-svc.is-ai { fill: var(--m-panel, var(--yt-card)); }
+.yt-score-svc.is-on { stroke: var(--m-ink, var(--yt-ink)); }
+.yt-score-rest { fill: var(--m-ink-3, var(--yt-ink-3)); opacity: 0.55; }
 .yt-score-rest.is-over { fill: var(--m-upset, #d98a0f); opacity: 1; }
 .yt-score-wait { font: 10px var(--yt-num); fill: var(--m-upset, #d98a0f); }
-.yt-score-break, .yt-score-time { font: 10px var(--yt-num); fill: var(--m-ink-3, #958ba1); }
+.yt-score-break, .yt-score-time { font: 10px var(--yt-num); fill: var(--m-ink-3, var(--yt-ink-3)); }
 
 .yt-replay-convs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .yt-replay-convs button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--m-line-2); background: none; color: var(--m-ink-2); border-radius: 8px; padding: 3px 8px; font: 12px var(--yt-num); cursor: pointer; }
@@ -673,3 +673,21 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-lanes-bar.is-done { border-left-color: var(--m-calm); }
 .yt-lanes-bar.is-risk, .yt-lanes-dot.is-risk { color: #f07a8b; border-left-color: var(--m-fury); }
 .yt-lanes-dot.is-risk i { background: var(--m-fury); }
+
+/* 风险页浅色（全局明暗，全景方案 1.4）：只换 --m-* 令牌 */
+html[data-theme='light'] .yt-risk-page, html[data-theme='light'] .yt-risk-page .yt-monitor { --m-bg: #f2f1f4; --m-panel: #ffffff; --m-raised: #f6f3f8; --m-hi: #ece6f3; --m-line: #ece7f0;
+  --m-line-2: #ddd4e6; --m-ink: #231a2b; --m-ink-2: #5e5468; --m-ink-3: #857a91; --m-calm: #22906f; --m-upset: #c27a0c; --m-fury: #cc3550; --m-low: #6f76b8;
+  color-scheme: light; }
+html[data-theme='light'] .yt-risk-detail { box-shadow: 0 8px 24px -16px rgba(42, 31, 51, 0.25); }
+html[data-theme='light'] .yt-risk-page .yt-monitor-hero { background: radial-gradient(120% 140% at 70% 0%, #f3ecf8 0%, var(--m-panel) 55%); }
+html[data-theme='light'] .yt-risk-page .yt-clue-tags em { background: var(--m-raised); }
+html[data-theme='light'] .yt-risk-page .yt-clue-tags em:first-child, html[data-theme='light'] .yt-risk-page .yt-clue-tags em.is-fury { background: #fbe9ed; color: #b02a43; }
+html[data-theme='light'] .yt-risk-page .yt-dist-marker { border-color: #fff; }
+html[data-theme='light'] .yt-risk-page .yt-dist-tip { background: #fff; color: var(--m-ink); border-color: var(--m-line-2); }
+html[data-theme='light'] .yt-rm-sig, html[data-theme='light'] .yt-conclusion mark, html[data-theme='light'] .yt-rm mark { color: #b02a43; }
+html[data-theme='light'] .yt-risk-page .yt-type-track span { background: #8d6fb0; }
+html[data-theme='light'] .yt-risk-page .ant-tag { background: var(--m-raised) !important; }
+html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-error, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-red { background: #fbe9ed !important; color: #b02a43 !important; }
+html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-warning, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-orange { background: #fcf1df !important; color: #9a5f08 !important; }
+html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-success, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-green { background: #e7f4ef !important; color: #1b7a5d !important; }
+html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-blue { background: #ecedf8 !important; color: #4f569a !important; }
