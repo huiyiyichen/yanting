@@ -3,7 +3,7 @@ import { DemoOperatorSelect } from '../features/service-desk/DemoOperatorSelect'
 
 /** 所有业务页统一页头：标题、可选范围切换、指标、操作区（含演示客服切换）。 */
 export function PageHeader({ title, stats, actions, extra }: {
-  title: string
+  title: ReactNode
   extra?: ReactNode
   stats?: { label: string; value: number | string; warning?: boolean }[]
   actions?: ReactNode

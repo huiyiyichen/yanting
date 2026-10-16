@@ -59,6 +59,8 @@ export type ServiceRiskLevel = components['schemas']['ServiceRiskLevel']
 export type ServiceRiskStatus = components['schemas']['ServiceRiskStatus']
 export type ReceptionItem = components['schemas']['ReceptionItemView']
 export type ReceptionSnapshot = components['schemas']['ReceptionSnapshotView']
+export type PanoramaView = components['schemas']['PanoramaView']
+export type PanoramaItem = components['schemas']['PanoramaItem']
 export type ServiceWorkOrder = components['schemas']['ServiceWorkOrderView']
 export type TicketView = components['schemas']['TicketView']
 export type TicketCreateRequest = components['schemas']['TicketCreateRequest']
@@ -354,6 +356,7 @@ export const supportApi = {
   productCard: (conversationId: string) =>
     request<DeskProductCardView | null>(`/api/support/reception/${conversationId}/product-card`, { role: 'support' }),
   reception: () => request<ReceptionSnapshot>('/api/support/reception/queue', { role: 'support' }),
+  panorama: () => request<PanoramaView>('/api/support/reception/panorama', { role: 'support' }),
   receptionMessages: (id: string) =>
     request<MessageView[]>(`/api/support/reception/${id}/messages`, { role: 'support' }),
   uploadAttachment: (id: string, file: File) =>

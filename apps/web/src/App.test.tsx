@@ -326,7 +326,8 @@ describe('颜听工作台', () => {
     expect(brief).not.toHaveTextContent('好的，谢谢。')
     expect(brief).not.toHaveTextContent('退货已经寄回了')
     const headings = screen.getAllByRole('heading', { level: 3 }).map((node) => node.textContent)
-    expect(headings[0]).toMatch(/^交接摘要/); expect(headings[1]).toMatch(/^回复建议/); expect(headings[2]).toBe('风险关注')
+    // 全景方案 5.3：回复建议排在交接摘要之前
+    expect(headings[0]).toMatch(/^回复建议/); expect(headings[1]).toMatch(/^交接摘要/); expect(headings[2]).toBe('风险关注')
     expect(fetchMock.mock.calls.some(([path, options]) =>
       String(path).endsWith('/assistant') && options?.method === 'POST')).toBe(false)
   })

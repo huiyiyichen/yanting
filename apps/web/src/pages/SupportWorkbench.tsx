@@ -9,6 +9,7 @@ import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerSe
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
 import { PageHeader } from '../components/PageHeader'
+import { Panorama } from '../features/panorama/Panorama'
 import { makeSenderInput } from '../components/SenderParts'
 import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
@@ -36,9 +37,19 @@ const intentLabels: Record<string, string> = {
   complaint: '投诉', other: '其他诉求', unknown: '待明确',
 }
 
+const VIEW_KEY = 'yt.support.view'
+
 export function SupportWorkbench() {
   const [params, setParams] = useSearchParams()
   const routeId = params.get('conversation')
+  const panoramaView = params.get('view') === 'panorama'
+  useEffect(() => {
+    if (!params.get('view') && !routeId && localStorage.getItem(VIEW_KEY) === 'panorama') setParams({ view: 'panorama' }, { replace: true })
+  }, [params, routeId, setParams])
+  const switchView = (next: 'desk' | 'panorama') => {
+    localStorage.setItem(VIEW_KEY, next)
+    setParams(next === 'panorama' ? { view: 'panorama' } : id ? { conversation: id } : {})
+  }
   const [fallbackId, setFallbackId] = useState<string | null>(null)
   const id = routeId ?? fallbackId
   const active = useRef(id)
@@ -330,7 +341,12 @@ export function SupportWorkbench() {
   </div>
   return <div className="desk-workbench">
     {holder}
-    <PageHeader title="客服工作台" stats={serviceMetricStats(metrics)} />
+    <PageHeader title={<span className="yt-view-seg" role="radiogroup" aria-label="接待视图">
+      {([['desk', '工作台'], ['panorama', '全景']] as const).map(([key, label]) => <button key={key} type="button" role="radio"
+        aria-checked={(key === 'panorama') === panoramaView} className={(key === 'panorama') === panoramaView ? 'on' : undefined}
+        onClick={() => switchView(key)}>{label}</button>)}
+    </span>} stats={serviceMetricStats(metrics)} />
+    {panoramaView ? <Panorama onOpen={(cid) => { localStorage.setItem(VIEW_KEY, 'desk'); setParams({ conversation: cid }) }} /> : <>
     <div className="reception-workspace">
       {!mobile && queue}
       <section className="reception-chat" aria-label="客服对话">
@@ -371,6 +387,7 @@ export function SupportWorkbench() {
       </section>
       {!compact && <aside className="reception-plugin" aria-label="接待辅助信息">{plugin(true)}</aside>}
     </div>
+    </>}
     <Drawer title="会话" placement="left" size={300} open={queueOpen} onClose={() => setQueueOpen(false)}>{queue}</Drawer>
     <TicketDraftDrawer open={ticketDrawer} conversationId={id ?? null} buyerAlias={current?.buyerAlias} context={context}
       onClose={() => setTicketDrawer(false)}
