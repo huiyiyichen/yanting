@@ -8,12 +8,15 @@ import { dateLabel } from './shared'
 export const riskHref = (conversationId: string, risk: string) =>
   `/risk?${new URLSearchParams({ conversation: conversationId, type: risk }).toString()}`
 
+/** 活动窗口（全景方案 8：120 分钟）；更早的会话不计等待，只显示日期。 */
+export const ACTIVE_WINDOW_SECONDS = 120 * 60
+
 /** 等待超过阈值时的等待时长；口径与后端 response_wait 规则一致（waitingSince + 阈值）。 */
 export function waitLabel(item: ReceptionItem, now: number): string | null {
   if (!item.waitingSince) return null
   const seconds = Math.floor((now - Date.parse(item.waitingSince)) / 1000)
-  if (!Number.isFinite(seconds) || seconds < (item.waitThresholdSeconds ?? 120)) return null
-  return seconds < 3600 ? `等待 ${Math.floor(seconds / 60)} 分` : `等待 ${Math.floor(seconds / 3600)} 小时`
+  if (!Number.isFinite(seconds) || seconds < (item.waitThresholdSeconds ?? 120) || seconds > ACTIVE_WINDOW_SECONDS) return null
+  return seconds < 3600 ? `等待 ${Math.floor(seconds / 60)} 分` : `等待 1 小时 ${Math.floor((seconds - 3600) / 60)} 分`
 }
 
 type QueueRowProps = {

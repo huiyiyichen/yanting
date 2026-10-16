@@ -24,6 +24,9 @@ describe('QueueRow', () => {
   it('Q1 wait label only past threshold', () => {
     expect(waitLabel({ ...base, waitingSince: '2026-05-07T10:04:30+00:00' }, now)).toBeNull()
     expect(waitLabel({ ...base, waitingSince: '2026-05-07T10:02:00+00:00' }, now)).toBe('等待 3 分')
+    // 全景方案 5.1：活动窗口（120 分钟）外不再显示“等待 220 小时”
+    expect(waitLabel({ ...base, waitingSince: new Date(now - 3 * 3600_000).toISOString() }, now)).toBeNull()
+    expect(waitLabel({ ...base, waitingSince: new Date(now - 95 * 60_000).toISOString() }, now)).toBe('等待 1 小时 35 分')
     const { container } = row({ waitingSince: '2026-05-07T10:02:00+00:00' })
     expect(container.querySelector('.yt-queue-wait')?.textContent).toBe('等待 3 分')
   })
