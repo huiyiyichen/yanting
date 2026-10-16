@@ -1,4 +1,8 @@
+import { Popover } from 'antd'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { shMonthDay } from '../service-desk/shTime'
+import { axisBreaks, densestWindow } from './distDays'
 import type { ProductClueView, RiskOverviewView } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 
@@ -15,8 +19,11 @@ function DistributionVoiceprint({ overview, onMarker }: {
   overview: RiskOverviewView; onMarker: (conversationId: string) => void
 }) {
   const [hover, setHover] = useState<number | null>(null)
-  const buckets = overview.hourly
-  const days = [...new Set(buckets.map((b) => b.date))].sort()
+  const [all, setAll] = useState(false)
+  const allDays = [...new Set(overview.hourly.map((b) => b.date))].sort()
+  const days = all ? allDays : densestWindow(overview.hourly)
+  const breaks = axisBreaks(days)
+  const buckets = overview.hourly.filter((b) => days.includes(b.date))
   const hours = buckets.map((b) => b.hour)
   const h0 = Math.min(8, ...hours), h1 = Math.max(23, ...hours)
   // 天数多时按 2 小时合并，保证柱宽不细成线
@@ -42,6 +49,10 @@ function DistributionVoiceprint({ overview, onMarker }: {
   const indexOf = (date: string, hour: number) => days.indexOf(date) * perDay + Math.floor((hour - h0) / step)
   const hovered = hover === null ? null : slots[hover]
   return <div className="yt-dist">
+    {days.length < allDays.length || all ? <div className="yt-dist-range" role="group" aria-label="声纹范围">
+      <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>密集 7 天</button>
+      <button type="button" aria-pressed={all} onClick={() => setAll(true)}>全部 {allDays.length} 天</button>
+    </div> : null}
     <svg role="img" aria-label={summary} viewBox={`0 0 ${W} ${H}`} width="100%" onMouseLeave={() => setHover(null)}
       onMouseMove={(event) => {
         const box = event.currentTarget.getBoundingClientRect()
@@ -49,7 +60,9 @@ function DistributionVoiceprint({ overview, onMarker }: {
         setHover(Math.max(0, Math.min(slots.length - 1, k)))
       }}>
       {days.map((date, di) => <g key={date}>
-        {di > 0 && <line x1={di * perDay * slot} x2={di * perDay * slot} y1={top - 4} y2={H - bottomPad + 6} className="yt-dist-day" />}
+        {di > 0 && (breaks.has(di)
+          ? <text x={di * perDay * slot} y={mid + 4} textAnchor="middle" className="yt-dist-break" aria-label="断档">≈</text>
+          : <line x1={di * perDay * slot} x2={di * perDay * slot} y1={top - 4} y2={H - bottomPad + 6} className="yt-dist-day" />)}
         <text x={di * perDay * slot + 6} y={H - 6} className="yt-dist-date">{date.slice(5).replace('-', '/')}</text>
       </g>)}
       <line x1={0} x2={W} y1={mid} y2={mid} className="yt-dist-mid" />
@@ -84,6 +97,27 @@ function DistributionVoiceprint({ overview, onMarker }: {
       <span><i className="is-calm" />平稳 {hovered.calm}</span>
     </div>}
   </div>
+}
+
+const WORK_TYPE: Record<string, string> = { adverse_reaction: '不良反应', return_refund: '售后退货', reship_exchange: '补发换货', offline_payment: '线下打款', logistics: '物流' }
+
+/** 商品线索展开（全景方案 5.4，反馈 ⑤）：按批次分组列出工单、订单尾号与会话；只列原始记录，不下结论。 */
+export function ClueCases({ clue, onFilterConversation }: { clue: ProductClueView; onFilterConversation: (conversationId: string) => void }) {
+  const groups = new Map<string, NonNullable<ProductClueView['cases']>>()
+  for (const item of clue.cases ?? []) {
+    const key = item.batch ? `批次 ${item.batch}` : '其他工单'
+    groups.set(key, [...(groups.get(key) ?? []), item])
+  }
+  return <div className="yt-clue-cases">{[...groups].map(([label, items]) => <section key={label} aria-label={label}>
+    <h4>{label}<span>{items.length}</span></h4>
+    <ul>{items.map((item) => <li key={item.workOrderId}>
+      <span className="d">{shMonthDay(item.createdAt)}</span>
+      <span>{WORK_TYPE[item.workOrderType] ?? item.workOrderType}</span>
+      <span className="o">{item.orderId ? `订单 …${item.orderId.slice(-4)}` : '无订单'}</span>
+      <button type="button" onClick={() => onFilterConversation(item.conversationId)}>{item.buyerAlias} · {item.conversationId}</button>
+      <Link to={`/platform/work-orders?q=${encodeURIComponent(item.workOrderId)}`}>{item.workOrderId}</Link>
+    </li>)}</ul>
+  </section>)}</div>
 }
 
 export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConversation }: {
@@ -130,7 +164,11 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
       </div>
       <div className="yt-panel"><div className="yt-panel-head"><h3>商品风险线索</h3></div>
         <ul className="yt-clues">{clues.slice(0, 4).map((clue) => <li key={clue.productName}>
-          <strong title={clue.productName}>{clue.productName}</strong>
+          <Popover trigger="click" placement="bottomLeft" title={clue.productName} destroyOnHidden
+            content={<ClueCases clue={clue} onFilterConversation={onFilterConversation} />}>
+            <button type="button" className="yt-clue-name" aria-label={`展开订单 ${clue.productName}`}>
+              <strong title={clue.productName}>{clue.productName}</strong></button>
+          </Popover>
           <span className="yt-clue-tags">
             <em>不良反应 {clue.adverseReactions}</em>
             {clue.medicalVisits > 0 && <em className="is-fury">就医 {clue.medicalVisits}</em>}

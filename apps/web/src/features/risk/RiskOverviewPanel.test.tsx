@@ -5,8 +5,10 @@
  * V3 商品线索出现质量结论文字（如“质量问题”“同批次”），只允许计数。
  * V4 点击类型条不筛选下方列表（onFilterType 未带类型）。
  * V5 点击高风险会话标记不打开对应会话筛选（onFilterConversation 未带会话号）。
+ * V6 商品线索不能展开到订单与会话（反馈 ⑤）；展开后不按批次分组。
  */
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import { describe, expect, it, vi } from 'vitest'
 import type { ProductClueView, RiskOverviewView } from '../../api/client'
@@ -27,11 +29,15 @@ const overview: RiskOverviewView = {
 const clues: ProductClueView[] = [{
   productName: '测试B5多效修护面膜20片', adverseReactions: 3, medicalVisits: 1, batches: ['26A05', '26A18', '未记录'],
   relatedTickets: 4, otherTickets: 1, abnormalReturns: 0, score: 15, workOrderIds: ['W1'],
+  cases: [
+    { workOrderId: 'W1', workOrderType: 'adverse_reaction', orderId: '6920156290763740456', conversationId: 'S00012', buyerAlias: '半d**', batch: '26A05', createdAt: '2026-05-06T10:00:00+08:00' },
+    { workOrderId: 'W2', workOrderType: 'return_refund', orderId: null, conversationId: 'S00020', buyerAlias: '雷**', batch: null, createdAt: '2026-05-07T10:00:00+08:00' },
+  ],
 }]
 
 function mount(props = {}) {
   const handlers = { onFilterType: vi.fn(), onFilterConversation: vi.fn() }
-  render(<ConfigProvider><RiskOverviewPanel overview={overview} clues={clues} {...handlers} {...props} /></ConfigProvider>)
+  render(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={overview} clues={clues} {...handlers} {...props} /></ConfigProvider></MemoryRouter>)
   return handlers
 }
 
@@ -62,4 +68,14 @@ describe('RiskOverviewPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /魏h\*\*/ }))
     expect(handlers.onFilterConversation).toHaveBeenCalledWith('S00059')
   })
+  it('V6 点商品展开按批次分组的工单、订单与会话，点会话筛选队列', async () => {
+    const handlers = mount()
+    fireEvent.click(screen.getByRole('button', { name: '展开订单 测试B5多效修护面膜20片' }))
+    const batch = await screen.findByRole('region', { name: '批次 26A05' })
+    expect(within(batch).getByText('订单 …0456')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: '其他工单' })).toHaveTextContent('无订单')
+    fireEvent.click(within(batch).getByRole('button', { name: '半d** · S00012' }))
+    expect(handlers.onFilterConversation).toHaveBeenCalledWith('S00012')
+  })
 })
+

@@ -64,6 +64,18 @@ class RiskOverviewView(ApiModel):
     emotion_source: Literal["rule"]
 
 
+class ProductClueCase(ApiModel):
+    """商品线索的一条原始记录：工单 → 订单 → 会话（全景方案 5.4，反馈 ⑤）。"""
+
+    work_order_id: str
+    work_order_type: str
+    order_id: str | None = None
+    conversation_id: str
+    buyer_alias: str
+    batch: str | None = None
+    created_at: str
+
+
 class ProductClueView(ApiModel):
     product_name: str
     adverse_reactions: int
@@ -74,6 +86,7 @@ class ProductClueView(ApiModel):
     abnormal_returns: int
     score: int
     work_order_ids: list[str]
+    cases: list[ProductClueCase] = []
 
 
 def _cst(value: datetime, *, imported: bool) -> datetime:
@@ -181,7 +194,7 @@ def product_clues(session: Session) -> list[ProductClueView]:
             details[row.work_order_record_id] = {"model": model.__name__, **json.loads(row.fields_json),
                                                  "abnormal": getattr(row, "abnormal", None)}
     clues: dict[str, dict] = defaultdict(lambda: {"adverse": 0, "medical": 0, "batches": set(),
-                                                    "tickets": 0, "abnormal": 0, "ids": []})
+                                                    "tickets": 0, "abnormal": 0, "ids": [], "cases": []})
     for work in session.scalars(select(WorkOrderRow).where(WorkOrderRow.batch_id == batch)):
         detail = details.get(work.record_id, {})
         name = detail.get("product_name") or products.get(work.order_id or "")
@@ -190,6 +203,15 @@ def product_clues(session: Session) -> list[ProductClueView]:
         clue = clues[name]
         clue["tickets"] += 1
         clue["ids"].append(work.work_order_id)
+        batch_no = None
+        if work.work_order_type == "adverse_reaction":
+            raw_batch = str(detail.get("product_batch_no") or "").strip()
+            batch_no = "未记录" if raw_batch in UNRECORDED_BATCH else raw_batch
+        clue["cases"].append(ProductClueCase(
+            work_order_id=work.work_order_id, work_order_type=work.work_order_type, order_id=work.order_id,
+            conversation_id=work.conversation_id, buyer_alias=work.buyer_alias, batch=batch_no,
+            created_at=_cst(work.created_at, imported=True).isoformat(),
+        ))
         if work.work_order_type == "adverse_reaction":
             clue["adverse"] += 1
             clue["medical"] += 1 if str(detail.get("sought_medical_care", "")).strip() == "是" else 0
@@ -208,5 +230,6 @@ def product_clues(session: Session) -> list[ProductClueView]:
             abnormal_returns=clue["abnormal"],
             score=clue["adverse"] * 3 + clue["medical"] * 5 + other,
             work_order_ids=sorted(clue["ids"]),
+            cases=sorted(clue["cases"], key=lambda case: (case.batch is None, case.batch or "", case.created_at)),
         ))
     return sorted(result, key=lambda item: (-item.score, item.product_name))

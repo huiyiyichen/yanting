@@ -9,6 +9,7 @@ O5 商品风险线索把批次“00”当真实批次，或把不同批次写成
 O6 商品线索排序分不是 不良反应×3 + 就医×5 + 其他工单×1；阈值外商品被返回。
 O7 商品线索给出质量结论文字（只允许计数与原始记录入口）。
 O8 读取看板触发模型调用或写库。
+O10 商品线索只有计数，展不开到具体工单、订单与会话（反馈 ⑤）。
 O9 同一“待处理风险”四处四个数（全景方案 5.1）：看板 pending、工作台 pendingRisks、风险列表 intervene 必须同口径；导航徽标=高风险且待处理。
 """
 
@@ -54,7 +55,13 @@ def test_product_clues_from_official_work_orders(workspace):
     scores = [item["score"] for item in response.json()]
     assert scores == sorted(scores, reverse=True)
     assert set(b5) == {"productName", "adverseReactions", "medicalVisits", "batches", "relatedTickets",
-                       "otherTickets", "abnormalReturns", "score", "workOrderIds"}
+                       "otherTickets", "abnormalReturns", "score", "workOrderIds", "cases"}
+    for clue in clues.values():
+        assert len(clue["cases"]) == clue["relatedTickets"]
+        assert sorted(c["workOrderId"] for c in clue["cases"]) == clue["workOrderIds"]
+        assert all(c["conversationId"] and c["buyerAlias"] for c in clue["cases"])
+        adverse = [c for c in clue["cases"] if c["workOrderType"] == "adverse_reaction"]
+        assert {c["batch"] for c in adverse} == set(clue["batches"])
 
 
 def test_pending_risk_single_definition(workspace):

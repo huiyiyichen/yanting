@@ -3018,6 +3018,26 @@ export interface components {
             /** Orderid */
             orderId?: string | null;
         };
+        /**
+         * ProductClueCase
+         * @description 商品线索的一条原始记录：工单 → 订单 → 会话（全景方案 5.4，反馈 ⑤）。
+         */
+        ProductClueCase: {
+            /** Workorderid */
+            workOrderId: string;
+            /** Workordertype */
+            workOrderType: string;
+            /** Orderid */
+            orderId?: string | null;
+            /** Conversationid */
+            conversationId: string;
+            /** Buyeralias */
+            buyerAlias: string;
+            /** Batch */
+            batch?: string | null;
+            /** Createdat */
+            createdAt: string;
+        };
         /** ProductClueView */
         ProductClueView: {
             /** Productname */
@@ -3038,6 +3058,11 @@ export interface components {
             score: number;
             /** Workorderids */
             workOrderIds: string[];
+            /**
+             * Cases
+             * @default []
+             */
+            cases: components["schemas"]["ProductClueCase"][];
         };
         /**
          * ProductRef
