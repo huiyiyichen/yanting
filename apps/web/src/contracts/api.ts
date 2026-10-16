@@ -2551,6 +2551,10 @@ export interface components {
             snapshotId: string | null;
             /** Evidence */
             evidence: components["schemas"]["RetrievalEvidence"][];
+            /** Sourcetexts */
+            sourceTexts?: {
+                [key: string]: string;
+            };
         };
         /** KnowledgeToggleRequest */
         KnowledgeToggleRequest: {

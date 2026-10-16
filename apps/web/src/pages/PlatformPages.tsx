@@ -3,6 +3,7 @@ import { Alert, Button, Drawer, Empty, Form, Image, Input, Modal, Popconfirm, Se
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { knowledgeApi, platformApi, type KnowledgeEditRequest, type KnowledgeEditorView, type KnowledgeOverviewView, type KnowledgeProductView, type KnowledgeSearchView } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
+import { KnowledgeHit, hitRelevance } from '../features/platform/KnowledgeHit'
 
 const statuses: Record<string, string> = { draft: '待发布', published: '已发布', failed: '发布失败' }
 
@@ -207,7 +208,8 @@ export function KnowledgePage() {
         options={products.map((p) => ({ value: p.sku, label: p.name }))} value={searchProduct} onChange={setSearchProduct} />
       <Input.Search aria-label="检索问题" placeholder="输入消费者问题" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onSearch={() => void search()} loading={searching} enterButton="检索" />
       {searchResult && <section className="service-section"><Tag>{searchResult.evidence.length} 条引用</Tag>
-        {searchResult.evidence.map((e) => <blockquote className="evidence-quote" key={e.chunk_id}><strong>{e.document_title}</strong><p>{e.quoted_excerpt}</p><small>{e.source_locator}</small></blockquote>)}
+        {searchResult.evidence.map((e) => <KnowledgeHit key={e.chunk_id} evidence={e}
+          relevance={hitRelevance(e, searchResult.evidence)} fullText={searchResult.sourceTexts?.[e.chunk_id]} />)}
         {!searchResult.evidence.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="未命中" />}
       </section>}
     </Drawer>

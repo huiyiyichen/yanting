@@ -575,3 +575,12 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 
 /* 长队列：屏幕外的行跳过布局与绘制（浏览器原生虚拟化，不改行高与结构） */
 .reception-list > .reception-row-item.yt-qi { content-visibility: auto; contain-intrinsic-size: auto 64px; }
+
+/* 知识检索命中：相关度条 + 全文展开 */
+.yt-khit-head { display: flex; align-items: center; gap: 10px; }
+.yt-khit-head strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-khit-rel { flex: 0 0 72px; height: 4px; border-radius: 2px; background: var(--yt-hair); overflow: hidden; }
+.yt-khit-rel i { display: block; height: 100%; border-radius: 2px; background: var(--yt-primary); }
+.yt-khit-head b { flex: 0 0 auto; min-width: 22px; text-align: right; font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--yt-ink); }
+.yt-khit p.is-full { white-space: pre-wrap; }
+.yt-khit-foot { display: flex; align-items: center; justify-content: space-between; }

@@ -109,6 +109,8 @@ class KnowledgeSearchView(ApiModel):
     hit_status: str
     snapshot_id: str | None
     evidence: list[RetrievalEvidence]
+    #: chunk_id → 片段全文（证据里的摘录是截断的；仅内部检索测试用于全文预览）
+    source_texts: dict[str, str] = Field(default_factory=dict)
 
 
 def _documents(session: Session) -> dict[str, KnowledgeDocumentRow]:
@@ -400,4 +402,5 @@ def search(
     )
     return KnowledgeSearchView(
         hit_status=result.hit_status.value, snapshot_id=result.snapshot_id, evidence=result.evidence,
+        source_texts=dict(result.source_texts),
     )
