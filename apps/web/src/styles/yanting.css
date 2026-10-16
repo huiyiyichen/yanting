@@ -102,7 +102,7 @@
 .yt-dist-upset { fill: var(--m-upset); }
 .yt-dist-fury { fill: var(--m-fury); }
 .yt-dist-calm { fill: var(--m-calm); opacity: 0.5; }
-.yt-dist-peak { fill: var(--m-ink-2); font-size: 11px; font-variant-numeric: tabular-nums; }
+.yt-dist-peak { fill: var(--m-ink-2); font-size: 14px; font-variant-numeric: tabular-nums; }
 .yt-dist-markers { position: absolute; top: 2px; left: 0; height: 10px; }
 .yt-dist-marker {
   position: absolute; top: 0; width: 8px; height: 8px; padding: 0; border: 0; cursor: pointer;
@@ -296,3 +296,9 @@ html[data-theme='dark'] .yt-ptile:hover { background: var(--yt-wash); }
 html[data-theme='dark'] .reception-row-item.is-active { background: var(--yt-wash); }
 html[data-theme='dark'] .yt-tag.is-ai { background: rgba(141, 111, 176, 0.22); color: #d6c6ea; }
 html[data-theme='dark'] .yt-chead-av, html[data-theme='dark'] .chat-message-surface .ant-avatar { background: var(--yt-wash) !important; color: var(--yt-ink-2) !important; }
+/* 模型页指标主次（全景方案 5.6）：每条回复成本、缓存命中率、每条回复调用突出 */
+.yt-usage-kpis.is-main { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.yt-usage-kpis.is-main > div { padding: 14px 16px; }
+.yt-usage-kpis.is-main strong { font-size: 28px; }
+.yt-usage-kpis.is-minor > div { padding: 6px 10px; background: transparent; }
+.yt-usage-kpis.is-minor strong { font-size: 15px; color: var(--yt-ink-2); }

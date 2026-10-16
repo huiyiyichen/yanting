@@ -63,7 +63,7 @@ export function WorkOrderPage() {
   const [context, setContext] = useState<ConsumerServiceContextView | null>(null)
   const [queue, setQueue] = useState<ReceptionItem[]>([])
   const [createContext, setCreateContext] = useState<ConsumerServiceContextView | null>(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => params.get('q') ?? '')
   const [status, setStatus] = useState<'all' | StatusGroup>('all')
   const [quick, setQuick] = useState<QuickFilter[]>([])
   const [collapsed, setCollapsed] = useState<ReadonlySet<StatusGroup>>(() => new Set(['resolved']))
@@ -201,8 +201,10 @@ export function WorkOrderPage() {
             { value: 'all', label: `全部 ${scoped.length}` },
             ...statusGroups.map(({ key, label }) => ({ value: key, label: `${label} ${countOf(key)}` })),
           ]} />
-          {([['mine', '我的'], ['unassigned', '待分配'], ['due', '到期']] as const).map(([key, label]) =>
-            <button key={key} type="button" className="yt-quick" aria-pressed={quick.includes(key)} onClick={() => toggleQuick(key)}>{label}</button>)}
+          <span className="yt-quick-group" role="group" aria-label="快捷筛选">
+            {([['mine', '我的'], ['unassigned', '待分配'], ['due', '到期']] as const).map(([key, label]) =>
+              <button key={key} type="button" className="yt-quick" aria-pressed={quick.includes(key)} onClick={() => toggleQuick(key)}>{label}</button>)}
+          </span>
           <Input aria-label="搜索工单" prefix={<SearchOutlined />} placeholder="工单、订单、客户、负责人" value={query} onChange={(e) => setQuery(e.target.value)} allowClear />
           <Select aria-label="工单类型" placeholder="工单类型" value={type} options={optionsOf(ticketTypes)} onChange={setType} allowClear />
           {conversationId && <Tag closable onClose={() => setParams({})}>{conversationId}</Tag>}

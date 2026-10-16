@@ -7,6 +7,7 @@
  * 2. 客户上传的图片附件**在气泡里真的渲染出来**（缺陷 #47 的前端半边）；
  *    多模态未接通时 e2e 只能验证到「接口返回 503」，图片渲染必须由组件测试兜住；
  * 3. 同一份消息数据在客户/客服视角下方向相反（前端规范第 5.2 节）。
+ * 4. 客户视角下客服与智能助手同一个机器人头像（全景方案 5.2：客服应为人形）。
  */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { App as AntApp, ConfigProvider } from 'antd'
@@ -147,5 +148,10 @@ describe('MessageList', () => {
     )
 
     expect(screen.getByText('发送失败，可重试')).toBeInTheDocument()
+  })
+  it('客户视角：人工客服与智能助手头像不同', () => {
+    renderList([message({ messageId: 'a', senderRole: 'assistant', body: '您好' }), message({ messageId: 'b', senderRole: 'operator', body: '我是客服' })], 'customer')
+    expect(screen.getByLabelText('智能助手')).toHaveClass('is-ai')
+    expect(screen.getByLabelText('人工客服')).toHaveClass('is-staff')
   })
 })

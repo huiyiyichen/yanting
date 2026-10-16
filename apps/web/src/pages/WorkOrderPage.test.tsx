@@ -214,7 +214,7 @@ it('到期待办过滤已完成工单并按期限先后排列', async () => {
   await user.click(screen.getByRole('button', { name: '到期' }))
   expect(screen.queryByText('已处理完')).not.toBeInTheDocument()
   const titles = screen.getAllByRole('button').filter((button) => button.classList.contains('table-title-link'))
-  expect(titles.map((button) => button.textContent)).toEqual(['早到期LOCAL-B', '晚到期LOCAL-A'])
+  expect(titles.map((button) => button.textContent?.replace(/ · 跟进.*$/, ''))).toEqual(['早到期LOCAL-B', '晚到期LOCAL-A'])
 })
 
 const statusRows = () => [

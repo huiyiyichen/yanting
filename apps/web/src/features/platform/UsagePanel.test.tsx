@@ -46,4 +46,10 @@ describe('UsagePanel', () => {
     expect(screen.getByText('未识别模型')).toBeInTheDocument()
     expect(screen.queryByText(/^(other|unknown)$/)).toBeNull()
   })
+  it('P5 三个主指标单独一组突出（全景方案 5.6）', () => {
+    const { container } = render(<ConfigProvider><UsagePanel usage={view} /></ConfigProvider>)
+    const main = [...container.querySelectorAll('.yt-usage-kpis.is-main > div')].map((el) => el.getAttribute('aria-label'))
+    expect(main).toEqual(['每条回复成本', '缓存命中率', '每条回复调用'])
+  })
 })
+

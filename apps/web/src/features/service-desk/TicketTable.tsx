@@ -1,10 +1,15 @@
-import { DownOutlined, RightOutlined } from '@ant-design/icons'
+import { CarOutlined, DownOutlined, MedicineBoxOutlined, PayCircleOutlined, RightOutlined, RollbackOutlined, SwapOutlined } from '@ant-design/icons'
 import { Empty, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { TicketView } from '../../api/client'
 import { TicketStatus, dateLabel, priorities, ticketTypes } from './shared'
 import { ticketDeadline } from './ticketDeadline'
 import { dueText, groupOf, statusGroups, type StatusGroup } from './ticketList'
+
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  reship_exchange: <SwapOutlined />, offline_payment: <PayCircleOutlined />, logistics: <CarOutlined />,
+  adverse_reaction: <MedicineBoxOutlined />, return_refund: <RollbackOutlined />,
+}
 
 type GroupRow = { kind: 'group'; key: string; group: StatusGroup; label: string; count: number; open: boolean }
 type Row = GroupRow | (TicketView & { kind: 'ticket'; key: string })
@@ -31,23 +36,21 @@ export function TicketTable({ rows, grouped, collapsed, onToggle, selectedId, on
   } else data.push(...rows.map((r) => ({ ...r, kind: 'ticket' as const, key: r.ticketId })))
 
   const cols: Array<ColumnsType<Row>[number] & { secondary?: boolean }> = [
-    { title: '工单 / 事项', key: 'title', width: compact ? 220 : 250, render: (_, row) => row.kind === 'group'
+    { title: '工单 / 事项', key: 'title', width: compact ? 260 : 320, render: (_, row) => row.kind === 'group'
       ? <button type="button" className="yt-ticket-group" aria-expanded={row.open} onClick={() => onToggle(row.group)}>
         {row.open ? <DownOutlined /> : <RightOutlined />}<strong>{row.label}</strong><span>{row.count}</span></button>
-      : <button type="button" className="table-title-link" onClick={() => onOpen(row.ticketId)}><strong>{row.title}</strong><small>{row.ticketId}</small></button> },
-    { title: '类型', key: 'type', width: 92, secondary: true, render: (_, row) => row.kind === 'ticket' && ticketTypes[row.workOrderType] },
-    { title: '客户', key: 'buyer', width: 96, render: (_, row) => row.kind === 'ticket' && row.buyerAlias },
+      : (() => {
+        const due = row.dueAt ? dueText(row, now) : ''
+        const state = ticketDeadline(row, now)
+        return <button type="button" className="table-title-link" onClick={() => onOpen(row.ticketId)}>
+          <strong><span className="yt-ticket-ic" role="img" aria-label={ticketTypes[row.workOrderType]} title={ticketTypes[row.workOrderType]}>{TYPE_ICON[row.workOrderType]}</span>
+            {row.title}{['urgent', 'high'].includes(row.priority) && <Tag color="error" className="yt-ticket-pri">{priorities[row.priority]}</Tag>}</strong>
+          <small>{row.ticketId}{row.dueAt && <span className={`yt-ticket-due is-${state}`}> · 跟进 {dateLabel(row.dueAt)}{due && <b> {due}</b>}</span>}</small>
+        </button>
+      })() },
     { title: '订单', key: 'order', width: 150, secondary: true, render: (_, row) => row.kind === 'ticket' && (row.orderId || <span className="yt-muted">—</span>) },
-    { title: '优先级', key: 'priority', width: 70, render: (_, row) => row.kind === 'ticket'
-      && <Tag color={['urgent', 'high'].includes(row.priority) ? 'error' : 'default'}>{priorities[row.priority]}</Tag> },
     { title: '状态', key: 'status', width: 92, render: (_, row) => row.kind === 'ticket' && <TicketStatus status={row.status} /> },
     { title: '负责人', key: 'assignee', width: 76, render: (_, row) => row.kind === 'ticket' && (row.assignee || <span className="yt-warn">待分配</span>) },
-    { title: '下次跟进', key: 'due', width: 150, render: (_, row) => {
-      if (row.kind !== 'ticket') return null
-      const text = dueText(row, now)
-      const state = ticketDeadline(row, now)
-      return <span className="yt-ticket-due">{text && <b className={`is-${state}`}>{text}</b>}<small>{row.dueAt ? dateLabel(row.dueAt) : '—'}</small></span>
-    } },
     { title: '更新', key: 'updated', width: 110, secondary: true, render: (_, row) => row.kind === 'ticket' && dateLabel(row.updatedAt) },
   ]
   const visible = cols.filter((c) => !(compact && c.secondary))

@@ -44,6 +44,10 @@ describe('QueueRow', () => {
     expect(screen.getAllByTestId('queue-tag')).toHaveLength(1)
     expect(screen.getByTestId('queue-tag').textContent).not.toBe('AI')
   })
+  it('Q5 重复进线让位给其他有效信号', () => {
+    row({ activeRiskTypes: ['repeated_contact', 'complaint_risk'] })
+    expect(screen.getByTestId('queue-tag').textContent).toBe('投诉风险')
+  })
   it('Q4 AI tag when autonomous without risk', () => {
     row({})
     expect(screen.getByTestId('queue-tag').textContent).toBe('AI')

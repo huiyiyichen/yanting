@@ -11,13 +11,15 @@ const count = (value: number) => value.toLocaleString('zh-CN')
 export function UsagePanel({ usage }: { usage: UsageView }) {
   const live = usage.live
   return <section className="yt-usage" aria-label="评测与成本">
-    <div className="yt-usage-kpis">
-      <div aria-label="真实调用"><span>真实调用</span><strong>{count(live.calls)}</strong></div>
-      <div aria-label="每条回复调用"><span>每条回复调用</span><strong>{live.callsPerReply ?? '—'}</strong></div>
-      <div aria-label="输入 Token"><span>输入 Token</span><strong>{count(live.promptTokens)}</strong></div>
-      <div aria-label="缓存命中率"><span>缓存命中率</span><strong>{rate(live.cacheHitRate)}</strong></div>
-      <div aria-label="估算费用"><span>估算费用</span><strong>{money(live.estimatedCost)}</strong></div>
+    <div className="yt-usage-kpis is-main">
       <div aria-label="每条回复成本"><span>每条回复成本</span><strong>{money(live.costPerReply)}</strong></div>
+      <div aria-label="缓存命中率"><span>缓存命中率</span><strong>{rate(live.cacheHitRate)}</strong></div>
+      <div aria-label="每条回复调用"><span>每条回复调用</span><strong>{live.callsPerReply ?? '—'}</strong></div>
+    </div>
+    <div className="yt-usage-kpis is-minor">
+      <div aria-label="真实调用"><span>真实调用</span><strong>{count(live.calls)}</strong></div>
+      <div aria-label="输入 Token"><span>输入 Token</span><strong>{count(live.promptTokens)}</strong></div>
+      <div aria-label="估算费用"><span>估算费用</span><strong>{money(live.estimatedCost)}</strong></div>
       <div aria-label="Mock 调用"><span>Mock 调用</span><strong>{count(usage.mock.calls)}</strong></div>
     </div>
     <Table size="small" pagination={false} rowKey="stage" dataSource={live.byStage} columns={[

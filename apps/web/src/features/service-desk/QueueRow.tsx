@@ -37,7 +37,8 @@ export function sameQueueRow(prev: QueueRowProps, next: QueueRowProps): boolean 
 export const QueueRow = memo(function QueueRow({ item, active, now, onOpen }: QueueRowProps) {
   const risk = item.riskLevel === 'high' ? 'high' : item.activeRiskTypes?.length ? 'medium' : null
   const wait = waitLabel(item, now)
-  const activeRisk = item.activeRiskTypes?.[0]
+  // 全景方案 5.3：重复进线几乎每行都有，只在没有其他有效信号时才显示
+  const activeRisk = [...(item.activeRiskTypes ?? [])].sort((a, b) => Number(a === 'repeated_contact') - Number(b === 'repeated_contact'))[0]
   const reviewRisk = activeRisk ? undefined : item.reviewRiskTypes?.[0]
   const tagRisk = activeRisk ?? reviewRisk
   return <div className={`reception-row-item yt-qi${active ? ' is-active' : ''}${risk ? ` is-risk-${risk}` : ''}`}>

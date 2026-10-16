@@ -8,7 +8,7 @@
  * 名字与时间在同一行（名 13px、时间 12px 次要色），气泡 15px、
  * 收到侧浅灰、发出侧薄荷（规范第 7.1 节）。
  */
-import { RobotOutlined, UserOutlined } from '@ant-design/icons'
+import { CustomerServiceOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { Bubble } from '@ant-design/x'
 import { Avatar, Button, Tag, Tooltip, Typography } from 'antd'
 import { Fragment, memo, useLayoutEffect, useRef, useState } from 'react'
@@ -44,23 +44,15 @@ const EMOTION_COLOR = { calm: 'var(--yt-calm)', dissatisfied: 'var(--yt-upset)',
 
 /** 头像：客户用人形图标，服务方用机器人图标，靠底色区分身份。 */
 function roleAvatar(senderRole: SenderRole, viewRole: ViewRole, buyerAlias?: string) {
-  const isService = senderRole === 'assistant' || senderRole === 'operator'
   if (viewRole === 'support') {
     if (senderRole === 'assistant') return <Avatar size={30} className="yt-ai-avatar" icon={<RobotOutlined />} aria-hidden="true" />
     if (senderRole === 'operator') return <Avatar size={30} className="yt-op-avatar" aria-hidden="true">客</Avatar>
     return <Avatar size={30} className="yt-cust-avatar" aria-hidden="true">{buyerAlias?.slice(0, 1) || <UserOutlined />}</Avatar>
   }
-  return (
-    <Avatar
-      size={38}
-      style={{
-        background: isService ? 'var(--yt-mint-surface)' : '#eef1f0',
-        color: isService ? 'var(--yt-teal)' : 'var(--yt-muted)',
-      }}
-      icon={isService ? <RobotOutlined /> : <UserOutlined />}
-      aria-hidden="true"
-    />
-  )
+  // 客户视角（全景方案 5.2）：智能助手用机器人，人工客服用人形耳机图标，客户自己用人形
+  if (senderRole === 'assistant') return <Avatar size={38} className="yt-c-avatar is-ai" icon={<RobotOutlined />} aria-label="智能助手" />
+  if (senderRole === 'operator') return <Avatar size={38} className="yt-c-avatar is-staff" icon={<CustomerServiceOutlined />} aria-label="人工客服" />
+  return <Avatar size={38} className="yt-c-avatar is-self" icon={<UserOutlined />} aria-hidden="true" />
 }
 
 /**

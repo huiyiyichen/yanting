@@ -428,7 +428,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist-fury { fill: #dd4a5f; }
 .yt-risk-page .yt-dist-calm { fill: #34a07f; fill-opacity: 0.5; opacity: 1; }
 .yt-risk-page .yt-dist-hover { fill: rgba(255, 255, 255, 0.05); }
-.yt-risk-page .yt-dist-peak { fill: var(--m-ink-2); font-size: 12px; position: static; transform: none; }
+.yt-risk-page .yt-dist-peak { fill: var(--m-ink-2); font-size: 15px; position: static; transform: none; }
 .yt-dist-bar { transform-box: fill-box; transform-origin: 50% 100%; animation: yt-rise 0.9s cubic-bezier(.2, .8, .2, 1) both; }
 .yt-dist-bar.is-down { transform-origin: 50% 0%; }
 @keyframes yt-rise { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
@@ -563,8 +563,9 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-ticket-list { min-width: 0; min-height: 0; overflow: auto; padding: 14px 22px 24px; }
 .yt-ticket-list .desk-filterbar { margin: 0 0 12px; gap: 8px; }
 .yt-ticket-list .desk-filterbar > .ant-input-affix-wrapper { width: 240px; margin-left: auto; }
-.yt-quick { font: inherit; font-size: 13px; height: 28px; padding: 0 12px; border: 1px solid var(--yt-hair); border-radius: 14px; background: var(--yt-card); color: #5d5468; cursor: pointer; }
-.yt-quick[aria-pressed="true"] { border-color: var(--yt-ink); background: var(--yt-ink); color: #fff; }
+.yt-quick-group { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--yt-hair-2); gap: 2px; }
+.yt-quick { font: inherit; font-size: 14px; height: 28px; padding: 0 11px; border: 0; border-radius: 6px; background: none; color: var(--yt-ink-2); cursor: pointer; }
+.yt-quick[aria-pressed="true"] { background: var(--yt-card); color: var(--yt-ink); box-shadow: 0 1px 2px rgba(42, 31, 51, 0.14); }
 .yt-ticket-table .ant-table-thead > tr > th { position: sticky; top: 0; z-index: 2; background: var(--yt-wash); font-weight: 500; color: var(--yt-ink-3); }
 .yt-ticket-table .ant-table-tbody > tr > td { padding: 7px 8px; }
 .yt-ticket-table .ant-table-tbody > tr > td:first-child { box-shadow: inset 3px 0 0 transparent; }
@@ -691,3 +692,27 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-error, html[data-theme='
 html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-warning, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-orange { background: #fcf1df !important; color: #9a5f08 !important; }
 html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-success, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-green { background: #e7f4ef !important; color: #1b7a5d !important; }
 html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-blue { background: #ecedf8 !important; color: #4f569a !important; }
+
+/* 客户页（全景方案 5.2）：颜听令牌；自己的消息浅紫、服务方白底 */
+.yt-c-avatar.is-ai { background: var(--yt-plum) !important; color: var(--yt-gold) !important; }
+.yt-c-avatar.is-staff { background: var(--yt-gold-wash) !important; color: var(--yt-gold-ink) !important; }
+.yt-c-avatar.is-self { background: #ece6f1 !important; color: var(--yt-ink-2) !important; }
+:root { --yt-bubble-out: #ece6f3; --yt-bubble-in: #ffffff; }
+
+/* 商品线索展开（全景方案 5.4） */
+.yt-clue-name { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; min-width: 0; overflow: hidden; }
+.yt-clue-name:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.yt-clue-cases { display: grid; gap: 10px; max-width: 460px; max-height: 360px; overflow-y: auto; }
+.yt-clue-cases h4 { margin: 0 0 4px; font-size: 12px; font-weight: 600; display: flex; gap: 6px; color: var(--yt-ink-2); }
+.yt-clue-cases h4 span { color: var(--yt-ink-3); font-weight: 400; }
+.yt-clue-cases ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.yt-clue-cases li { display: grid; grid-template-columns: 40px 60px 92px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12px; color: var(--yt-ink-2); }
+.yt-clue-cases .d, .yt-clue-cases .o { font-family: var(--yt-num); color: var(--yt-ink-3); }
+.yt-clue-cases button { border: 0; background: none; padding: 0; font: inherit; color: var(--yt-ink); cursor: pointer; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-clue-cases a { color: var(--yt-gold-ink); font-family: var(--yt-num); }
+
+/* 大声纹范围与断轴（X-1） */
+.yt-risk-page .yt-dist-range { position: absolute; top: -30px; right: 0; display: inline-flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--m-hair, rgba(255,255,255,.08)); }
+.yt-risk-page .yt-dist-range button { border: 0; background: none; font: inherit; font-size: 12px; height: 22px; padding: 0 9px; border-radius: 5px; color: var(--m-ink-3); cursor: pointer; }
+.yt-risk-page .yt-dist-range button[aria-pressed="true"] { background: var(--m-card, rgba(255,255,255,.12)); color: var(--m-ink); }
+.yt-risk-page .yt-dist-break { fill: var(--m-ink-3); font-size: 22px; }
