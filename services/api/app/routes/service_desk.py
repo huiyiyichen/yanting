@@ -60,7 +60,7 @@ def stats(session: Session = Depends(get_session)):
         historical_conversations=sum(item.data_source != "live" for item in snapshot.items),
         unread_messages=snapshot.unread_total,
         open_tickets=sum(item.status != "resolved" for item in tickets.list_tickets(session)),
-        pending_risks=sum(item.current_action in {"intervene", "review"} for item in risk),
+        pending_risks=sum(incidents.is_pending(item) for item in risk),
     )
 
 

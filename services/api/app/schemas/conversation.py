@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import Field
@@ -39,6 +40,7 @@ class ConversationSummary(ApiModel):
     mode_revision: int
     last_message_preview: str = ""
     message_count: int = 0
+    last_message_at: datetime | None = None
     case_status: CaseStatus | None = None
     auto_reply_status: str = "idle"
 

@@ -42,7 +42,7 @@ function useHighRiskCount(enabled: boolean) {
     const read = () => {
       if (document.hidden) return
       deskApi.riskOverview('live')
-        .then((view) => { if (!cancelled) setCount(view?.counts?.high ?? 0) })
+        .then((view) => { if (!cancelled) setCount(view?.counts?.pendingHigh ?? 0) })
         .catch(() => undefined)
     }
     read()

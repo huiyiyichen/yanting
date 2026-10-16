@@ -90,4 +90,11 @@ describe('PersonaCard', () => {
     expect(due).toHaveTextContent('待兑现')
     expect(screen.getByText(/线下打款直接补给您/)).not.toHaveTextContent('05/08')
   })
+  it('C10 关注最多 2 个，其余显示 +N（全景方案 5.3，插件首屏让位回复建议）', () => {
+    mount({ ...base, memory: { ...base.memory!, concerns: ['退款时效', '成分安全', '物流', '赠品'].map((text, i) => ({ text, sourceRef: `m${i}` })) } })
+    expect(screen.getByText('退款时效')).toBeInTheDocument()
+    expect(screen.getByText('成分安全')).toBeInTheDocument()
+    expect(screen.queryByText('物流')).not.toBeInTheDocument()
+    expect(screen.getByText('+2')).toHaveAttribute('title', '物流、赠品')
+  })
 })

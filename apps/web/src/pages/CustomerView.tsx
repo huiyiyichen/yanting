@@ -9,6 +9,7 @@
 import { Alert, Button, Spin } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
+import { shHourMinute, shMonthDay } from '../features/service-desk/shTime'
 import { ApiError, customerApi, type ConversationSummary, type MessageView, type ProductRef } from '../api/client'
 import { ConversationList } from '../components/ConversationList'
 import { useChatImage } from '../components/ChatImageUpload'
@@ -344,7 +345,7 @@ export function CustomerView() {
         conversationId: item.conversationId,
         title: item.title,
         preview: item.lastMessagePreview,
-        meta: `${item.messageCount} 条消息`,
+        meta: item.lastMessageAt ? `${shMonthDay(item.lastMessageAt)} ${shHourMinute(item.lastMessageAt)}` : '',
       })),
     [conversations],
   )

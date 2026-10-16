@@ -11,20 +11,25 @@ const REWRITES: { key: Instruction; label: string }[] = [
   { key: 'gentler', label: '更温和' }, { key: 'concise', label: '更简洁' }, { key: 'professional', label: '更专业' },
 ]
 
-/** 依据引用转成客服可读标签：工单号、订单尾号、会话号；未知类型原样。 */
-export function sourceLabel(ref: string): string {
-  const [kind, id = '', ...rest] = ref.split(':')
+type Source = NonNullable<ConsumerServiceAssistantView['groundingSources']>[number]
+
+/** 依据引用转成客服可读标签（工单号、订单尾号、本次会话、商品资料名）；内部编号只放悬停。 */
+export function sourceLabel(ref: string, sources: Source[] = []): string {
+  const [kind, id = ''] = ref.split(':')
   if (kind === 'work_order' || kind === 'ticket') return `工单 ${id}`
   if (kind === 'order') return `订单 …${id.slice(-4)}`
-  if (kind === 'message' || kind === 'conversation') return `会话 ${id}`
-  if (kind === 'knowledge') return `知识 ${rest.length ? rest.join(':') : id}`
-  return ref
+  if (kind === 'message' || kind === 'conversation' || kind === 'customer_message' || kind === 'staff_message') return '本次会话'
+  if (kind === 'knowledge') {
+    const title = sources.find((source) => source.sourceId === ref)?.label
+    return title ? `商品资料 · ${title}` : '商品资料'
+  }
+  return '其他依据'
 }
 
 /** 把有依据的短片段（非整段）标成金色引用。 */
-function marked(body: string, claims: Suggestion['claims']): ReactNode[] {
+function marked(body: string, claims: Suggestion['claims'], sources: Source[]): ReactNode[] {
   const spans = (claims ?? []).filter((claim) => claim.text && claim.text !== body && body.includes(claim.text))
-    .map((claim) => ({ start: body.indexOf(claim.text), text: claim.text, title: [...new Set(claim.sourceRefs.map(sourceLabel))].join('、') }))
+    .map((claim) => ({ start: body.indexOf(claim.text), text: claim.text, title: [...new Set(claim.sourceRefs.map((ref) => sourceLabel(ref, sources)))].join('、') }))
     .sort((a, b) => a.start - b.start)
   const out: ReactNode[] = []
   let at = 0
@@ -39,8 +44,9 @@ function marked(body: string, claims: Suggestion['claims']): ReactNode[] {
 }
 
 /** 回复建议卡：风格切换、编辑、改写、单风格重生成；核验通过前不可采用，采用只填草稿不发送。 */
-export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdopt, onIgnore, onRegenerate, onRewrite }: {
+export function ReplyCard({ suggestions, sources = [], adoptable, automatic, generating, onAdopt, onIgnore, onRegenerate, onRewrite }: {
   suggestions: Suggestion[]
+  sources?: Source[]
   adoptable: boolean
   automatic: boolean
   generating: boolean
@@ -57,7 +63,8 @@ export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdo
   const current = suggestions.find((item) => item.style === style) ?? suggestions[0]
   if (!current) return null
   const original = current.body
-  const basis = [...new Set((current.claims ?? []).flatMap((claim) => claim.sourceRefs.map(sourceLabel)))].slice(0, 5)
+  const basis = [...new Map((current.claims ?? []).flatMap((claim) => claim.sourceRefs)
+    .map((ref) => [sourceLabel(ref, sources), ref] as const)).entries()].slice(0, 5)
   const body = edits[current.style] ?? original
   const edited = body !== original
   const blocked = !adoptable || automatic || generating
@@ -87,14 +94,14 @@ export function ReplyCard({ suggestions, adoptable, automatic, generating, onAdo
     {editing
       ? <Input.TextArea aria-label="编辑回复建议" autoSize={{ minRows: 3, maxRows: 8 }} maxLength={800} value={body}
         onChange={(event) => setEdits((old) => ({ ...old, [current.style]: event.target.value }))} />
-      : <p className="yt-reply-body">{edited ? body : marked(body, current.claims)}</p>}
+      : <p className="yt-reply-body">{edited ? body : marked(body, current.claims, sources)}</p>}
     {(current.empathyDimensions?.length ?? 0) > 0 && <div className="yt-reply-empathy">
       {current.empathyDimensions!.map((item) =>
         <span key={item.key} title={item.reason} className={item.status === 'present' ? 'is-present' : 'is-missing'}>
           {item.status === 'present' ? <CheckCircleFilled /> : <MinusCircleOutlined />} {item.label}</span>)}
     </div>}
     {basis.length > 0 && <ul className="yt-reply-basis" aria-label="回复依据">
-      {basis.map((label) => <li key={label}>{label}</li>)}</ul>}
+      {basis.map(([label, ref]) => <li key={label} title={ref}>{label}</li>)}</ul>}
     <div className="yt-reply-actions">
       <Tooltip title={reason}><span>
         <Button type="primary" size="small" icon={<CheckOutlined />} disabled={blocked}

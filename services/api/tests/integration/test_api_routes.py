@@ -126,6 +126,9 @@ class TestCustomerConversations:
         )
         assert listed.status_code == 200
         assert conversation_id in {item["conversationId"] for item in listed.json()}
+        # 全景方案 5.2：会话列表显示时间而不是消息数——摘要必须带最后一条消息时间（欢迎语即首条）。
+        row = next(item for item in listed.json() if item["conversationId"] == conversation_id)
+        assert row["lastMessageAt"]
 
     def test_send_message_returns_reply_but_no_internal_decision(self, client: TestClient) -> None:
         """AC-24：客户侧响应不得包含 AI 判断明细。"""

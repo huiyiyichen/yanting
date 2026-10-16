@@ -186,6 +186,11 @@ def _emotion_comparisons(
     ]
 
 
+def is_pending(item: object) -> bool:
+    """“待处理风险”唯一口径：当前动作为介入（工作台指标、风险页大字与页签、导航徽标共用）。"""
+    return getattr(item, "current_action", None) == "intervene"
+
+
 def list_incidents(
     session: Session, *, conversation_id: str | None = None,
 ) -> list[RiskIncidentView]:

@@ -173,6 +173,7 @@ class ConversationService:
                     mode_revision=row.mode_revision,
                     last_message_preview=last_body[:60],
                     message_count=len(messages),
+                    last_message_at=messages[-1].created_at if messages else None,
                     case_status=CaseStatus(case.case_status) if case else None,
                     auto_reply_status=jobs[row.conversation_id].status if row.conversation_id in jobs else "idle",
                 )

@@ -101,7 +101,7 @@ function ConversationRow({
      而删除按钮也是 button —— **两者不能嵌套**，否则是无效 HTML，点击删除还会连带选中会话。
      因此外层是定位容器，行按钮与删除按钮是兄弟节点，删除按钮绝对定位在右上角。 */
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="yt-conv-item" style={{ position: 'relative' }}>
       <button
         type="button"
         className="yt-conv-row"
@@ -137,8 +137,9 @@ function ConversationRow({
                 flex: 1,
                 minWidth: 0,
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
               }}
             >
               {item.title || '新会话'}
@@ -183,6 +184,7 @@ function ConversationRow({
             danger
             icon={<DeleteOutlined />}
             aria-label={`删除会话 ${item.title || '新会话'}`}
+            className="yt-conv-del"
             style={{ position: 'absolute', top: 6, right: 4 }}
           />
         </Popconfirm>

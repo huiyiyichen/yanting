@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>颜听 接待全景 示例</title>
+<style>
+:root {
+  --plum-rail: #170f1d;
+  --plum: #2a1f33;
+  --plum-2: #3b2a4a;
+  --gold: #d9b47c;
+  --gold-ink: #8a6532;
+  --gold-wash: #f7efe1;
+  --gold-line: #e8d3b0;
+  --porcelain: #f6f4f8;
+  --desk: #f2f1f4;
+  --card: #ffffff;
+  --hair: #e8e3ed;
+  --hair-2: #f0ecf3;
+  --ink: #231a2b;
+  --ink-2: #5e5468;
+  --ink-3: #958ba1;
+  --calm: #22906f;
+  --upset: #d98a0f;
+  --fury: #cc3550;
+  --fury-wash: #fbe9ed;
+  --upset-wash: #fcf1df;
+  --sans: "Source Han Sans CN", "思源黑体 CN", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --num: "Bahnschrift", "DIN Alternate", "Source Han Sans CN", sans-serif;
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--desk); color: var(--ink); font: 400 14px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 76px 1fr; height: 100vh; }
+
+/* rail */
+.rail { background: var(--plum-rail); display: flex; flex-direction: column; align-items: center; padding: 18px 0; gap: 4px; }
+.brand { display: grid; justify-items: center; gap: 6px; margin-bottom: 18px; }
+.brand-mark { display: flex; align-items: center; gap: 2px; height: 22px; }
+.brand-mark i { display: block; width: 3px; border-radius: 2px; background: var(--gold); }
+.brand-name { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #f3eef6; }
+.rail a { width: 60px; padding: 9px 0 7px; border-radius: 12px; display: grid; justify-items: center; gap: 3px; color: #8f839b; text-decoration: none; font-size: 11px; line-height: 1.2; position: relative; }
+.rail a svg { width: 21px; height: 21px; }
+.rail a:hover { color: #c3b8cc; background: rgba(255,255,255,0.04); }
+.rail a.on { color: var(--gold); background: rgba(217,180,124,0.13); }
+.rail a .dot { position: absolute; top: 5px; right: 13px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--fury); color: #fff; font: 600 10px/16px var(--num); }
+.rail .gap { height: 14px; }
+
+.shell { display: grid; grid-template-rows: 60px 1fr; min-width: 0; min-height: 0; }
+
+/* top bar */
+.top { display: flex; align-items: center; gap: 26px; padding: 0 20px 0 22px; background: var(--card); border-bottom: 1px solid var(--hair); }
+.seg { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--desk); }
+.seg button { border: 0; background: none; padding: 4px 14px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--ink-3); }
+.seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(42,31,51,0.14); }
+.stats { display: flex; gap: 24px; }
+.stat { display: grid; line-height: 1.15; }
+.stat span { font-size: 12px; color: var(--ink-3); }
+.stat b { font: 600 19px/1.25 var(--num); }
+.stat b.f { color: var(--fury); }
+.top .sp { flex: 1; }
+.live { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--hair); background: none; font-size: 13px; color: var(--ink-2); }
+.live i { width: 7px; height: 7px; border-radius: 50%; background: var(--calm); }
+.live[aria-pressed="true"] i { animation: pulse 1.6s ease-in-out infinite; }
+.live[aria-pressed="false"] i { background: var(--ink-3); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(34,144,111,0.18); } }
+.op { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--hair); border-radius: 10px; font-size: 13px; color: var(--ink-2); background: none; }
+.op .online { width: 7px; height: 7px; border-radius: 50%; background: var(--calm); }
+.op svg { width: 14px; height: 14px; }
+
+.pano { display: grid; grid-template-columns: minmax(0, 1fr) 384px; min-height: 0; }
+
+/* wall */
+.wall { overflow: auto; padding: 14px 16px 20px; }
+.tools { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.chips { display: inline-flex; gap: 4px; }
+.chips button { border: 1px solid var(--hair); background: var(--card); padding: 2px 12px; border-radius: 999px; font-size: 13px; color: var(--ink-2); }
+.chips button.on { background: var(--plum); border-color: var(--plum); color: #fff; }
+.chips .n { font-family: var(--num); margin-left: 4px; }
+.legend { display: flex; gap: 14px; margin-left: auto; font-size: 12px; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .sw-key { width: 8px; height: 13px; border-radius: 2px; }
+.legend .wave-key { display: inline-flex; gap: 1.5px; align-items: center; height: 12px; }
+.legend .wave-key i { width: 2px; border-radius: 1px; background: var(--gold-ink); }
+.legend .dot-key { width: 8px; height: 8px; border-radius: 50%; background: var(--fury); }
+
+.lanes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.lane { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 12px 14px 8px; min-width: 0; }
+.lane[data-lane="ai"] { grid-column: 1 / -1; }
+.lane.wait { background: linear-gradient(90deg, #fdf2f4, #ffffff 46%); border-color: #f1d3da; }
+.lane-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.lane-head b { font-size: 14px; }
+.lane-head .n { font: 600 16px var(--num); }
+.lane-head .sub { font-size: 12px; color: var(--ink-3); }
+.lane-head .sub em { font-style: normal; font-family: var(--num); color: var(--ink-2); }
+.tiles { display: flex; flex-wrap: wrap; gap: 4px 2px; min-height: 104px; align-content: flex-start; }
+
+.tile { width: 72px; padding: 4px 3px 6px; border: 1px solid transparent; border-radius: 10px; background: none; display: grid; justify-items: center; gap: 2px; position: relative; }
+.tile:hover { background: #faf8fb; }
+.tile.sel { background: var(--gold-wash); border-color: var(--gold-line); }
+.tile.dim { opacity: 0.22; }
+.wave { display: flex; align-items: center; justify-content: center; gap: 2px; height: 12px; opacity: 0; transition: opacity .2s; }
+.wave i { width: 2.5px; border-radius: 2px; background: var(--gold-ink); transform-origin: 50% 50%; }
+.wave i:nth-child(1), .wave i:nth-child(5) { height: 4px; }
+.wave i:nth-child(2), .wave i:nth-child(4) { height: 8px; }
+.wave i:nth-child(3) { height: 11px; }
+.wave.on { opacity: 1; }
+.wave.on i { animation: talk .8s ease-in-out infinite alternate; }
+.wave.on i:nth-child(2) { animation-delay: -.2s; }
+.wave.on i:nth-child(3) { animation-delay: -.4s; }
+.wave.on i:nth-child(4) { animation-delay: -.6s; }
+.wave.on i:nth-child(5) { animation-delay: -.1s; }
+@keyframes talk { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+.sw-wrap { position: relative; width: 32px; height: 54px; margin-bottom: 3px; }
+.sw-wrap::after { content: ""; position: absolute; left: -3px; right: -3px; bottom: -6px; height: 7px; background: radial-gradient(closest-side, rgba(42,31,51,0.16), transparent); }
+.sw { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 1.5px; background: var(--card);
+  clip-path: path('M0 7 L32 0 L32 49 Q32 54 27 54 L5 54 Q0 54 0 49 Z'); }
+.tile.sel .sw { background: var(--gold-wash); }
+.band { flex: none; display: block; transform-origin: 50% 100%; }
+.rdot { position: absolute; right: -4px; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--fury); box-shadow: 0 0 0 2px var(--card); }
+.nm { font-size: 12px; font-weight: 600; max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+.meta { font: 11px/1.2 var(--num); color: var(--ink-3); }
+.meta.wait { color: var(--ink-2); }
+.meta.warn { color: #a8670a; }
+.meta.over { color: var(--fury); font-weight: 600; }
+
+/* preview */
+.preview { border-left: 1px solid var(--hair); background: var(--porcelain); overflow: auto; padding: 12px; display: grid; gap: 10px; align-content: start; grid-auto-rows: max-content; }
+.card { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; padding: 13px 14px; }
+.card h3 { margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card h3 .r { margin-left: auto; font-weight: 400; font-size: 12px; color: var(--ink-3); font-family: var(--num); }
+.ph { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+.ph .sw-wrap { width: 40px; height: 66px; margin: 0; }
+.ph .sw-wrap::after { display: none; }
+.ph .sw { clip-path: path('M0 9 L40 0 L40 60 Q40 66 34 66 L6 66 Q0 66 0 60 Z'); gap: 2px; }
+.ph b { font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.lane-chip { font-size: 12px; font-weight: 500; padding: 0 8px; border-radius: 6px; line-height: 20px; }
+.lane-chip.ai { background: #efeaf5; color: var(--plum-2); }
+.lane-chip.wait { background: var(--fury-wash); color: var(--fury); }
+.lane-chip.human { background: #e7f4ef; color: var(--calm); }
+.ph .sub { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+.ph .now { display: flex; gap: 12px; font-size: 12px; color: var(--ink-2); margin-top: 3px; }
+.ph .now span { display: inline-flex; align-items: center; gap: 5px; }
+.ph .now i { width: 7px; height: 7px; border-radius: 50%; }
+.ph .now .t { font-family: var(--num); }
+.reason { border-left: 3px solid var(--fury); padding: 2px 0 2px 10px; }
+.reason b { color: var(--fury); font-size: 13px; }
+.reason q { display: block; font-size: 13px; color: var(--ink); margin-top: 2px; quotes: "“" "”"; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.steps li { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; font-size: 13px; color: var(--ink-3); padding: 3px 0; position: relative; }
+.steps li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #cfc6d8; justify-self: center; background: var(--card); z-index: 1; }
+.steps li:not(:last-child)::after { content: ""; position: absolute; left: 7.5px; top: 18px; height: 12px; width: 1px; background: var(--hair); }
+.steps li.done { color: var(--ink-2); }
+.steps li.done::before { background: var(--calm); border-color: var(--calm); }
+.steps li.active { color: var(--ink); font-weight: 600; }
+.steps li.active::before { border-color: var(--gold-ink); background: var(--gold); animation: pulse2 1s ease-in-out infinite; }
+@keyframes pulse2 { 50% { box-shadow: 0 0 0 4px rgba(217,180,124,0.3); } }
+.steps li.fail { color: var(--fury); font-weight: 600; }
+.steps li.fail::before { background: var(--fury); border-color: var(--fury); }
+.steps .d { font: 12px var(--num); color: var(--ink-3); }
+
+.msgs { display: grid; gap: 8px; }
+.pm { display: grid; gap: 2px; max-width: 92%; }
+.pm .who { font-size: 11px; color: var(--ink-3); display: flex; gap: 6px; align-items: center; }
+.pm .who .t { font-family: var(--num); }
+.pm .who .e { display: inline-flex; align-items: center; gap: 4px; }
+.pm .who .e i { width: 6px; height: 6px; border-radius: 50%; }
+.pm .bb { padding: 6px 10px; border-radius: 4px 12px 12px 12px; background: var(--card); border: 1px solid var(--hair); font-size: 13px; line-height: 1.6; }
+.pm.c .bb { box-shadow: inset 3px 0 0 var(--lv); }
+.pm.s { justify-self: end; }
+.pm.s .who { justify-content: flex-end; }
+.pm.s .bb { border-radius: 12px 4px 12px 12px; }
+.pm.a .bb { background: var(--gold-wash); border-color: var(--gold-line); }
+.pm.o .bb { background: #ece6f3; border-color: #e0d7ea; }
+.pm.sys { justify-self: center; max-width: 100%; }
+.pm.sys span { font-size: 11px; color: var(--ink-3); background: rgba(42,31,51,0.05); padding: 1px 10px; border-radius: 999px; }
+.acts { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hair-2); }
+.b { height: 32px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--hair); background: var(--card); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.b.pri { background: var(--plum); border-color: var(--plum); color: #fff; font-weight: 600; }
+.b.pri:hover { background: var(--plum-2); }
+.b svg { width: 14px; height: 14px; }
+.handler { font-size: 12px; color: var(--ink-2); align-self: center; }
+
+@media (max-width: 1180px) {
+  .pano { grid-template-columns: 1fr; overflow: auto; }
+  .wall { overflow: visible; }
+  .preview { border-left: 0; border-top: 1px solid var(--hair); }
+  .stats { gap: 16px; }
+  .stat:nth-child(n+5) { display: none; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 56px 1fr; }
+  .rail a { width: 48px; font-size: 10px; }
+  .brand-name { font-size: 12px; }
+  .top { gap: 12px; padding: 0 12px; overflow-x: auto; }
+  .stats, .op { display: none; }
+  .tools { flex-wrap: wrap; gap: 8px; }
+  .legend { margin-left: 0; flex-wrap: wrap; gap: 10px; }
+  .lanes { grid-template-columns: minmax(0, 1fr); }
+  .wall { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wave.on i, .live i, .steps li.active::before { animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="主导航">
+    <div class="brand" aria-label="颜听">
+      <div class="brand-mark" aria-hidden="true"><i style="height:8px"></i><i style="height:16px"></i><i style="height:22px"></i><i style="height:12px"></i><i style="height:6px"></i></div>
+      <div class="brand-name">颜听</div>
+    </div>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>客户</a>
+    <a href="#" class="on" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>接待</a>
+    <a href="#"><span class="dot">6</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 12h3l2-5 3 10 3-7 2 2h5"/></svg>风险</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>工单</a>
+    <div class="gap"></div>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M5 4h9a5 5 0 0 1 5 5v11H10a5 5 0 0 1-5-5z"/></svg>知识</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12 15h5"/></svg>Prompt</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>模型</a>
+  </nav>
+
+  <div class="shell">
+    <header class="top">
+      <div class="seg" role="tablist" aria-label="接待视图">
+        <button role="tab" aria-selected="false">工作台</button>
+        <button role="tab" aria-selected="true" class="on">全景</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>AI 接待</span><b id="st-ai">96</b></div>
+        <div class="stat"><span>自动回复率</span><b>61%</b></div>
+        <div class="stat"><span>转人工</span><b id="st-ho">50</b></div>
+        <div class="stat"><span>平均首响</span><b>12 秒</b></div>
+        <div class="stat"><span>建议采纳率</span><b>58%</b></div>
+        <div class="stat"><span>待处理风险</span><b class="f">73</b></div>
+      </div>
+      <div class="sp"></div>
+      <button class="live" id="live" aria-pressed="true"><i></i><span>实时</span></button>
+      <button class="op"><span class="online"></span>模拟客服 G001<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg></button>
+    </header>
+
+    <div class="pano">
+      <section class="wall" id="wall" aria-label="接待全景">
+        <div class="tools">
+          <div class="chips" role="group" aria-label="筛选" id="chips">
+            <button class="on" data-f="all">全部</button>
+            <button data-f="risk">有风险<span class="n" id="c-risk"></span></button>
+            <button data-f="late">等待超时<span class="n" id="c-late"></span></button>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i class="sw-key" style="background:var(--calm)"></i>平稳</span>
+            <span><i class="sw-key" style="background:var(--upset)"></i>不满</span>
+            <span><i class="sw-key" style="background:var(--fury)"></i>激烈</span>
+            <span><i class="wave-key"><i style="height:4px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:7px"></i></i>AI 处理中</span>
+            <span><i class="dot-key"></i>高风险</span>
+          </div>
+        </div>
+        <div class="lanes">
+          <div class="lane wait" data-lane="wait"><div class="lane-head"><b>待人工</b><span class="n"></span><span class="sub"></span></div><div class="tiles"></div></div>
+          <div class="lane" data-lane="human"><div class="lane-head"><b>人工处理中</b><span class="n"></span><span class="sub"></span></div><div class="tiles"></div></div>
+          <div class="lane" data-lane="ai"><div class="lane-head"><b>AI 接待中</b><span class="n"></span><span class="sub"></span></div><div class="tiles"></div></div>
+        </div>
+      </section>
+      <aside class="preview" id="preview" aria-label="会话预览" aria-live="polite"></aside>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 官方虚构业务数据中的真实会话，按原顺序回放；情绪为项目规则口径（0 平稳 1 不满 2 激烈） */
+const DATA = [{"id":"S00014","alias":"陆**","scene":"物流查询","product":"测试B5多效修护面膜20片","high":[],"msgs":[{"r":"c","x":"你好，我的面膜发货了吗？单号多少，麻烦了","lv":0},{"r":"o","x":"亲稍等哦，正在为您查询中~","by":"测试客服"},{"r":"o","x":"查到啦亲，韵达快递单号463434884597278，包裹正在派送途中，今明两天就能到您手上啦~","by":"测试客服"},{"r":"c","x":"嗯嗯 收到，挺快的","lv":0}]},{"id":"S00002","alias":"冯h**","scene":"套装搭配推荐","product":null,"high":[],"msgs":[{"r":"c","x":"在吗？啊","lv":0},{"r":"o","x":"您好，我是测试客服薇薇，请问有什么可以帮您？","by":"薇薇"},{"r":"c","x":"送人的，想买个套装，你们家哪套比较能打","lv":0},{"r":"o","x":"您好~这套是店铺回购率最高的组合哦，套装比单拍能省几十块，还多送两个小样","by":"薇薇"},{"r":"c","x":"套装赠品是啥哦","lv":0},{"r":"o","x":"套装随赠测试丝绒唇釉小样1.2g哦~支持七天无理由，不合适可整套退回；也有入门体验组，价格更友好，我发链接您看看~","by":"薇薇"},{"r":"c","x":"能，谢谢推荐","lv":0},{"r":"o","x":"后续有任何问题随时找薇薇哦，祝您使用愉快~","by":"薇薇"}]},{"id":"S00092","alias":"黎**","scene":"使用方法","product":null,"high":[],"msgs":[{"r":"c","x":"你好，测试修护精华液30ml和精华的使用顺序是啥呀","lv":0},{"r":"o","x":"您好，我是测试客服，请问有什么可以帮您？","by":"测试客服"},{"r":"o","x":"亲亲，精华液建议早晚洁面后使用哦，先水后精华再面霜，取黄豆粒大小均匀涂抹按摩至吸收就可以啦~","by":"测试客服"},{"r":"c","x":"哦哦好，那放冰箱保存吗","lv":0},{"r":"o","x":"常温阴凉处保存就可以啦，不用放冰箱哦，开封后建议6个月内用完呢~","by":"测试客服"},{"r":"c","x":"好的谢谢啦...","lv":0},{"r":"o","x":"感谢您的理解与支持，祝您生活愉快，么么哒","by":"测试客服"}]},{"id":"S00117","alias":"钟**","scene":"发票申请","product":"测试轻透粉底液30ml #01自然白","high":[],"msgs":[{"r":"c","x":"你好，订单6920063725709937880能开发票吗","lv":0},{"r":"o","x":"您好，我是测试客服欣欣，请问有什么可以帮您？","by":"欣欣"},{"r":"o","x":"可以的亲，请提供发票抬头和税号，默认开电子普票，1-3个工作日发送到您的预留邮箱哦呀~","by":"欣欣"},{"r":"c","x":"抬头：测试网络科技有限公司，税号91330106MA2B0000XX，麻烦了哦","lv":0},{"r":"o","x":"收到亲，信息已登记，电子发票开具后会发送至您订单预留的联系方式，请注意查收哦亲~","by":"欣欣"},{"r":"c","x":"好的，谢谢","lv":0}]},{"id":"S00030","alias":"郭h**","scene":"好评回访","product":"测试温和氨基酸洁面乳120ml","high":[],"msgs":[{"r":"c","x":"就想来夸夸你们，洁面乳真的好用，用了两周脸稳定多了","lv":0},{"r":"o","x":"哇谢谢亲的认可！欣欣这就把您的夸夸转达给产品团队，比心~","by":"欣欣"},{"r":"c","x":"亲，已经五星好评啦","lv":0},{"r":"o","x":"感谢您的理解与支持，祝您生活愉快，么么哒哦~","by":"欣欣"}]},{"id":"S00134","alias":"林**","scene":"孕妇可用咨询","product":null,"high":[],"msgs":[{"r":"c","x":"在吗，急问！护发精油孕妇能用吗？我刚发现怀孕，前几天还在用，好慌呢","lv":0},{"r":"o","x":"亲您好，欢迎光临测试官方旗舰店，我是客服薇薇，很高兴为您服务","by":"薇薇"},{"r":"c","x":"麻烦帮我看下成分有没孕妇不能用的，维A酸水杨酸那些","lv":0},{"r":"o","x":"亲亲别担心哦，这款护发精油不含维A酸、水杨酸、二苯酮类等孕期慎用成分，配方温和~不过每位准妈妈体质不同，建议您把成分表给产检医生看一下，医生确认后使用更安心呢","by":"薇薇"},{"r":"c","x":"好的好的，那我先问下医生，谢谢你啊","lv":0},{"r":"o","x":"好的亲，还有其他可以帮您的吗？祝您生活愉快哈~","by":"薇薇"}]},{"id":"S00057","alias":"赵a**","scene":"物流查询","product":"【预售】测试焕活紧致礼盒(面霜50ml+精华30ml)","high":[],"msgs":[{"r":"c","x":"帮我看下订单6920611177078328696到哪了啊","lv":0},{"r":"o","x":"好的亲，马上为您查询，请稍等哈1-2分钟哦呢~","by":"测试客服"},{"r":"o","x":"亲亲，您的包裹已由顺丰速运发出，运单号SF1636197352711，目前显示已到达郑州市转运中心，预计1-2天送达哦~","by":"测试客服"},{"r":"c","x":"嗯嗯 收到，挺快的！","lv":0},{"r":"o","x":"后续有任何问题随时找测试客服哦，祝您使用愉快~","by":"测试客服"}]},{"id":"S00062","alias":"杜a**","scene":"催发货","product":"测试九色眼影盘 #03落日大地","high":[],"msgs":[{"r":"c","x":"你好，订单6920413704354349960什么时候发货啊，付款两天了一直没动静","lv":0},{"r":"o","x":"亲亲您好，欢迎光临测试官方旗舰店，我是客服欣欣，很高兴为您服务~","by":"欣欣"},{"r":"o","x":"好的亲，马上为您查询，请稍等1-2分钟哦~","by":"欣欣"},{"r":"c","x":"嗯，帮我催催吧，别家都到货了","lv":0},{"r":"o","x":"实在不好意思亲，618订单爆仓啦，已为您标记加急催发，预计1-2天内发出，请您再耐心等等哦","by":"欣欣"},{"r":"c","x":"那说好了48小时哈，再不发我可要申请退款了！","lv":0},{"r":"o","x":"收到亲，已为您加急标记，感谢您的耐心等待，发出后物流单号会同步给您哦哦~","by":"欣欣"}]},{"id":"S00043","alias":"侯e**","scene":"催发货","product":"测试净澈卸妆水300ml","high":[],"msgs":[{"r":"c","x":"咋还不发货啊，我等着用呢哦","lv":1},{"r":"o","x":"亲您好呀~这里是测试官方旗舰店，有什么可以帮到您呢？","by":"欣欣"},{"r":"o","x":"好的亲，马上为您查询，请稍等1-2分钟哦~","by":"欣欣"},{"r":"c","x":"嗯，帮我催催吧，别家都到货了","lv":0},{"r":"o","x":"实在不好意思亲，618订单爆仓啦，已为您标记加急催发，预计1-2天内发出，请您再耐心等等哦","by":"欣欣"},{"r":"c","x":"emmm，那说好了48小时哈，再不发我可要申请退款了哦","lv":0},{"r":"o","x":"收到亲，已为您加急标记，感谢您的耐心等待，发出后物流单号会同步给您哦哦亲~","by":"欣欣"}]},{"id":"S00007","alias":"李c**","scene":"漏发赠品","product":"【预售】测试焕活紧致礼盒(面霜50ml+精华30ml)","high":[],"msgs":[{"r":"c","x":"在吗，下单时页面写赠测试修护精华小样5ml，包裹里没有，是漏发了吗","lv":1},{"r":"o","x":"好的亲，马上为您查询，请稍等1-2分钟哦~","by":"欣欣"},{"r":"o","x":"亲，查到您的订单确实包含赠品测试修护精华小样5ml，实在抱歉是仓库漏发了！这边马上给您登记补发~","by":"欣欣"},{"r":"c","x":"就是冲着赠品买的，可别再漏了啊","lv":1},{"r":"o","x":"已为您创建补发工单，48小时内发出，发货后单号同步给您，这次仓库会重点核对的，请您放心哦~","by":"欣欣"},{"r":"c","x":"好的，麻烦啦","lv":0}]},{"id":"S00003","alias":"周h**","scene":"保价申请被拒","product":"测试轻盈控油洗发水500ml","high":[],"msgs":[{"r":"c","x":"啥意思啊，我刚买没几天就降价40块，太坑了吧","lv":1},{"r":"o","x":"收到，这边立刻为您核实，稍等一下下呢~","by":"欣欣"},{"r":"o","x":"亲非常抱歉，查询到您的订单已超过15天价保期限，且直播间为限时秒杀活动价，不在价保范围内，无法为您补差呢，实在抱歉","by":"欣欣"},{"r":"c","x":"唉，那也差太多了吧，就差几天而已，你们这样谁还敢原价买！","lv":0},{"r":"o","x":"非常理解您的心情亲，规则是平台统一的，欣欣也没有权限突破呢。这边给您申请一张50元无门槛券作为补偿，您看可以吗？","by":"欣欣"},{"r":"c","x":"emmm，行吧行吧，券发我吧，下次再降价我真不买了","lv":0},{"r":"o","x":"券已发放到您的账户~真的非常抱歉，感谢您的理解，后续大促前可以先来问欣欣，帮您把握最优价~","by":"欣欣"}]},{"id":"S00041","alias":"杨b**","scene":"比价与决策","product":null,"high":[],"msgs":[{"r":"c","x":"话说，同样是精华，你们比隔壁贵一百，好在哪","lv":0},{"r":"o","x":"亲亲您好呀~这里是测试美妆旗舰店，有什么可以帮到您呢？","by":"薇薇"},{"r":"o","x":"亲亲咱家精华液主打高浓度活性成分+专利配方，通过了功效测试哦~价格里也包含正品保障和售后无忧，一分价钱一分货呢~","by":"薇薇"},{"r":"c","x":"好吧，先买一个试试，不好用我退","lv":0},{"r":"o","x":"现在下单有满减+赠测试舒缓面霜中样15ml哦，到手价很划算~不合适随时找薇薇退换，无忧的呢~","by":"薇薇"},{"r":"c","x":"行，那拍了，急","lv":0},{"r":"o","x":"感谢您的理解与支持，祝您生活愉快~","by":"薇薇"}]},{"id":"S00158","alias":"芝h**","scene":"色号不合适退货","product":"测试丝绒唇釉 #01赤茶红","high":[],"msgs":[{"r":"c","x":"小姐姐，#01赤茶红到手了，上脸有点显黑，想退了换#05枫叶红可以吗，就试色了一下！","lv":0},{"r":"o","x":"可以的亲~轻微试色支持退换哦。建议直接申请退货退款，寄回后重新拍#05枫叶红，这样最快；运费这边给您报销~","by":"薇薇"},{"r":"c","x":"嗯嗯好，那我重拍，运费找谁呀","lv":0},{"r":"o","x":"寄回后把快递底单拍给薇薇，运费以红包形式给您，10元内实报实销哦~","by":"薇薇"},{"r":"c","x":"安排好了，新的#05枫叶红帮我加急发下哈捏","lv":0},{"r":"o","x":"收到亲，新订单已备注加急，今天就发~","by":"薇薇"},{"r":"c","x":"效率好高，谢谢美女","lv":0}]},{"id":"S00059","alias":"魏h**","scene":"仅退款疑似异常","product":"测试B5多效修护面膜20片","high":["complaint_risk"],"msgs":[{"r":"c","x":"你们发的什么玩意儿，箱子打开里面是空的！我要仅退款，不退货啊，货都没退什么退","lv":1},{"r":"o","x":"亲亲您先别急，这边非常重视~麻烦您先别丢弃外箱和快递面单，拍一下外箱六面、面单和内件的照片给岚岚核实好吗？","by":"岚岚"},{"r":"c","x":"拍什么拍，我说空的就是空的，你是不信我？赶紧退款","lv":1},{"r":"o","x":"理解您的心情亲~按流程空包裹需要核实出库称重记录和物流揽收重量，这边已提交核实工单，有结果第一时间联系您，请您配合提供下照片哦~","by":"岚岚"},{"r":"c","x":"搞这么复杂，那算了，我平台申请仅退款，你们等着！","lv":2},{"r":"o","x":"亲平台申请我们也会如实举证的哦~若核实确为漏发，一定第一时间给您补发或退款，绝不让您吃亏；若记录显示正常出库，也请您理解我们需按规处理~","by":"岚岚"},{"r":"c","x":"哼，等着瞧","lv":2}]},{"id":"S00058","alias":"钟c**","scene":"泛红刺痒","product":"测试B5多效修护面膜20片","high":["adverse_reaction"],"msgs":[{"r":"c","x":"在吗？急！昨晚用了面膜，今早额头又红又痒，是不是过敏了","lv":1},{"r":"o","x":"亲亲先别慌，测试客服帮您登记核实。请先立即停用产品，用清水洁面，暂时不要叠加其他护肤品哦。方便说下您用后多久出现不适的吗？","by":"测试客服"},{"r":"c","x":"话说，大概用了3小时后开始红的","lv":0},{"r":"o","x":"了解~再确认几个信息哈：您的年龄和肤质？使用前皮肤状态如何？最近一周有没有用新的其他产品或做医美项目？","by":"测试客服"},{"r":"c","x":"28，混敏皮，就新用了你家这个，谢谢","lv":0},{"r":"o","x":"收到亲。目前建议：停用+温和清洁+做好保湿，一般轻度敏感2-3天可自行缓解；若持续加重或范围扩大请及时就医。这边已为您登记不良反应记录单，专员会在24小时内回访跟进~","by":"测试客服"},{"r":"c","x":"那这个产品还能继续用吗？","lv":0},{"r":"o","x":"建议皮肤完全恢复后先做耳后测试，若仍不适就不要继续使用了~商品可以走\"使用不适\"退货退款，运费我们承担，稍后专员回访时一并为您办理","by":"测试客服"},{"r":"c","x":"行，等你们回访，麻烦尽快哦","lv":0},{"r":"o","x":"嗯嗯，祝您皮肤快快恢复，有任何变化随时联系测试客服~","by":"测试客服"}]},{"id":"S00049","alias":"冯e**","scene":"物流查询","product":"测试温和氨基酸洁面乳120ml","high":[],"msgs":[{"r":"c","x":"亲，帮我看下订单6920931970463042905到哪了！","lv":0},{"r":"o","x":"好的亲，马上为您查询，请稍等1-2分钟哦哦~","by":"薇薇"},{"r":"o","x":"查到啦亲，顺丰速运单号SF1658736448323，包裹正在派送途中，今明两天就能到您手上啦","by":"薇薇"},{"r":"c","x":"好的，谢谢呢","lv":0},{"r":"o","x":"好的亲，还有其他可以帮您的吗？祝您生活愉快~","by":"薇薇"}]},{"id":"S00113","alias":"唐**","scene":"使用方法","product":null,"high":[],"msgs":[{"r":"c","x":"你好，测试修护精华液30ml和精华的使用顺序是啥呀","lv":0},{"r":"o","x":"您好，我是测试客服，请问有什么可以帮您？","by":"测试客服"},{"r":"o","x":"亲亲，精华液建议早晚洁面后使用哦，先水后精华再面霜，取黄豆粒大小均匀涂抹按摩至吸收就可以啦哦亲~","by":"测试客服"},{"r":"c","x":"可以和别的精华叠加吗","lv":0},{"r":"o","x":"常温阴凉处保存就可以啦，不用放冰箱哦，开封后建议6个月内用完呢哦~","by":"测试客服"},{"r":"c","x":"亲，好的谢谢啦","lv":0},{"r":"o","x":"好的亲，还有其他可以帮您的吗？祝您生活愉快~","by":"测试客服"}]},{"id":"S00141","alias":"段**","scene":"发票申请","product":"测试九色眼影盘 #03落日大地","high":[],"msgs":[{"r":"c","x":"你好，订单6920263986088953315可以开发票吗","lv":0},{"r":"o","x":"亲您好，欢迎光临测试官方旗舰店，我是客服测试客服，很高兴为您服务~","by":"测试客服"},{"r":"o","x":"可以的亲，请提供发票抬头和税号，默认开电子普票，1-3个工作日发送到您的预留邮箱哦~","by":"测试客服"},{"r":"c","x":"个人抬头能吧？抬头写我名字就行捏","lv":0},{"r":"o","x":"收到亲，信息已登记，电子发票开具后会发送至您订单预留的联系方式，请注意查收呢~","by":"测试客服"},{"r":"c","x":"好的，谢谢捏","lv":0},{"r":"o","x":"后续有任何问题随时找测试客服哦，祝您使用愉快哦~","by":"测试客服"}]},{"id":"S00026","alias":"深**","scene":"七天无理由退货","product":"测试轻盈控油洗发水500ml","high":[],"msgs":[{"r":"c","x":"在吗，这个洗发水能七天无理由退吗？没开封呢","lv":0},{"r":"o","x":"可以的亲，未拆封支持七天无理由退货哦~您在订单页申请退货退款，选\"不想要了\"，系统通过后把退货单号填进去就行~","by":"欣欣"},{"r":"c","x":"运费谁出呀啊","lv":0},{"r":"o","x":"七天无理由的情况运费是买家承担哦亲，如果您有运费险，平台会自动理赔大部分运费的~","by":"欣欣"},{"r":"c","x":"好吧，我申请了，地址是系统里那个吗啊","lv":0},{"r":"o","x":"是的亲，寄到系统展示的退货地址就好，仓库签收验收无误后1-3天退款到账~","by":"欣欣"},{"r":"c","x":"在吗，OK","lv":0},{"r":"o","x":"后续有任何问题随时找欣欣哦，祝您使用愉快","by":"欣欣"}]},{"id":"S00015","alias":"芝g**","scene":"过敏就医","product":"测试B5多效修护面膜20片","high":["adverse_reaction","complaint_risk"],"msgs":[{"r":"c","x":"必须给我个说法！用了你们面膜脸过敏，红肿刺痛，我人现在在医院！","lv":2,"med":1},{"r":"o","x":"亲亲，非常抱歉！您的情况我们高度重视，请先遵医嘱治疗。方便的话请把门诊病历和医生诊断拍照发给岚岚，马上为您上报专项处理","by":"岚岚"},{"r":"c","x":"资料给你，咋赔偿说个方案，不行我就走12315","lv":2,"cf":1},{"r":"o","x":"收到资料，已为您建立不良反应专项工单并升级处理。方案：①商品全额退款；②凭医疗票据报销本次门诊费用；③专员24小时内电话回访跟进恢复情况。您看可以吗？","by":"岚岚"},{"r":"c","x":"那个，能，动作快点点，别让我再跑一趟医院","lv":1,"med":1},{"r":"o","x":"好的亲，请提供支付宝账号用于医疗费打款，退款走原路退回。也麻烦告知医生开的用药，方便回访时跟进~","by":"岚岚"},{"r":"c","x":"支付宝就是我手机号，医生开了氯雷他定和一支药膏哦","lv":0},{"r":"o","x":"都登记好了亲，打款1-3个工作日内到账。祝您早日康复，专员明天上午会致电回访，请留意接听","by":"岚岚"},{"r":"c","x":"好，等钱到账就行！","lv":0}]},{"id":"S00009","alias":"杨c**","scene":"显示签收未收到","product":"测试轻润护发精油50ml","high":[],"msgs":[{"r":"c","x":"搞啥啊！物流显示昨天已签收，我根本没收到货！773766290769689","lv":1},{"r":"o","x":"亲您先别着急，测试客服马上为您核实签收信息，请稍等哈哈~","by":"测试客服"},{"r":"c","x":"别让我等太久，找不回来今天必须给我处理方案","lv":1},{"r":"o","x":"查到派件员登记的是放在厦门市的丰巢柜，这边已联系申通快递网点调取派送记录和监控，同时为您登记了丢件工单。您放心，若确认丢失，我们全额补发或退款，绝不让您承担损失~","by":"测试客服"},{"r":"c","x":"那个，行，那我等你们回复，最好今天就有结果，急","lv":0},{"r":"o","x":"理解您的心情亲，实在抱歉给您添堵了。网点2小时内会给回复，无论找没找到，今天下班前一定给您明确方案","by":"测试客服"},{"r":"c","x":"好，说话算话啊","lv":0},{"r":"o","x":"亲，网点刚回复：包裹被误放到隔壁单元快递架了，已安排派件员重新送到您手上，预计1小时内送达，实在抱歉！补偿您一张20元无门槛券哦亲~","by":"测试客服"},{"r":"c","x":"收到了，虚惊一场…券我收下了哈哈","lv":0},{"r":"o","x":"后续有任何问题随时找测试客服哦，祝您使用愉快~","by":"测试客服"}]},{"id":"S00044","alias":"me**","scene":"物流停滞疑似丢件","product":"测试丝绒唇釉 #05枫叶红","high":[],"msgs":[{"r":"c","x":"在吗，我的快递YT7694992980510卡在昆明市三四天了一动不动，是不是丢了？？","lv":0},{"r":"o","x":"亲稍等一下哦，正在为您查询中~","by":"岚岚"},{"r":"o","x":"亲亲，查到您的包裹确实在昆明市中转站停滞了，这边马上联系圆通快递核实，24小时内给您答复好吗？","by":"岚岚"},{"r":"c","x":"等你们核实又要好几天，我这是着急用的！","lv":1},{"r":"o","x":"非常抱歉亲，已为您登记加急工单并同步快递公司排查，若48小时内无走件更新，我们直接给您安排原地址补发，不让您白等~","by":"岚岚"},{"r":"c","x":"那行，你们抓紧，最晚后天必须给我说法","lv":1},{"r":"o","x":"放心亲，工单已加急，有结果第一时间联系您；若补发会用顺丰给您发出，2天内就能到~","by":"岚岚"},{"r":"c","x":"行，等你们消息，麻烦了","lv":0},{"r":"o","x":"后续有任何问题随时找岚岚哦，祝您使用愉快~","by":"岚岚"}]},{"id":"S00004","alias":"徐**","scene":"错发色号","product":"测试丝绒唇釉 #01赤茶红","high":[],"msgs":[{"r":"c","x":"开什么玩笑，我买的#01赤茶红，发来个#05枫叶红，色差也太大了，这我没法用","lv":1},{"r":"o","x":"非常抱歉亲！麻烦您拍一下收到商品的底标色号照片，测试客服马上为您核实处理呢~","by":"测试客服"},{"r":"c","x":"图发你了，底标写的就是#05枫叶红","lv":0},{"r":"o","x":"确认是仓库发错色号了，实在抱歉！给您两个方案：①直接换货，先给您发#01赤茶红，收到后把错发的寄回（运费我们承担）；②如果您愿意留下#05枫叶红，补偿您30元。您选哪个？","by":"测试客服"},{"r":"c","x":"emmm，那还是换吧，#05枫叶红不适合我","lv":0},{"r":"o","x":"好的亲，换货工单已创建，今天为您发出#01赤茶红，包裹里附退货面单，您把#05枫叶红原样放进去交给快递员就行，全程不用您花一分钱~","by":"测试客服"},{"r":"c","x":"行，操作挺方便，那等新的到了我就寄回","lv":0}]},{"id":"S00076","alias":"贺**","scene":"质疑正品退货","product":"测试轻透粉底液30ml #N02自然色","high":["emotion_escalation","complaint_risk"],"msgs":[{"r":"c","x":"我在专柜对比了，你们发的粉底液膏体颜色不一样，质地也稀，是不是给我发的假货？！哦","lv":1},{"r":"o","x":"亲请放心，官方旗舰店所有商品与专柜同源，绝无假货。不同批次间原料存在合理差异~您可以刮开防伪码验证，也可以把批次号发我帮您查~","by":"欣欣"},{"r":"c","x":"批次号26A27，你查！查不出来我就去平台举报，急","lv":2,"cf":1},{"r":"o","x":"查到批次26A27为今年3月正常生产批次，质检报告可以发您。当然，如果您仍不放心，完全支持退货退款，运费我们承担，绝不让您勉强使用哈~","by":"欣欣"},{"r":"c","x":"行，那退吧，报告也发我一份，我自己看","lv":0},{"r":"o","x":"好的亲，退货申请这边直接给您通过，质检报告已发送。仓库签收后当天退款~","by":"欣欣"},{"r":"c","x":"收到，处理挺痛快，就是希望品控上点心","lv":0},{"r":"o","x":"好的亲，还有其他可以帮您的吗？祝您生活愉快~","by":"欣欣"}]},{"id":"S00034","alias":"王h**","scene":"直播间承诺纠纷","product":"【预售】测试焕活紧致礼盒(面霜50ml+精华30ml)","high":[],"msgs":[{"r":"c","x":"你好，我昨晚直播间下的单，主播明明说下单送正装小样一套，怎么发来只有正装？，急","lv":0},{"r":"o","x":"收到，这边立刻为您核实，稍等一下下~","by":"薇薇"},{"r":"c","x":"我截图了主播口播的，白纸黑字，你们不能不认","lv":2},{"r":"o","x":"亲亲收到您的截图啦~核实到昨晚直播确有该福利，是发货时赠品未关联上，实在抱歉！这边给您登记补发测试舒缓面霜中样15ml，48小时内发出哦哈~","by":"薇薇"},{"r":"c","x":"早这样不就好了，等你们补发","lv":0},{"r":"o","x":"已为您加急登记补发工单，单号出来同步给您~给您带来不便非常抱歉，感谢理解~","by":"薇薇"},{"r":"c","x":"好的好的","lv":0}]},{"id":"S00087","alias":"一e**","scene":"少发正装","product":"【预售】测试焕活紧致礼盒(面霜50ml+精华30ml)","high":["emotion_escalation","complaint_risk"],"msgs":[{"r":"c","x":"你们咋回事？！我订单6920480727847614042买了面霜和洁面泡沫两样，箱子里只有洁面泡沫！呢","lv":0},{"r":"o","x":"亲实在抱歉！您先消消气，麻烦拍一下外箱面单、内件和填充物的照片，岚岚立刻联系仓库核查出库记录~","by":"岚岚"},{"r":"c","x":"照片给你，最好快点解决，不然我直接投诉到平台，麻烦了","lv":2,"cf":1},{"r":"o","x":"收到亲，已为您登记加急工单。仓库复核出库视频确认面霜漏装，真的非常抱歉！马上为您补发，今天顺丰发出，并附赠测试丝绒唇釉小样1.2g一份向您赔罪哦亲~","by":"岚岚"},{"r":"c","x":"早该这样了，单号发我哦","lv":0},{"r":"o","x":"一定一定，仓库那边我们也会内部追责改进的。补发单号稍后发您，请留意查收，实在抱歉给您带来不好的体验","by":"岚岚"},{"r":"c","x":"嗯，到了，处理效率还行","lv":0},{"r":"o","x":"后续有任何问题随时找岚岚哦，祝您使用愉快~","by":"岚岚"}]}];
+
+const LV = ['平稳', '不满', '激烈'];
+const COL = ['var(--calm)', 'var(--upset)', 'var(--fury)'];
+const STEPS = [['安全检查', 200, 400], ['读取轨迹', 300, 700], ['知识检索', 500, 1200], ['起草', 1800, 3200], ['核验', 900, 1800], ['发送', 200, 300]];
+const LANE = { ai: 'AI 接待中', wait: '待人工', human: '人工处理中' };
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const EASE = 'cubic-bezier(.2,.8,.2,1)';
+const MAX_RUNS = 4;
+const BASE = 17 * 3600 + 30 * 60;
+
+let T = 0, paused = false, selected = 'S00059', filter = 'all';
+let aiCount = 96, handoffCount = 50, activeRuns = 0, laneSeq = 0;
+const byId = new Map(DATA.map(d => [d.id, d]));
+const convs = new Map();
+const pool = ['S00058', 'S00049', 'S00113', 'S00141', 'S00026'];
+const recycled = [];
+let events = [];
+
+const pad = n => String(n).padStart(2, '0');
+const clock = ms => { const s = BASE + Math.floor(ms / 1000); return pad(Math.floor(s / 3600) % 24) + ':' + pad(Math.floor(s / 60) % 60); };
+const dur = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ':' + pad(s % 60); };
+const rnd = (a, b) => a + Math.random() * (b - a);
+const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const schedule = (delay, fn) => events.push({ at: T + delay, fn });
+
+function makeConv(id, lane, shown, opt = {}) {
+  const d = byId.get(id);
+  const firstOp = d.msgs.find(m => m.r === 'o');
+  const c = {
+    id, alias: d.alias, scene: d.scene, product: d.product, high: d.high, msgs: d.msgs, pos: 0, shown: [], lane,
+    handler: opt.handler || null, officialHandler: firstOp ? firstOp.by : '欣欣', reason: opt.reason || null, reasonQuote: null,
+    waitSince: null, run: null, queued: null, lastRun: null, lastAt: T, fast: !!opt.fast, ending: false, seq: laneSeq++,
+  };
+  const kind = opt.serviceKind || (lane === 'ai' ? 'a' : 'o');
+  let t = T - (opt.ago ?? rnd(60, 300)) * 1000 - Math.max(0, shown - 1) * 55000;
+  for (let i = 0; i < shown; i++) {
+    const m = c.msgs[c.pos++];
+    c.shown.push(m.r === 'c' ? { r: 'c', x: m.x, lv: m.lv, at: t } : { r: kind, x: m.x, by: kind === 'o' ? (c.handler || m.by) : null, at: t });
+    t += 55000;
+  }
+  const last = c.shown[c.shown.length - 1];
+  if (last) c.lastAt = last.at;
+  if (last && last.r === 'c') c.waitSince = last.at;
+  if (lane === 'wait') c.reasonQuote = lastCustomer(c)?.x;
+  convs.set(id, c);
+  return c;
+}
+const bands = c => c.shown.filter(s => s.r === 'c').map(s => s.lv);
+const curLv = c => { const b = bands(c); return b.length ? b[b.length - 1] : 0; };
+const lastCustomer = c => [...c.shown].reverse().find(s => s.r === 'c');
+const isRisk = c => c.high.length > 0 || curLv(c) === 2;
+const isLate = c => c.waitSince != null && T - c.waitSince >= 120000;
+
+/* ---------- simulation ---------- */
+function nextCustomer(c) {
+  if (!convs.has(c.id) || c.lane === 'wait' || c.ending) return;
+  if (c.pos >= c.msgs.length) return endConv(c);
+  const m = c.msgs[c.pos];
+  if (m.r !== 'c') return serviceReply(c, c.lane === 'ai' ? 'a' : 'o');
+  c.pos++;
+  c.shown.push({ r: 'c', x: m.x, lv: m.lv, at: T });
+  c.waitSince = T; c.lastAt = T;
+  if (c.lane === 'ai') enqueueRun(c, (m.lv === 2 || m.cf || m.med) ? 'handoff' : 'reply');
+  else schedule(rnd(3500, 7000), () => serviceReply(c, 'o'));
+  render(new Set([c.id]));
+}
+function serviceReply(c, kind) {
+  if (!convs.has(c.id)) return;
+  let n = 0;
+  while (c.pos < c.msgs.length && c.msgs[c.pos].r === 'o') {
+    const m = c.msgs[c.pos++];
+    c.shown.push({ r: kind, x: m.x, by: kind === 'o' ? c.handler : null, at: T });
+    n++;
+  }
+  if (!n) return;
+  c.waitSince = null; c.lastAt = T;
+  render();
+  if (c.pos >= c.msgs.length) schedule(rnd(7000, 11000), () => endConv(c));
+  else schedule(c.fast ? rnd(5000, 7000) : rnd(6000, 16000), () => nextCustomer(c));
+}
+function enqueueRun(c, mode) { c.queued = mode; tryRuns(); }
+function tryRuns() {
+  for (const c of [...convs.values()].filter(x => x.queued && x.lane === 'ai').sort((a, b) => a.waitSince - b.waitSince)) {
+    if (activeRuns >= MAX_RUNS) break;
+    const mode = c.queued; c.queued = null; activeRuns++;
+    const steps = mode === 'handoff' ? [{ n: '安全检查', d: 900, s: 'active' }]
+      : STEPS.map(([n, a, b], i) => ({ n, d: rnd(a, b), s: i ? 'pending' : 'active' }));
+    c.run = { mode, steps, i: 0, el: 0 };
+  }
+  render();
+}
+function tickRuns(dt) {
+  for (const c of convs.values()) {
+    const r = c.run; if (!r) continue;
+    r.el += dt;
+    let changed = false;
+    while (r.i < r.steps.length && r.el >= r.steps[r.i].d) {
+      r.el -= r.steps[r.i].d;
+      r.steps[r.i].s = r.mode === 'handoff' ? 'fail' : 'done';
+      r.i++; changed = true;
+      if (r.i < r.steps.length) r.steps[r.i].s = 'active';
+    }
+    if (r.i >= r.steps.length) { c.lastRun = r; c.run = null; activeRuns--; r.mode === 'reply' ? serviceReply(c, 'a') : handoff(c); tryRuns(); }
+    else if (changed && c.id === selected) renderPreview();
+  }
+}
+function handoff(c) {
+  const last = lastCustomer(c);
+  const src = c.msgs[c.pos - 1] || {};
+  c.lane = 'wait'; c.seq = laneSeq++;
+  c.reason = src.med ? '就医 · 安全转人工' : (src.cf || c.high.includes('complaint_risk')) ? '投诉风险' : '情绪激烈';
+  c.reasonQuote = last?.x;
+  c.shown.push({ r: 'sys', x: '已转人工，客服将继续跟进。', at: T });
+  document.getElementById('st-ho').textContent = ++handoffCount;
+  render();
+  schedule(45000, () => { if (convs.has(c.id) && c.lane === 'wait') takeover(c, c.officialHandler); });
+}
+function takeover(c, who) {
+  if (!convs.has(c.id) || c.lane === 'human') return;
+  if (c.run) { c.run = null; activeRuns--; }
+  c.queued = null;
+  c.lane = 'human'; c.handler = who; c.reason = null; c.seq = laneSeq++;
+  c.shown.push({ r: 'sys', x: `${who} 已接管`, at: T });
+  if (c.waitSince != null) schedule(rnd(4000, 7000), () => serviceReply(c, 'o'));
+  else schedule(rnd(6000, 12000), () => nextCustomer(c));
+  tryRuns();
+  render();
+}
+function endConv(c) {
+  if (!convs.has(c.id) || c.ending || c.lane === 'wait') return;
+  c.ending = true;
+  const el = document.querySelector(`.tile[data-id="${c.id}"]`);
+  const done = () => {
+    convs.delete(c.id); recycled.push(c.id);
+    if (selected === c.id) selected = null;
+    render();
+  };
+  if (el && !RM) el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.6)' }], { duration: 380, easing: EASE }).onfinish = done;
+  else done();
+}
+function arrive() {
+  const id = pool.shift() ?? recycled.shift();
+  if (id && !convs.has(id)) {
+    const c = makeConv(id, 'ai', 0);
+    document.getElementById('st-ai').textContent = ++aiCount;
+    nextCustomer(c);
+  }
+  schedule(rnd(11000, 16000), arrive);
+}
+
+/* ---------- rendering ---------- */
+function swatch(c, w, h, cut, gap, max) {
+  const b = bands(c).slice(-max), n = b.length;
+  const inner = h - gap * Math.max(0, n - 1);
+  const hs = n <= 1 ? [inner] : [...Array(n - 1).fill(inner * 0.6 / (n - 1)), inner * 0.4];
+  return b.map((lv, i) => `<span class="band" style="height:${hs[i].toFixed(1)}px;background:${COL[lv]}"></span>`).join('');
+}
+function waitMeta(c) {
+  const ms = T - c.waitSince;
+  return `meta wait${ms >= 120000 ? ' over' : ms >= 60000 ? ' warn' : ''}`;
+}
+function tileHTML(c) {
+  const seq = bands(c).map(lv => LV[lv]).join('、');
+  const dim = filter === 'risk' ? !isRisk(c) : filter === 'late' ? !isLate(c) : false;
+  const meta = c.waitSince != null
+    ? `<span class="${waitMeta(c)}" data-wait="${c.id}">${dur(T - c.waitSince)}</span>`
+    : `<span class="meta">${clock(c.lastAt)}</span>`;
+  return `<button class="tile${c.id === selected ? ' sel' : ''}${dim ? ' dim' : ''}" data-id="${c.id}"
+    aria-label="${esc(c.alias)}，${LANE[c.lane]}，${seq}${isRisk(c) ? '，高风险' : ''}">
+    <span class="wave${c.run ? ' on' : ''}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    <span class="sw-wrap"><span class="sw">${swatch(c, 32, 54, 7, 1.5, 6)}</span>${isRisk(c) ? '<span class="rdot"></span>' : ''}</span>
+    <span class="nm">${esc(c.alias)}</span>${meta}</button>`;
+}
+const order = {
+  wait: (a, b) => a.waitSince - b.waitSince,
+  ai: (a, b) => (isRisk(b) - isRisk(a)) || a.seq - b.seq,
+  human: (a, b) => a.seq - b.seq,
+};
+function render(grown = new Set()) {
+  const first = new Map();
+  document.querySelectorAll('.tile').forEach(el => first.set(el.dataset.id, el.getBoundingClientRect()));
+  const focusId = document.activeElement?.classList?.contains('tile') ? document.activeElement.dataset.id : null;
+  for (const lane of ['wait', 'ai', 'human']) {
+    const list = [...convs.values()].filter(c => c.lane === lane).sort(order[lane]);
+    const host = document.querySelector(`.lane[data-lane="${lane}"]`);
+    host.querySelector('.tiles').innerHTML = list.map(tileHTML).join('');
+    host.querySelector('.n').textContent = list.length;
+  }
+  if (focusId) document.querySelector(`.tile[data-id="${focusId}"]`)?.focus({ preventScroll: true });
+  if (!RM) document.querySelectorAll('.tile').forEach(el => {
+    const r0 = first.get(el.dataset.id);
+    if (!r0) { el.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: EASE }); return; }
+    const r1 = el.getBoundingClientRect(), dx = r0.left - r1.left, dy = r0.top - r1.top;
+    if (Math.abs(dx) + Math.abs(dy) > 1) el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 560, easing: EASE });
+  });
+  if (!RM) grown.forEach(id => document.querySelector(`.tile[data-id="${id}"] .band:last-child`)
+    ?.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 420, easing: EASE }));
+  renderPreview();
+  live();
+}
+function msgHTML(s, c) {
+  if (s.r === 'sys') return `<div class="pm sys"><span>${esc(s.x)}</span></div>`;
+  if (s.r === 'c') return `<div class="pm c" style="--lv:${COL[s.lv]}"><div class="who">${esc(c.alias)} <span class="t">${clock(s.at)}</span>
+    <span class="e"><i style="background:${COL[s.lv]}"></i>${LV[s.lv]}</span></div><div class="bb">${esc(s.x)}</div></div>`;
+  return `<div class="pm s ${s.r}"><div class="who"><span class="t">${clock(s.at)}</span>${s.r === 'a' ? '智能助手' : esc(s.by || '')}</div><div class="bb">${esc(s.x)}</div></div>`;
+}
+function stepsHTML(r, title) {
+  const total = r.mode === 'reply' && r.steps.every(s => s.s === 'done') ? (r.steps.reduce((a, s) => a + s.d, 0) / 1000).toFixed(1) + ' 秒' : '';
+  return `<section class="card"><h3>${title}<span class="r">${total}</span></h3>
+    <ol class="steps">${r.steps.map((s, i) => `<li class="${s.s}"><span>${s.n}</span><span class="d" ${s.s === 'active' ? 'data-step' : ''}>${
+      s.s === 'done' ? (s.d / 1000).toFixed(1) + 's' : s.s === 'fail' ? '转人工' : s.s === 'active' ? (r.el / 1000).toFixed(1) + 's' : ''}</span></li>`).join('')}</ol></section>`;
+}
+function renderPreview() {
+  const host = document.getElementById('preview');
+  const c = convs.get(selected);
+  if (!c) { host.innerHTML = '<section class="card"><h3>未选择会话</h3></section>'; return; }
+  const lv = curLv(c);
+  const acts = `<div class="acts">${c.lane !== 'human' ? `<button class="b pri" data-act="take">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>接管</button>` : ''}
+    <button class="b" data-act="open">打开会话</button></div>`;
+  const head = `<section class="card"><div class="ph">
+      <span class="sw-wrap"><span class="sw">${swatch(c, 40, 66, 9, 2, 8)}</span>${isRisk(c) ? '<span class="rdot"></span>' : ''}</span>
+      <div><b>${esc(c.alias)}<span class="lane-chip ${c.lane}">${c.lane === 'human' ? '人工 · ' + esc(c.handler) : LANE[c.lane]}</span></b>
+        <div class="sub">${esc(c.scene)}${c.product ? ' · ' + esc(c.product) : ''}</div>
+        <div class="now"><span><i style="background:${COL[lv]}"></i>${LV[lv]}</span>${c.waitSince != null ? `<span>等待 <span class="t" data-pwait>${dur(T - c.waitSince)}</span></span>` : ''}</div>
+      </div></div>${acts}</section>`;
+  const reason = c.lane === 'wait' ? `<section class="card"><div class="reason"><b>${c.reason}</b>${c.reasonQuote ? `<q>${esc(c.reasonQuote)}</q>` : ''}</div></section>` : '';
+  const run = c.run ? stepsHTML(c.run, 'AI 处理中') : c.queued ? `<section class="card"><h3>AI 排队中</h3></section>` : c.lastRun ? stepsHTML(c.lastRun, '上一轮 AI 处理') : '';
+  const msgs = `<section class="card"><h3>最近消息<span class="r">${c.shown.filter(s => s.r === 'c').length} 条消费者消息</span></h3>
+    <div class="msgs">${c.shown.slice(-6).map(s => msgHTML(s, c)).join('')}</div></section>`;
+  host.innerHTML = head + reason + run + msgs;
+}
+function live() {
+  document.querySelectorAll('[data-wait]').forEach(el => {
+    const c = convs.get(el.dataset.wait); if (!c || c.waitSince == null) return;
+    el.textContent = dur(T - c.waitSince); el.className = waitMeta(c);
+  });
+  const sel = convs.get(selected);
+  const pw = document.querySelector('[data-pwait]');
+  if (pw && sel?.waitSince != null) pw.textContent = dur(T - sel.waitSince);
+  const ps = document.querySelector('[data-step]');
+  if (ps && sel?.run) ps.textContent = (sel.run.el / 1000).toFixed(1) + 's';
+  const all = [...convs.values()];
+  const w = all.filter(c => c.lane === 'wait');
+  document.querySelector('.lane[data-lane="wait"] .sub').innerHTML = w.length ? `最长等待 <em>${dur(Math.max(...w.map(c => T - c.waitSince)))}</em>` : '';
+  const ai = all.filter(c => c.lane === 'ai');
+  document.querySelector('.lane[data-lane="ai"] .sub').innerHTML = `处理中 <em>${ai.filter(c => c.run).length}</em>　排队 <em>${ai.filter(c => c.queued).length}</em>`;
+  document.getElementById('c-risk').textContent = all.filter(isRisk).length;
+  document.getElementById('c-late').textContent = all.filter(isLate).length;
+}
+
+/* ---------- interaction ---------- */
+document.getElementById('wall').addEventListener('click', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  selected = t.dataset.id;
+  document.querySelectorAll('.tile.sel').forEach(x => x.classList.remove('sel'));
+  t.classList.add('sel');
+  renderPreview();
+});
+document.getElementById('wall').addEventListener('keydown', e => {
+  const t = e.target.closest('.tile'); if (!t) return;
+  const tiles = [...document.querySelectorAll('.tile')], i = tiles.indexOf(t);
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); tiles[(i + (e.key === 'ArrowRight' ? 1 : -1) + tiles.length) % tiles.length].focus(); }
+  if (e.key.toLowerCase() === 't') { const c = convs.get(t.dataset.id); if (c) { selected = c.id; takeover(c, 'G001'); } }
+});
+document.getElementById('preview').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const c = convs.get(selected); if (!c) return;
+  if (b.dataset.act === 'take') takeover(c, 'G001');
+});
+document.getElementById('chips').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll('#chips button').forEach(x => x.classList.toggle('on', x === b));
+  render();
+});
+document.getElementById('live').addEventListener('click', e => {
+  paused = !paused;
+  e.currentTarget.setAttribute('aria-pressed', String(!paused));
+  e.currentTarget.querySelector('span').textContent = paused ? '已暂停' : '实时';
+});
+
+/* ---------- initial state ---------- */
+[['S00059', 2, { fast: true, ago: 70 }], ['S00014', 1, { ago: 5 }], ['S00002', 2], ['S00092', 3], ['S00117', 3], ['S00030', 2], ['S00134', 2],
+ ['S00057', 3], ['S00062', 3], ['S00043', 3], ['S00007', 3], ['S00003', 3], ['S00041', 3], ['S00158', 2], ['S00009', 2]]
+  .forEach(([id, n, o]) => makeConv(id, 'ai', n, o));
+makeConv('S00015', 'wait', 1, { reason: '就医 · 安全转人工', ago: 95 });
+makeConv('S00044', 'wait', 4, { reason: '核验未通过', ago: 40, serviceKind: 'a' });
+makeConv('S00004', 'human', 2, { handler: '测试客服' });
+makeConv('S00076', 'human', 4, { handler: '欣欣' });
+makeConv('S00034', 'human', 3, { handler: '薇薇', ago: 20 });
+makeConv('S00087', 'human', 4, { handler: '岚岚' });
+
+for (const c of convs.values()) {
+  const last = c.shown[c.shown.length - 1];
+  if (c.lane === 'wait') schedule(c.id === 'S00015' ? 35000 : 55000, () => { if (c.lane === 'wait') takeover(c, c.officialHandler); });
+  else if (c.lane === 'ai' && last.r === 'c') schedule(600, () => enqueueRun(c, 'reply'));
+  else if (c.lane === 'human' && last.r === 'c') schedule(rnd(3000, 6000), () => serviceReply(c, 'o'));
+  else if (c.id === 'S00059') schedule(1200, () => nextCustomer(c));
+  else schedule(rnd(5000, 30000), () => nextCustomer(c));
+}
+schedule(4000, arrive);
+render();
+
+let lastTick = performance.now();
+setInterval(() => {
+  const now = performance.now(), dt = Math.min(500, now - lastTick); lastTick = now;
+  if (paused) return;
+  T += dt;
+  const due = events.filter(e => e.at <= T);
+  events = events.filter(e => e.at > T);
+  due.sort((a, b) => a.at - b.at).forEach(e => e.fn());
+  tickRuns(dt);
+  live();
+}, 100);
+</script>
+</body>
+</html>

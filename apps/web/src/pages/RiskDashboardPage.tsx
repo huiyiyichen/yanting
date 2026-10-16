@@ -1,4 +1,4 @@
-import { CheckOutlined, CloseOutlined, EyeOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { CheckOutlined, CloseOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -50,7 +50,8 @@ export function RiskDashboardPage() {
   const [selected, setSelected] = useState<RiskIncidentDetailView | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [mode, setMode] = useState('initial')
+  const [scopeState, setScope] = useState<'initial' | 'official' | 'live'>('initial')
+  const [tab, setTab] = useState<'initial' | 'active' | 'review' | 'closed' | 'all'>('initial')
   const [type, setType] = useState<string>()
   const [level, setLevel] = useState<string>()
   const [error, setError] = useState('')
@@ -87,8 +88,8 @@ export function RiskDashboardPage() {
       if (request === listRequest.current) {
         setRows(data)
         setReceptionItems(reception.items)
-        setMode((current) => current === 'initial'
-          ? data.some((row) => row.currentAction === 'record_only') ? 'historical' : 'active'
+        setScope((current) => current === 'initial'
+          ? data.some((row) => row.currentAction === 'record_only') ? 'official' : 'live'
           : current)
         setRuntimeWarning(data.some((row) => !row.serviceState || !row.currentAction))
         setError('')
@@ -97,7 +98,8 @@ export function RiskDashboardPage() {
     } catch (err) { if (request === listRequest.current) setError((err as Error).message) }
     finally { if (request === listRequest.current) setLoading(false) }
   }, [])
-  const scope: 'official' | 'live' = mode === 'historical' || mode === 'initial' ? 'official' : 'live'
+  const scope: 'official' | 'live' = scopeState === 'live' ? 'live' : 'official'
+  const mode = scope === 'official' ? 'historical' : 'active'
   useEffect(() => {
     let cancelled = false
     Promise.all([deskApi.riskOverview(scope), deskApi.productClues()])
@@ -133,8 +135,9 @@ export function RiskDashboardPage() {
     if (row) {
       handledLink.current = key
       setSelectedId(row.incidentId)
-      setMode(row.currentAction === 'record_only' ? 'historical' : row.currentAction === 'intervene'
-        ? 'active' : row.currentAction === 'review' ? 'review' : 'closed')
+      setScope(row.currentAction === 'record_only' ? 'official' : 'live')
+      setTab(row.attentionState === 'review' || row.currentAction === 'review' ? 'review'
+        : row.attentionState === 'closed' ? 'closed' : row.currentAction === 'record_only' ? 'all' : 'active')
     }
   }, [requestedConversation, requestedType, requestedIncident, rows])
   const openConversation = (id: string) => navigate(`/support?conversation=${encodeURIComponent(id)}`)
@@ -232,16 +235,17 @@ export function RiskDashboardPage() {
       }
     } finally { setSaving(false) }
   }
-  const active = rows.filter((row) => row.currentAction === 'intervene')
-  const review = rows.filter((row) => row.currentAction === 'review')
-  const historical = rows.filter((row) => row.currentAction === 'record_only')
-  const lowRisk = rows.filter((row) => row.riskLevel === 'low')
+  const inScope = rows.filter((row) => (row.currentAction === 'record_only') === (scope === 'official'))
+  const tabOf = (row: RiskIncidentView) => row.attentionState === 'closed' ? 'closed'
+    : row.currentAction === 'review' || row.attentionState === 'review' ? 'review'
+      : row.currentAction === 'intervene' ? 'active' : 'other'
+  const counts = { active: inScope.filter((row) => tabOf(row) === 'active').length, review: inScope.filter((row) => tabOf(row) === 'review').length }
+  const currentTab = tab === 'initial' ? (counts.active ? 'active' : 'all') : tab
   const safeCustomers = receptionItems.filter((item) =>
     item.dataSource === 'live' && !item.activeRiskTypes?.length && !item.reviewRiskTypes?.length)
-  const filtered = rows.filter((row) =>
-    (mode === 'all' || (mode === 'safe') || (mode === 'active' ? row.currentAction === 'intervene'
-      : mode === 'review' ? row.currentAction === 'review' : mode === 'historical'
-        ? row.currentAction === 'record_only' : row.attentionState === 'closed'))
+  const showSafe = level === 'none'
+  const filtered = inScope.filter((row) =>
+    (currentTab === 'all' || tabOf(row) === currentTab)
     && (!level || row.riskLevel === level)
     && (!type || row.signals.some((signal) => signal.riskType === type && (mode !== 'active' || signalAttention(signal) === 'active')))
     && `${row.buyerAlias} ${row.conversationIds.join(' ')} ${row.orderIds.join(' ')} ${row.latestMessage}`.includes(query))
@@ -277,7 +281,7 @@ export function RiskDashboardPage() {
     <PageHeader title="风险预警" extra={<div className="yt-scope" role="radiogroup" aria-label="数据范围">
       {(['official', 'live'] as const).map((key) => <button key={key} type="button" role="radio" aria-checked={scope === key}
         className={scope === key ? 'on' : undefined}
-        onClick={() => setMode(key === 'official' ? 'historical' : 'active')}>{key === 'official' ? '官方记录' : '实时'}</button>)}
+        onClick={() => { setScope(key); setTab('initial') }}>{key === 'official' ? '官方记录' : '实时'}</button>)}
     </div>} actions={<Space><Button icon={<ReloadOutlined />} aria-label="刷新风险" loading={loading} onClick={() => void load()} />
       <Button icon={<PlayCircleOutlined />} loading={scanning} onClick={() => void scan()}>扫描异常</Button></Space>} />
     <div className="desk-page-body">
@@ -287,18 +291,16 @@ export function RiskDashboardPage() {
         onFilterType={(next) => setType(next)} onFilterConversation={(cid) => setQuery(cid)} />}
       <div className={`yt-risk-md${selectedId ? ' has-detail' : ''}`}>
       <section className="yt-risk-queue" aria-label="风险队列">
-      <Tabs activeKey={mode} onChange={setMode} items={[
-        { key: 'historical', label: `官方记录 ${historical.length}` },
-        { key: 'safe', label: `低风险 / 无风险 ${lowRisk.length + safeCustomers.length}` },
-        { key: 'active', label: `待处理 ${active.length}` }, { key: 'review', label: `待复核 ${review.length}` },
-        { key: 'closed', label: '已关闭' }, { key: 'all', label: '全部事件' },
+      <Tabs activeKey={currentTab} onChange={(key) => setTab(key as typeof tab)} items={[
+        { key: 'active', label: `待处理 ${counts.active}` }, { key: 'review', label: `待复核 ${counts.review}` },
+        { key: 'closed', label: '已关闭' }, { key: 'all', label: `全部 ${inScope.length}` },
       ]} />
       <div className="desk-filterbar">
         <Input prefix={<SearchOutlined />} aria-label="搜索风险" placeholder="客户、订单、最新消息" allowClear value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Select aria-label="风险等级" placeholder="风险等级" allowClear value={level} onChange={setLevel} options={optionsOf(levelLabels)} />
+        <Select aria-label="风险等级" placeholder="风险等级" allowClear value={level} onChange={setLevel} options={[...optionsOf(levelLabels), ...(scope === 'live' ? [{ value: 'none', label: '无风险' }] : [])]} />
         <Select aria-label="风险类型" placeholder="风险类型" allowClear value={type} onChange={setType} options={optionsOf(serviceRiskTypeLabels)} />
       </div>
-      {mode === 'safe' ? <Table<ReceptionItem> rowKey="conversationId" size="small" dataSource={safeFiltered} loading={loading}
+      {showSafe ? <Table<ReceptionItem> rowKey="conversationId" size="small" dataSource={safeFiltered} loading={loading}
         pagination={{ pageSize: 10, showSizeChanger: false }}
         locale={{ emptyText: '当前没有无风险客户' }}
         columns={[
@@ -309,30 +311,29 @@ export function RiskDashboardPage() {
           </Tag> },
           { title: '最新消费者消息', render: (_, item) => <div className="table-cell-stack"><div className="table-excerpt">{item.preview || '暂无消息'}</div><span>{dateLabel(item.updatedAt)}</span></div> },
           { title: '操作', width: 100, render: (_, item) => <Button aria-label={`打开会话 ${item.buyerAlias}`} size="small" icon={<MessageOutlined />} onClick={() => openConversation(item.conversationId)} /> },
-        ]} /> : <Table<RiskIncidentView> rowKey="incidentId" size="small" rowClassName={(row) => `yt-rk-row is-${row.riskLevel}${row.incidentId === selectedId ? ' is-selected' : ''}`} dataSource={filtered} loading={loading} scroll={{ x: 1050 }} pagination={{ pageSize: 10, showSizeChanger: false }}
+        ]} /> : <Table<RiskIncidentView> rowKey="incidentId" size="small" rowClassName={(row) => `yt-rk-row is-${row.riskLevel}${row.incidentId === selectedId ? ' is-selected' : ''}`}
+        onRow={(row) => ({ onClick: () => setSelectedId(row.incidentId), 'aria-selected': row.incidentId === selectedId })} dataSource={filtered} loading={loading} scroll={{ x: 1000 }} pagination={{ pageSize: 10, showSizeChanger: false }}
         locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={runtimeWarning ? '当前预警未加载' : '暂无风险事件'} /> }}
         columns={[
           { title: '等级 / 状态', width: 125, render: (_, row) => <div className="table-cell-stack">
             <Tag color={row.riskLevel === 'high' ? 'error' : row.riskLevel === 'medium' ? 'warning' : 'default'}>{levelLabels[row.riskLevel]}</Tag>
             <span className={`yt-rk-status is-${row.currentAction}`}>{row.currentAction === 'intervene' && row.riskStatus === 'in_progress' ? '处理中' : currentActionLabels[row.currentAction]}</span>
           </div> },
-          { title: '消费者', width: 180, render: (_, row) => <div className="table-cell-stack"><strong className="yt-rk-name" title={row.buyerAlias}>{row.buyerAlias}</strong><span>{serviceStateLabels[row.serviceState]}</span></div> },
-          { title: '风险 / 原因', width: 290, render: (_, row) => {
+          { title: '消费者', width: 180, render: (_, row) => <div className="table-cell-stack"><strong className="yt-rk-name" data-testid={`risk-open-${row.incidentId}`} title={row.buyerAlias}>{row.buyerAlias}</strong>{row.serviceState !== 'historical' && <span>{serviceStateLabels[row.serviceState]}</span>}</div> },
+          { title: '风险 / 原话', width: 330, render: (_, row) => {
             const signals = row.signals.filter((signal) => mode !== 'active' || signalAttention(signal) === 'active')
             const unique = [...new Map(signals.map((signal) => [`${signal.riskType}:${signalAttention(signal)}`, signal])).values()]
-            return <div className="table-cell-stack"><Space size={[0, 4]} wrap>{unique.map((signal) => <Tag
+            const shown = unique.slice(0, 2)
+            return <div className="table-cell-stack"><Space size={[0, 4]} wrap>{shown.map((signal) => <Tag
               color={signalAttention(signal) === 'active' ? 'warning' : 'default'} key={`${signal.riskType}:${signalAttention(signal)}`}>
               {serviceRiskTypeLabels[signal.riskType]}
-            </Tag>)}{row.historicalSensitivity > 0 && <Tag color="processing">历史敏感 {row.historicalSensitivity}/3</Tag>}</Space><div className="table-excerpt">{(signals.find((signal) => signalAttention(signal) === 'active')
-              ?? signals.find((signal) => signalAttention(signal) === 'review') ?? signals[0])?.triggerSummary}</div></div>
+            </Tag>)}{unique.length > 2 && <Tag title={unique.slice(2).map((signal) => serviceRiskTypeLabels[signal.riskType]).join('、')}>+{unique.length - 2}</Tag>}</Space>
+              <div className="table-excerpt" title={row.latestMessage}>{row.latestMessage || '—'}</div></div>
           } },
           { title: mode === 'historical' ? '结束时情绪' : '当前情绪', width: 150, render: (_, row) => <div className="yt-rk-emo"><RiskSpark seq={row.emotionSeq} /><span className={`yt-rk-emo-l is-${row.currentEmotion}`}><i />{emotionStatus(row)}</span></div> },
-          { title: '最新消费者消息', width: 280, render: (_, row) => <div className="table-cell-stack"><div className="table-excerpt">{row.latestMessage || '暂无消息'}</div><span>{dateLabel(row.latestCustomerAt)}</span></div> },
-          { title: '操作', width: 155, render: (_, row) => <Space>
-            <Button data-testid={`risk-open-${row.incidentId}`} size="small" icon={<EyeOutlined />} onClick={() => setSelectedId(row.incidentId)}>详情</Button>
-            <Button aria-label={`打开会话 ${row.buyerAlias}`} title="打开会话" size="small" icon={<MessageOutlined />} disabled={!primaryConversation(row)}
-              onClick={() => { const id = primaryConversation(row); if (id) openConversation(id) }} />
-          </Space> },
+          { title: '最近消息', width: 120, render: (_, row) => <span className="yt-rk-time">{dateLabel(row.latestCustomerAt)}</span> },
+          { title: '', width: 56, render: (_, row) => <Button aria-label={`打开会话 ${row.buyerAlias}`} title="打开会话" size="small" icon={<MessageOutlined />} disabled={!primaryConversation(row)}
+            onClick={(event) => { event.stopPropagation(); const id = primaryConversation(row); if (id) openConversation(id) }} /> },
         ]} />}
       </section>
       {selectedId && <aside className="yt-risk-detail" aria-label="风险详情">

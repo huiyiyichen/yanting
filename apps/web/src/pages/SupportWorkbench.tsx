@@ -270,18 +270,13 @@ export function SupportWorkbench() {
       }} items={[
       { key: 'assistant', label: '辅助', children: <>
         {profile?.memory && profile.conversationId === id ? <PersonaCard profile={profile} /> : null}
-        {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
-          items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
-          missing={assistant.missingInformation} /> : null}
-        <HandoffSummary summary={assistant && !assistant.stale ? assistant.serviceSummary : null}
-          state={generating ? '生成中' : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
         {aiError && <Alert type="error" title={aiError} showIcon />}
         {assistant && !assistant.stale && assistant.replySuggestions.length ? <>
           {assistant.verificationStatus === 'partial' && <Tag color="warning">
             已移除 {Number(assistant.modelUsage?.segmentsDropped ?? 0)} 段
           </Tag>}
           <ReplyCard key={`${id}-${assistant.inputHash}`}
-            suggestions={assistant.replySuggestions} automatic={automatic} generating={generating}
+            suggestions={assistant.replySuggestions} sources={assistant.groundingSources ?? []} automatic={automatic} generating={generating}
             adoptable={['verified', 'partial'].includes(assistant.verificationStatus ?? '')}
             onAdopt={(style, body, edited) => void adopt(style, body, edited ? 'adopt_edited' : 'adopt')}
             onIgnore={(style) => void adopt(style, '', 'ignore')}
@@ -292,6 +287,11 @@ export function SupportWorkbench() {
             {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
           </ol>}
         </section>}
+        <HandoffSummary summary={assistant && !assistant.stale ? assistant.serviceSummary : null}
+          state={generating ? '生成中' : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
+        {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
+          items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
+          missing={assistant.missingInformation} /> : null}
         {id ? <SupportRiskPanel key={id} conversationId={id}
           enabled={visible && pluginTab === 'assistant'} refreshKey={riskRefreshKey}
           serviceMode={current?.serviceMode} onIntervened={refreshAfterIntervention} /> : null}

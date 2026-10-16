@@ -2035,6 +2035,8 @@ export interface components {
              * @default 0
              */
             messageCount: number;
+            /** Lastmessageat */
+            lastMessageAt?: string | null;
             caseStatus?: components["schemas"]["CaseStatus"] | null;
             /**
              * Autoreplystatus
@@ -2791,6 +2793,11 @@ export interface components {
             signals: number;
             /** Pending */
             pending: number;
+            /**
+             * Pendinghigh
+             * @default 0
+             */
+            pendingHigh: number;
             /** High */
             high: number;
             /** Emotionescalation */

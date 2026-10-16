@@ -1,6 +1,7 @@
 /**
  * 评测与成本面板（P1-7/P1-9）。先列失败方式：
- * P1 未配置价格时显示 ¥0（应显示“未配置价格”）。
+ * P1 未配置价格时显示 ¥0 或像故障的长文案（应显示“—”）。
+ * P4 节点/模型出现英文 other、unknown。
  * P2 Mock 与真实调用混在一起展示。
  * P3 缓存命中率无数据时显示 0%。
  */
@@ -24,7 +25,8 @@ const view: UsageView = {
 describe('UsagePanel', () => {
   it('P1 shows missing price instead of zero', () => {
     render(<ConfigProvider><UsagePanel usage={view} /></ConfigProvider>)
-    expect(screen.getAllByText('未配置价格').length).toBeGreaterThan(0)
+    expect(screen.getByLabelText('估算费用')).toHaveTextContent('—')
+    expect(screen.queryByText('未配置价格')).toBeNull()
     expect(screen.queryByText('¥0')).toBeNull()
   })
   it('P2 separates live and mock', () => {
@@ -35,5 +37,13 @@ describe('UsagePanel', () => {
   it('P3 cache hit rate shows a dash without data', () => {
     render(<ConfigProvider><UsagePanel usage={{ ...view, live: { ...view.live, cacheHitRate: null } }} /></ConfigProvider>)
     expect(screen.getByLabelText('缓存命中率')).toHaveTextContent('—')
+  })
+  it('P4 other/unknown 显示为中文', () => {
+    render(<ConfigProvider><UsagePanel usage={{ ...view, live: { ...view.live,
+      byStage: [{ stage: 'other', calls: 1, promptTokens: 1, completionTokens: 1, cachedTokens: 0, latencySeconds: 1 }],
+      byModel: [{ model: 'unknown', calls: 1, promptTokens: 1, completionTokens: 1, cachedTokens: 0, estimatedCost: null }] } }} /></ConfigProvider>)
+    expect(screen.getByText('其他')).toBeInTheDocument()
+    expect(screen.getByText('未识别模型')).toBeInTheDocument()
+    expect(screen.queryByText(/^(other|unknown)$/)).toBeNull()
   })
 })

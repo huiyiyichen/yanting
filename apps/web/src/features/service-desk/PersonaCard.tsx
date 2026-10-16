@@ -18,7 +18,8 @@ function hk(value: string, withTime = false): string {
 
 export function PersonaCard({ profile }: { profile: ConsumerProfileView }) {
   const emotion = profile.currentEmotion ?? null
-  const concerns = profile.memory.concerns.slice(0, 4)
+  const concerns = profile.memory.concerns.slice(0, 2)
+  const moreConcerns = profile.memory.concerns.slice(2)
   const rejected = profile.memory.rejected.slice(0, 3)
   return <section className="yt-persona" aria-label="客户画像">
     <header className="yt-persona-head">
@@ -43,7 +44,8 @@ export function PersonaCard({ profile }: { profile: ConsumerProfileView }) {
     {(concerns.length > 0 || rejected.length > 0) && <dl className="yt-mem">
       {concerns.length > 0 && <><dt id={`mem-c-${profile.conversationId}`}>关注</dt>
         <dd aria-labelledby={`mem-c-${profile.conversationId}`}>{concerns.map((item) =>
-          <span key={item.text} title={item.sourceRef} className="yt-memory-tag">{item.text}</span>)}</dd></>}
+          <span key={item.text} title={item.sourceRef} className="yt-memory-tag">{item.text}</span>)}
+          {moreConcerns.length > 0 && <span className="yt-memory-tag" title={moreConcerns.map((item) => item.text).join('、')}>+{moreConcerns.length}</span>}</dd></>}
       {rejected.length > 0 && <><dt id={`mem-r-${profile.conversationId}`}>已拒绝</dt>
         <dd aria-labelledby={`mem-r-${profile.conversationId}`}>{rejected.map((item) =>
           <span key={item.text} title={item.sourceRef} className="yt-memory-tag is-rejected">{item.text}</span>)}</dd></>}

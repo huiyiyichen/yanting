@@ -9,6 +9,7 @@
  * R7 正文中有依据的片段与普通文字无区分（概念稿：金色虚线引用）。
  * R8 看不到这条建议依据了哪些工单/订单/会话；同一来源重复出现。
  * R9 风格切换不是可读的 tab（无 aria-selected），读屏无法知道当前风格。
+ * R10 依据标签外露内部编号（conv-…、loreal-products@…#…），客服读不懂（全景方案 5.1）。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ConfigProvider } from 'antd'
@@ -80,12 +81,23 @@ describe('ReplyCard', () => {
     const basis = screen.getByRole('list', { name: '回复依据' })
     expect(basis).toHaveTextContent('订单 …0707')
     expect(basis).toHaveTextContent('工单 KOC7263722')
-    expect(basis.textContent?.match(/会话 S00005/g)).toHaveLength(1)
+    expect(basis.textContent?.match(/本次会话/g)).toHaveLength(1)
   })
   it('R9 style switch exposes the selected tab', () => {
     mount()
     expect(screen.getByRole('tab', { name: '推荐' })).toHaveAttribute('aria-selected', 'true')
     fireEvent.click(screen.getByRole('tab', { name: '简洁' }))
     expect(screen.getByRole('tab', { name: '简洁' })).toHaveAttribute('aria-selected', 'true')
+  })
+  it('R10 依据标签不外露内部编号，编号放悬停', () => {
+    mount({ sources: [{ sourceId: 'knowledge:loreal-products@1.0.0#0015-4a91', kind: 'knowledge', subjectId: 'x',
+      label: '测试温和氨基酸洁面乳', text: '' }],
+    suggestions: [{ style: 'recommended', body: '这款成分温和。', claims: [
+      { text: '成分温和', sourceRefs: ['knowledge:loreal-products@1.0.0#0015-4a91', 'conversation:conv-29bc32c12839'] }], empathyDimensions: [] }] })
+    const basis = screen.getByRole('list', { name: '回复依据' })
+    expect(basis).toHaveTextContent('商品资料 · 测试温和氨基酸洁面乳')
+    expect(basis).toHaveTextContent('本次会话')
+    expect(basis.textContent).not.toMatch(/conv-|loreal-products|#0015/)
+    expect(screen.getByText('本次会话')).toHaveAttribute('title', 'conversation:conv-29bc32c12839')
   })
 })

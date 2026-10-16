@@ -30,6 +30,7 @@ class OverviewCounts(ApiModel):
     events: int
     signals: int
     pending: int
+    pending_high: int = 0
     high: int
     emotion_escalation: int
     adverse_reaction: int
@@ -99,7 +100,7 @@ def _customer_messages(session: Session, scope: Scope, batch: str | None) -> lis
 
 def risk_overview(session: Session, scope: Scope) -> RiskOverviewView:
     from app.domain.consumer_service.emotion import score_message
-    from app.domain.consumer_service.incidents import list_incidents
+    from app.domain.consumer_service.incidents import is_pending, list_incidents
     from app.domain.consumer_service.models import ServiceConversationRow, ServiceRiskAlertRow
     from app.domain.consumer_service.workspace import active_batch
 
@@ -146,7 +147,8 @@ def risk_overview(session: Session, scope: Scope) -> RiskOverviewView:
         scope=scope,
         counts=OverviewCounts(
             events=len(incidents), signals=len(alerts),
-            pending=sum(1 for item in incidents if item.risk_status in {"pending", "in_progress"}),
+            pending=sum(1 for item in incidents if is_pending(item)),
+            pending_high=sum(1 for item in incidents if is_pending(item) and item.risk_level == "high"),
             high=sum(1 for item in incidents if item.risk_level == "high"),
             emotion_escalation=types.get("emotion_escalation", 0),
             adverse_reaction=types.get("adverse_reaction", 0),

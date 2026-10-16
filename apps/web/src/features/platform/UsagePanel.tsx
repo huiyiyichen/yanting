@@ -1,8 +1,9 @@
 import { Table } from 'antd'
 import type { UsageView } from '../../api/client'
 
-const STAGES: Record<string, string> = { draft: '起草', verify: '核验', image: '图片', rewrite: '改写', breakpoint: '断点' }
-const money = (value?: number | null) => (value == null ? '未配置价格' : `¥${value.toFixed(4)}`)
+const STAGES: Record<string, string> = { draft: '起草', verify: '核验', image: '图片', rewrite: '改写', breakpoint: '断点', other: '其他' }
+const modelName = (value: string) => (!value || value === 'unknown' ? '未识别模型' : value)
+const money = (value?: number | null) => (value == null ? '—' : `¥${value.toFixed(4)}`)
 const rate = (value?: number | null) => (value == null ? '—' : `${Math.round(value * 100)}%`)
 const count = (value: number) => value.toLocaleString('zh-CN')
 
@@ -28,7 +29,7 @@ export function UsagePanel({ usage }: { usage: UsageView }) {
       { title: '耗时（秒）', dataIndex: 'latencySeconds', align: 'right' },
     ]} />
     <Table size="small" pagination={false} rowKey="model" dataSource={live.byModel} columns={[
-      { title: '模型', dataIndex: 'model' },
+      { title: '模型', dataIndex: 'model', render: modelName },
       { title: '调用', dataIndex: 'calls', align: 'right' },
       { title: '输入 Token', dataIndex: 'promptTokens', align: 'right', render: count },
       { title: '估算费用', dataIndex: 'estimatedCost', align: 'right', render: money },

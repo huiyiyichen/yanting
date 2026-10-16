@@ -9,6 +9,7 @@ O5 商品风险线索把批次“00”当真实批次，或把不同批次写成
 O6 商品线索排序分不是 不良反应×3 + 就医×5 + 其他工单×1；阈值外商品被返回。
 O7 商品线索给出质量结论文字（只允许计数与原始记录入口）。
 O8 读取看板触发模型调用或写库。
+O9 同一“待处理风险”四处四个数（全景方案 5.1）：看板 pending、工作台 pendingRisks、风险列表 intervene 必须同口径；导航徽标=高风险且待处理。
 """
 
 from tests.integration import test_reception_workspace as fixtures
@@ -54,3 +55,20 @@ def test_product_clues_from_official_work_orders(workspace):
     assert scores == sorted(scores, reverse=True)
     assert set(b5) == {"productName", "adverseReactions", "medicalVisits", "batches", "relatedTickets",
                        "otherTickets", "abnormalReturns", "score", "workOrderIds"}
+
+
+def test_pending_risk_single_definition(workspace):
+    client, _, _ = workspace
+    client.post("/api/support/desk/risks/scan", headers=SUPPORT)
+    rows = client.get("/api/support/desk/risks", headers=SUPPORT).json()
+    pending = [row for row in rows if row["currentAction"] == "intervene"]
+    stats = client.get("/api/support/desk/stats", headers=SUPPORT).json()
+    assert stats["pendingRisks"] == len(pending)
+    totals = {"pending": 0, "pendingHigh": 0}
+    for scope in ("official", "live"):
+        counts = client.get(f"/api/support/desk/risks/overview?scope={scope}", headers=SUPPORT).json()["counts"]
+        totals["pending"] += counts["pending"]
+        totals["pendingHigh"] += counts["pendingHigh"]
+    assert totals["pending"] == len(pending)
+    assert totals["pendingHigh"] == sum(row["riskLevel"] == "high" for row in pending)
+

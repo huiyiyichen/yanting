@@ -155,7 +155,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .section-title-row > :last-child:not(h3) { margin-left: auto; }
 .reception-plugin .desk-plugin-inner p { font-size: 13px; line-height: 1.7; color: var(--yt-ink-2); margin: 6px 0; }
 .reception-plugin .yt-reply {
-  margin: 8px -14px -13px; border: 1px solid var(--yt-gold-line); border-radius: 0 0 14px 14px;
+  margin: 8px 0 0; border: 1px solid var(--yt-gold-line); border-radius: 14px;
   box-shadow: 0 8px 24px -14px rgba(138, 101, 50, 0.45);
 }
 .reception-plugin .yt-reply::before { background: linear-gradient(90deg, #c99a5b, #ecd3a6 50%, #c99a5b); }
@@ -222,7 +222,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-reply-styles button.on { background: #fff; color: #231a2b; box-shadow: 0 1px 2px rgba(42, 31, 51, 0.12); }
 .reception-plugin .yt-reply-head .ant-btn { color: #958ba1; }
 .reception-plugin .yt-reply-body { padding: 10px 14px 4px; margin: 0; font-size: 14px; line-height: 1.75; color: #231a2b; }
-.reception-plugin .yt-reply-ref { color: #8a6532; border-bottom: 1px dashed #e8d3b0; }
+.reception-plugin .yt-reply-ref { color: inherit; border-bottom: 1px dashed #c99a5b; }
 .reception-plugin .yt-reply > .ant-input-textarea-affix-wrapper, .reception-plugin .yt-reply > textarea { margin: 10px 14px 4px; width: calc(100% - 28px); }
 .reception-plugin .yt-reply-empathy { display: flex; gap: 12px; padding: 4px 14px 0; font-size: 12px; color: #5e5468; }
 .reception-plugin .yt-reply-empathy span { display: inline-flex; align-items: center; gap: 4px; }
@@ -412,8 +412,11 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-queue .yt-rk-row.is-high > td:first-child { box-shadow: inset 3px 0 0 var(--m-fury); }
 .yt-risk-queue .yt-rk-row.is-medium > td:first-child { box-shadow: inset 3px 0 0 var(--m-upset); }
 .yt-risk-queue .yt-rk-row.is-low > td:first-child { box-shadow: inset 3px 0 0 var(--m-low); }
-.yt-risk-queue .yt-rk-row.is-selected > td { background: linear-gradient(90deg, rgba(221, 74, 95, 0.1), rgba(255, 255, 255, 0.02)) !important; }
-.yt-risk-queue .yt-rk-row { cursor: default; }
+.yt-risk-queue .yt-rk-row.is-selected > td { background: rgba(217, 180, 124, 0.08) !important; }
+.yt-risk-queue .yt-rk-row.is-selected > td:first-child { box-shadow: inset 3px 0 0 #d9b47c; }
+.yt-risk-queue .yt-rk-row { cursor: pointer; }
+.yt-risk-queue .ant-table-measure-row > td { padding: 0 !important; border: 0 !important; height: 0 !important; }
+.yt-risk-page .ant-select-placeholder { color: var(--m-ink-3) !important; }
 /* 声纹 v2：等比、圆角、段间留白、上下独立缩放 */
 .yt-risk-page .yt-dist { position: relative; padding: 0; margin-top: 4px; }
 .yt-risk-page .yt-dist svg { display: block; width: 100%; height: auto; overflow: visible; }
