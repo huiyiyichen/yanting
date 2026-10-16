@@ -60,6 +60,7 @@ export type ServiceRiskStatus = components['schemas']['ServiceRiskStatus']
 export type ReceptionItem = components['schemas']['ReceptionItemView']
 export type ReceptionSnapshot = components['schemas']['ReceptionSnapshotView']
 export type PanoramaView = components['schemas']['PanoramaView']
+export type ServiceScoreView = components['schemas']['ServiceScoreView']
 export type PanoramaItem = components['schemas']['PanoramaItem']
 export type ServiceWorkOrder = components['schemas']['ServiceWorkOrderView']
 export type TicketView = components['schemas']['TicketView']
@@ -593,6 +594,8 @@ export const deskApi = {
   createTicket: (body: TicketCreateRequest) => request<TicketView>('/api/support/desk/tickets', { method: 'POST', body, role: 'support' }),
   updateTicket: (id: string, body: TicketUpdateRequest) => request<TicketView>(`/api/support/desk/tickets/${id}`, { method: 'PUT', body, role: 'support' }),
   risks: () => request<RiskIncidentView[]>('/api/support/desk/risks', { role: 'support' }),
+  conversationScore: (id: string) => request<ServiceScoreView>(
+    `/api/support/desk/conversations/${encodeURIComponent(id)}/score`, { role: 'support' }),
   riskOverview: (scope: 'official' | 'live') =>
     request<RiskOverviewView>(`/api/support/desk/risks/overview?scope=${scope}`, { role: 'support' }),
   productClues: () => request<ProductClueView[]>('/api/support/desk/risks/product-clues', { role: 'support' }),

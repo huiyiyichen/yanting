@@ -8,7 +8,7 @@ import { ApiError } from '../api/client'
 import { emotionStatus } from '../features/service-desk/riskPresentation'
 
 const api = vi.hoisted(() => ({
-  risks: vi.fn(), reception: vi.fn(), risk: vi.fn(), analyze: vi.fn(), operators: vi.fn(), intervene: vi.fn(), judge: vi.fn(),
+  risks: vi.fn(), reception: vi.fn(), risk: vi.fn(), analyze: vi.fn(), operators: vi.fn(), intervene: vi.fn(), judge: vi.fn(), score: vi.fn(),
 }))
 
 vi.mock('../api/client', async (original) => {
@@ -16,7 +16,7 @@ vi.mock('../api/client', async (original) => {
   return {
     ...actual,
     deskApi: { ...actual.deskApi, risks: api.risks, risk: api.risk, analyzeBreakpoints: api.analyze, operators: api.operators,
-      interveneRisk: api.intervene, judgeRisk: api.judge },
+      interveneRisk: api.intervene, judgeRisk: api.judge, conversationScore: api.score },
     supportApi: { ...actual.supportApi, reception: api.reception },
   }
 })
@@ -57,6 +57,10 @@ beforeEach(() => {
   api.analyze.mockResolvedValue({ ...assessment, stale: false })
   api.intervene.mockImplementation(async () => detail)
   api.judge.mockImplementation(async () => detail)
+  api.score.mockImplementation(async (cid: string) => ({ conversationId: cid, waits: [], breaks: [], notes: [
+    { messageId: 'm1', at: '2026-05-11T10:18:00+08:00', role: 'customer', body: '查不出来我就去平台举报', level: 'angry', signals: ['complaint_risk'], highlights: [] },
+    { messageId: 'm2', at: '2026-05-11T10:25:00+08:00', role: 'customer', body: '嗯，这还差不多', level: 'calm', signals: [], highlights: [] },
+  ] }))
   api.operators.mockResolvedValue({ defaultOperatorId: 'G001', operators: [{ operatorId: 'G001', name: '模拟客服 G001' }] })
 })
 
@@ -71,7 +75,7 @@ function Location() {
 
 async function openBreakpoints(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByTestId('risk-open-incident-1'))
-  await user.click(await screen.findByText('服务排查'))
+  await user.click(await screen.findByRole('tab', { name: '处置记录' }))
   await screen.findByRole('heading', { name: '物流进度 · 重复咨询未解决' })
 }
 
@@ -137,8 +141,8 @@ describe('风险服务断点', () => {
     api.risk.mockResolvedValue(detail)
     renderPage()
     await user.click(await screen.findByTestId('risk-open-incident-1'))
-    expect(screen.getAllByText('服务排查')).toHaveLength(1)
-    await user.click(await screen.findByText('服务排查'))
+    await user.click(await screen.findByRole('tab', { name: '处置记录' }))
+    expect(await screen.findAllByRole('region', { name: '服务排查' })).toHaveLength(1)
     await user.click(screen.getByRole('combobox', { name: '排查会话' }))
     await user.click(await screen.findByText('conv-2', { selector: '.ant-select-item-option-content' }))
     expect(screen.getByRole('button', { name: '分析服务断点 conv-2' })).toBeEnabled()
@@ -268,15 +272,14 @@ describe('风险服务断点', () => {
     renderPage('/risk?conversation=conv-1')
     await waitFor(() => expect(api.risk).toHaveBeenCalledWith('incident-1'))
     await screen.findByRole('heading', { name: '消费者甲' })
-    expect(await screen.findByRole('region', { name: '情绪轨迹' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '触发依据' })).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '关联记录' })).toBeInTheDocument()
-    await user.click(screen.getByText('服务轨迹'))
-    expect((await screen.findAllByText('嗯，这还差不多')).length).toBeGreaterThan(0)
-    expect(screen.getByText('查不出来我就去平台举报')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: '情绪弧线' })).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '情绪从激烈到平稳' })).toBeInTheDocument()
-    expect(screen.getAllByText('平稳 · 缓和').length).toBeGreaterThan(0)
+    // 全景方案 4.12 F1：同一会话情绪只在“对话回放”一处；结论、三个页签
+    expect(await screen.findByRole('region', { name: '风险结论' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '情绪轨迹' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: '情绪弧线' })).not.toBeInTheDocument()
+    expect(await screen.findByText('嗯，这还差不多')).toBeInTheDocument()
+    expect(screen.getAllByRole('tab').map((node) => node.textContent)).toEqual(expect.arrayContaining(['对话回放', '服务轨迹', '处置记录']))
+    await user.click(screen.getByRole('tab', { name: '处置记录' }))
+    expect(screen.getByText('暂无处置记录')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: '官方记录' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('button', { name: '接管并回复' })).not.toBeInTheDocument()
     expect(api.analyze).not.toHaveBeenCalled()

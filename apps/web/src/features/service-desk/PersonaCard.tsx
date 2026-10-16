@@ -53,7 +53,9 @@ export function PersonaCard({ profile }: { profile: ConsumerProfileView }) {
     {profile.promises.map((promise) => <div key={promise.sourceRef}
       className={`yt-promise is-${promise.status}`}>
       <span className="yt-promise-ic"><ClockCircleOutlined /></span>
-      <div className="yt-promise-body"><b>{hk(promise.madeAt)} 客服承诺</b><span title={promise.text}>{promise.text}</span></div>
+      <div className="yt-promise-body"><b>{hk(promise.madeAt)} 客服承诺</b><span title={promise.fullText || promise.text}>{promise.deadline && promise.text.includes(promise.deadline)
+        ? <>{promise.text.slice(0, promise.text.indexOf(promise.deadline))}<strong>{promise.deadline}</strong>{promise.text.slice(promise.text.indexOf(promise.deadline) + promise.deadline.length)}</>
+        : promise.text}</span></div>
       <div className="yt-promise-due" data-testid="promise-due">{hk(promise.dueAt)}<small>{PROMISE_STATUS[promise.status] ?? promise.status}</small></div>
     </div>)}
     {profile.lastContact && <div className="yt-persona-last">

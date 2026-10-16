@@ -17,6 +17,7 @@ from app.domain.consumer_service.risk_overview import (
     product_clues,
     risk_overview,
 )
+from app.domain.consumer_service.service_score import ServiceScoreView, service_score
 from app.domain.consumer_service.ticket_draft import TicketDraftView, draft_for_conversation
 from app.domain.consumer_service.workspace import reception_snapshot
 from app.routes.commit import CommitBeforeResponseRoute
@@ -46,6 +47,12 @@ router = APIRouter(
 @router.get("/operators", response_model=DemoOperatorRosterView)
 def operator_roster():
     return operators.roster()
+
+
+@router.get("/conversations/{conversation_id}/score", response_model=ServiceScoreView)
+def conversation_score(conversation_id: str, session: Session = Depends(get_session)) -> ServiceScoreView:
+    """服务乐谱：双方消息、消费者情绪、触发信号、等待与断谱（全景方案 4.9）。"""
+    return service_score(session, conversation_id)
 
 
 @router.get("/stats", response_model=ReceptionStatsView)

@@ -1208,6 +1208,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/desk/conversations/{conversation_id}/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Conversation Score
+         * @description 服务乐谱：双方消息、消费者情绪、触发信号、等待与断谱（全景方案 4.9）。
+         */
+        get: operations["conversation_score_api_support_desk_conversations__conversation_id__score_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/desk/stats": {
         parameters: {
             query?: never;
@@ -3071,6 +3091,16 @@ export interface components {
             /** Text */
             text: string;
             /**
+             * Deadline
+             * @default
+             */
+            deadline: string;
+            /**
+             * Fulltext
+             * @default
+             */
+            fullText: string;
+            /**
              * Madeat
              * Format: date-time
              */
@@ -4012,6 +4042,44 @@ export interface components {
             message: string;
             config: components["schemas"]["ModelConfigView"];
         };
+        /** ScoreBreak */
+        ScoreBreak: {
+            /** Aftermessageid */
+            afterMessageId: string;
+            /** Beforemessageid */
+            beforeMessageId: string;
+            /** Ms */
+            ms: number;
+        };
+        /** ScoreNote */
+        ScoreNote: {
+            /** Messageid */
+            messageId: string;
+            /** At */
+            at: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "customer" | "operator" | "assistant" | "system";
+            /** Body */
+            body: string;
+            /** Level */
+            level?: ("calm" | "dissatisfied" | "angry") | null;
+            /** Signals */
+            signals?: components["schemas"]["ServiceRiskType"][];
+            /** Highlights */
+            highlights?: components["schemas"]["EvidenceHighlight"][];
+        };
+        /** ScoreWait */
+        ScoreWait: {
+            /** Frommessageid */
+            fromMessageId: string;
+            /** Tomessageid */
+            toMessageId?: string | null;
+            /** Ms */
+            ms: number;
+        };
         /** SeenRequest */
         SeenRequest: {
             /** Revision */
@@ -4261,6 +4329,17 @@ export interface components {
          * @enum {string}
          */
         ServiceRiskType: "emotion_escalation" | "repeated_contact" | "repeated_refund" | "adverse_reaction" | "abnormal_return" | "work_order_overdue" | "complaint_risk" | "data_conflict" | "service_breakpoint" | "response_wait" | "followup_due_soon" | "unknown";
+        /** ServiceScoreView */
+        ServiceScoreView: {
+            /** Conversationid */
+            conversationId: string;
+            /** Notes */
+            notes: components["schemas"]["ScoreNote"][];
+            /** Waits */
+            waits: components["schemas"]["ScoreWait"][];
+            /** Breaks */
+            breaks: components["schemas"]["ScoreBreak"][];
+        };
         /** ServiceTimelineEventView */
         ServiceTimelineEventView: {
             /** Eventid */
@@ -6886,6 +6965,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemoOperatorRosterView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conversation_score_api_support_desk_conversations__conversation_id__score_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceScoreView"];
                 };
             };
             /** @description Validation Error */

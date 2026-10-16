@@ -46,6 +46,19 @@ class ExtractedPromise:
     made_at: datetime
     due_at: datetime
     source_ref: str
+    deadline: str = ""
+    full_text: str = ""
+
+
+CLAUSE_END = re.compile(r"[。！？!?；;~～\n]+")
+
+
+def deadline_clause(text: str, deadline: str) -> str:
+    """只截取含期限的分句（全景方案 4.7）；找不到时退回整句截断。"""
+    for clause in CLAUSE_END.split(text):
+        if deadline and deadline in clause:
+            return _sentence(clause.strip(" ，,"))
+    return _sentence(text)
 
 
 def workday_deadline(made_at: datetime, days: int) -> datetime:
@@ -68,6 +81,8 @@ def extract_promise(statement: PromiseStatement) -> ExtractedPromise | None:
     spans, dates = SPAN.findall(stripped), DATE.findall(stripped)
     if len(workdays) + len(spans) + len(dates) != 1:
         return None
+    match = WORKDAY.search(text) or SPAN.search(stripped) or DATE.search(stripped)
+    deadline = match.group(0) if match else ""
     if workdays:
         due = workday_deadline(statement.at, int(workdays[0]))
     elif spans:
@@ -82,8 +97,8 @@ def extract_promise(statement: PromiseStatement) -> ExtractedPromise | None:
             due = datetime(year, month, day, 23, 59, 59, tzinfo=CST).astimezone(UTC)
         except ValueError:
             return None
-    return ExtractedPromise(text=_sentence(text), made_at=statement.at, due_at=due,
-                            source_ref=statement.source_ref)
+    return ExtractedPromise(text=deadline_clause(text, deadline), made_at=statement.at, due_at=due,
+                            source_ref=statement.source_ref, deadline=deadline, full_text=text)
 
 
 def promise_status(due_at: datetime, *, as_of: datetime, evidence: str | None) -> str:
@@ -148,6 +163,9 @@ class ProfileMemory(ApiModel):
 
 class ProfilePromise(ApiModel):
     text: str
+    #: 期限原文（“3个工作日”），界面加粗；full_text 为整句，放悬停
+    deadline: str = ""
+    full_text: str = ""
     made_at: datetime
     due_at: datetime
     status: str
@@ -300,7 +318,8 @@ def build_consumer_profile(session: Session, conversation_id: str) -> ConsumerPr
                          if (done := _utc(row.completed_at, imported=True)) and promise.made_at <= done <= as_of
                          and "打款" in promise.text), None)
         promises.append(ProfilePromise(
-            text=promise.text, made_at=promise.made_at, due_at=promise.due_at,
+            text=promise.text, deadline=promise.deadline, full_text=promise.full_text,
+            made_at=promise.made_at, due_at=promise.due_at,
             status=promise_status(promise.due_at, as_of=as_of, evidence=evidence),
             source_ref=promise.source_ref, evidence_ref=evidence,
         ))

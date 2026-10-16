@@ -97,4 +97,11 @@ describe('PersonaCard', () => {
     expect(screen.queryByText('物流')).not.toBeInTheDocument()
     expect(screen.getByText('+2')).toHaveAttribute('title', '物流、赠品')
   })
+  it('C11 承诺卡只显示含期限分句，期限加粗，整句放悬停（全景方案 4.7）', () => {
+    mount({ ...base, promises: [{ text: '若3个工作日内仍未到账，我们走线下打款', deadline: '3个工作日', fullText: '给您添麻烦了~若3个工作日内仍未到账，我们走线下打款',
+      madeAt: '2026-05-05T12:00:00+08:00', dueAt: '2026-05-08T23:59:59+08:00', status: 'pending', sourceRef: 'm9' }] })
+    expect(screen.getByText('3个工作日').tagName).toBe('STRONG')
+    expect(screen.getByText('3个工作日').parentElement).toHaveAttribute('title', '给您添麻烦了~若3个工作日内仍未到账，我们走线下打款')
+  })
 })
+

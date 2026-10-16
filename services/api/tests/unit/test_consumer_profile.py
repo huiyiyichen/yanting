@@ -64,6 +64,14 @@ def test_p1_workday_promise_is_extracted():
     assert promise.due_at == cst(2026, 5, 8, 23, 59, 59).astimezone(UTC)
 
 
+def test_promise_card_keeps_only_the_deadline_clause():
+    """全景方案 4.7：承诺卡只显示含期限的分句，期限单独给出供加粗，整句供悬停。"""
+    text = "给您添麻烦了~提供下支付宝账号哈。若3个工作日内仍未到账，我们走线下打款直接补给您"
+    promise = extract_promise(statement(text))
+    assert promise.text == "若3个工作日内仍未到账，我们走线下打款直接补给您"
+    assert promise.deadline == "3个工作日" and promise.full_text == text
+
+
 @pytest.mark.parametrize("text", ["48小时内给您回复", "预计2天内联系您", "我们会在2026年5月9日前处理好"])
 def test_p1_hour_day_and_date_promises_are_extracted(text):
     assert extract_promise(statement(text)) is not None
