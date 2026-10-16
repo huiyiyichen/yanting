@@ -13,6 +13,7 @@ import { WorkOrderPage } from './pages/WorkOrderPage'
 import { KnowledgePage } from './pages/PlatformPages'
 import { PromptTemplatePage } from './pages/PromptTemplatePage'
 import { ModelConfigPage } from './pages/ModelConfigPage'
+import { visibleInterval } from './hooks/visibleInterval'
 
 const navigation = [
   { path: '/customer', label: '客户视角', short: '客户', icon: <MessageOutlined /> },
@@ -45,8 +46,8 @@ function useHighRiskCount(enabled: boolean) {
         .catch(() => undefined)
     }
     read()
-    const timer = window.setInterval(read, 30000)
-    return () => { cancelled = true; window.clearInterval(timer) }
+    const stop = visibleInterval(read, 30000)
+    return () => { cancelled = true; stop() }
   }, [enabled])
   return enabled ? count : 0
 }

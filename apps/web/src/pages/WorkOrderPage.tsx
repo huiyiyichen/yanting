@@ -8,6 +8,7 @@ import { OrderFacts, TicketStatus, dateLabel, optionsOf, priorities, ticketStatu
 import { getDemoOperator, useDemoOperator } from '../features/service-desk/operator'
 import { TicketDetailFields, newTicketDetail } from '../features/service-desk/TicketDetailFields'
 import { ticketDeadline } from '../features/service-desk/ticketDeadline'
+import { visibleInterval } from '../hooks/visibleInterval'
 
 const detailLabels: Record<string, string> = {
   serviceType: '工单类型', reason: '售后原因', productName: '商品', sku: '货号', quantity: '数量',
@@ -90,8 +91,8 @@ export function WorkOrderPage() {
   }, [])
   useEffect(() => {
     void load()
-    const timer = window.setInterval(() => { setClock(Date.now()); void load(true) }, 15000)
-    return () => { window.clearInterval(timer); listRequest.current++ }
+    const stop = visibleInterval(() => { setClock(Date.now()); void load(true) }, 15000)
+    return () => { stop(); listRequest.current++ }
   }, [load])
   useEffect(() => {
     const request = ++selectedRequest.current

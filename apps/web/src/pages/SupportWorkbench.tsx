@@ -27,6 +27,7 @@ import { ReplyCard } from '../features/service-desk/ReplyCard'
 import { EvidenceFolds, HandoffSummary, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { ServiceJourney } from '../features/service-desk/ServiceJourney'
+import { visibleInterval } from '../hooks/visibleInterval'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
 const intentLabels: Record<string, string> = {
@@ -66,8 +67,8 @@ export function SupportWorkbench() {
     let cancelled = false
     const read = () => { if (!document.hidden) deskApi.stats().then((next) => { if (!cancelled) setMetrics(next?.handoffs ? next : null) }).catch(() => undefined) }
     read()
-    const timer = window.setInterval(read, 15000)
-    return () => { cancelled = true; window.clearInterval(timer) }
+    const stop = visibleInterval(read, 15000)
+    return () => { cancelled = true; stop() }
   }, [])
   const [error, setError] = useState('')
   const [queueError, setQueueError] = useState('')
@@ -166,9 +167,9 @@ export function SupportWorkbench() {
       finally { running = false }
     }
     void sync()
-    const timer = window.setInterval(() => void sync(), 1500)
+    const stop = visibleInterval(() => void sync(), 1500)
     window.addEventListener('focus', sync)
-    return () => { disposed = true; clearInterval(timer); window.removeEventListener('focus', sync) }
+    return () => { disposed = true; stop(); window.removeEventListener('focus', sync) }
   }, [loadDetail, setParams, toast])
 
   const generate = async (target = id, style?: string) => {

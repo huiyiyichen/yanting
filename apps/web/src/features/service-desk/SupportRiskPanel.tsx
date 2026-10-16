@@ -6,6 +6,7 @@ import { deskApi, type ReceptionItem, type RiskIncidentView } from '../../api/cl
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 import { dateLabel } from './shared'
 import { followupDeadlines, signalAttention } from './riskPresentation'
+import { visibleInterval } from '../../hooks/visibleInterval'
 
 function isOpen(signal: RiskIncidentView['signals'][number]) {
   return ['active', 'review'].includes(signalAttention(signal))
@@ -73,15 +74,13 @@ export function SupportRiskPanel({ conversationId, enabled, refreshKey, serviceM
       }
     }
     void load()
-    const timer = window.setInterval(() => void load(), 10000)
+    const stop = visibleInterval(() => void load(), 10000)
     const focus = () => { void load() }
     window.addEventListener('focus', focus)
-    document.addEventListener('visibilitychange', focus)
     return () => {
       disposed = true
-      window.clearInterval(timer)
+      stop()
       window.removeEventListener('focus', focus)
-      document.removeEventListener('visibilitychange', focus)
     }
   }, [conversationId, enabled, refreshKey, retry])
 

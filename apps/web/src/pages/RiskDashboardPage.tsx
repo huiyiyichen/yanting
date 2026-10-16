@@ -13,6 +13,7 @@ import { RiskSpark } from '../features/risk/RiskSpark'
 import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
 import { RiskEmotionTrack, RiskLinks, RiskTriggers, emotionNow, linkedRecords } from '../features/risk/RiskDetailSections'
 import { NextSteps } from '../features/service-desk/AssistBlocks'
+import { visibleInterval } from '../hooks/visibleInterval'
 
 const actionLabels = { resolved: '复核关闭', ignored: '忽略风险', reopen: '重新介入' }
 const actionResults = {
@@ -113,9 +114,9 @@ export function RiskDashboardPage() {
   useEffect(() => {
     void load()
     const sync = () => { if (!document.hidden) void load(true) }
-    const timer = window.setInterval(sync, 10000)
+    const stop = visibleInterval(sync, 10000)
     window.addEventListener('focus', sync)
-    return () => { window.clearInterval(timer); window.removeEventListener('focus', sync); listRequest.current++ }
+    return () => { stop(); window.removeEventListener('focus', sync); listRequest.current++ }
   }, [load])
   useEffect(() => {
     const request = ++detailRequest.current

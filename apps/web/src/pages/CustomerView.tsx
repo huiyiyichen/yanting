@@ -26,6 +26,7 @@ import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { CUSTOMER_LAYOUT, OVERLAY_LAYOUT } from '../styles/layout'
+import { visibleInterval } from '../hooks/visibleInterval'
 
 const { Text } = Typography
 
@@ -204,8 +205,8 @@ export function CustomerView() {
         if (!disposed) setListError((err as Error).message)
       } finally { pending = false }
     }
-    const timer = window.setInterval(() => void sync(), 1000)
-    return () => { disposed = true; window.clearInterval(timer) }
+    const stop = visibleInterval(() => void sync(), 1000)
+    return () => { disposed = true; stop() }
   }, [])
 
   /** 开场白与快捷选项：文案来自后端，取不到就不显示快捷入口（不编一套本地文案）。 */
