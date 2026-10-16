@@ -6,29 +6,21 @@
  *
  * 已发送消息一律以后端为准；本地只保留按会话隔离的未发送草稿。
  */
-import { CustomerServiceOutlined, RobotOutlined, UnorderedListOutlined } from '@ant-design/icons'
-import { Sender } from '@ant-design/x'
-import { Alert, Avatar, Button, Spin, Typography } from 'antd'
+import { Alert, Button, Spin } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ApiError, customerApi, type ConversationSummary, type MessageView, type ProductRef } from '../api/client'
 import { ConversationList } from '../components/ConversationList'
-import { ProductPicker } from '../components/ProductCard'
-import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
+import { useChatImage } from '../components/ChatImageUpload'
 import { MessageList } from '../components/MessageList'
 import { QuickReplies } from '../components/QuickReplies'
-import { RatingCard } from '../components/RatingCard'
-import {
-  SenderSendButton,
-  makeSenderInput,
-} from '../components/SenderParts'
+import { CustomerChatHead, CustomerComposer, ServiceRating } from '../features/customer/CustomerParts'
 import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { CUSTOMER_LAYOUT, OVERLAY_LAYOUT } from '../styles/layout'
 import { visibleInterval } from '../hooks/visibleInterval'
 
-const { Text } = Typography
 
 /** 演示身份：地址参数 ?customer= 优先，其次启动时注入的 VITE_DEMO_CUSTOMER_ID。 */
 function demoCustomerId(): string {
@@ -40,7 +32,6 @@ function demoCustomerId(): string {
 const CUSTOMER_ID = demoCustomerId()
 
 /** 输入控件的可访问名：e2e 与屏幕阅读器共用同一个名字。 */
-const CUSTOMER_COMPOSER_INPUT = makeSenderInput('客户消息输入框')
 
 /**
  * 发送按钮的提交闭包通过 ref 传递。
@@ -403,41 +394,9 @@ export function CustomerView() {
       />
 
       <section className="yt-base-panel" style={{ flex: 1 }} aria-label="客户会话内容">
-        {/* 对话头部：这里只放真实存在的东西——会话标题、状态与两个真按钮。
-            窄屏必须有进入会话列表的入口，否则无法切换或新建会话。 */}
-        <div className="yt-base-chat-head yt-hairline-bottom">
-          <Avatar
-            size={40}
-            style={{ background: 'var(--yt-mint-surface)', color: 'var(--yt-teal)' }}
-            icon={activeConversation?.serviceMode === 'operator_assisted' ? <CustomerServiceOutlined /> : <RobotOutlined />}
-            aria-hidden="true"
-          />
-          <div className="yt-chat-head-text">
-            <span
-              className="yt-chat-title yt-wrap"
-              style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-            >
-              {activeConversation?.title || '智能助手'}
-            </span>
-            {activeConversation && <span className="yt-base-chip">
-              {activeConversation.serviceMode === 'operator_assisted' ? '人工接待' : aiReplying ? 'AI 回复中' : 'AI 接待'}
-            </span>}
-          </div>
-          <div className="yt-base-chat-head-actions">
-            <Button size="small" icon={<CustomerServiceOutlined />} aria-label="转人工"
-              disabled={!activeId || activeConversation?.serviceMode === 'operator_assisted'}
-              loading={transferring} onClick={() => void handoff()}>转人工</Button>
-            {isNarrowList && !showList ? (
-              <Button
-                size="small"
-                icon={<UnorderedListOutlined />}
-                onClick={() => setListOpenOverride(true)}
-              >
-                会话列表
-              </Button>
-            ) : null}
-          </div>
-        </div>
+        <CustomerChatHead conversation={activeConversation} aiReplying={aiReplying} transferring={transferring}
+          canHandoff={Boolean(activeId) && activeConversation?.serviceMode !== 'operator_assisted'} onHandoff={() => void handoff()}
+          showListButton={isNarrowList && !showList} onOpenList={() => setListOpenOverride(true)} />
         <div className="yt-scroll" style={{ flex: 1 }}>
           {loadingMessages && messages.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center' }}>
@@ -470,89 +429,17 @@ export function CustomerView() {
                   onPick={(prompt) => void handleQuickReply(prompt)}
                 />
               ) : null}
-              {/* 服务结束时出现的大卡片（点一下即提交，与参考图一致） */}
-              {ratingOpen ? (
-                <RatingCard
-                  busy={ratingBusy}
-                  onSubmit={(value) => void handleSubmitRating(value)}
-                  onSkip={() => void handleSubmitRating(null)}
-                />
-              ) : rating && rating.status !== 'not_requested' ? (
-                <div style={{ padding: '0 18px 14px' }}>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {rating.status === 'submitted'
-                      ? `本次服务已评价：${rating.value ?? '—'} 分，感谢反馈`
-                      : rating.status === 'skipped'
-                        ? '本次服务已结束（未评分）'
-                        : '待评价'}
-                  </Text>
-                </div>
-              ) : null}
+              <ServiceRating open={ratingOpen} busy={ratingBusy} rating={rating}
+                onSubmit={(value) => void handleSubmitRating(value)} />
             </>
           )}
         </div>
 
-        <div className="yt-composer yt-hairline-top">
-          {aiReplying && <div className="auto-reply-state" role="status"><Spin size="small" /><span>AI 回复中</span></div>}
-          {sendError ? (
-            <Alert
-              type={sendError.isPermissionDenied ? 'warning' : 'error'}
-              showIcon
-              closable={{ onClose: () => setSendError(null) }}
-              style={{ marginBottom: 8 }}
-              title={sendError.message}
-              description={sendError.detail ?? undefined}
-            />
-          ) : null}
-          {imageUpload.image?.error ? (
-            <Alert
-              type="error"
-              showIcon
-              closable={{ onClose: () => imageUpload.clear() }}
-              style={{ marginBottom: 8 }}
-              title="图片上传失败"
-              description={<span className="yt-wrap">{imageUpload.image.error}</span>}
-            />
-          ) : null}
-          <ChatImagePreview image={imageUpload.image} onRemove={() => imageUpload.clear()}
-            disabled={sending || uploading} />
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
-            <ChatImageButton upload={imageUpload.upload} disabled={!activeId || sending || uploading}
-              uploading={uploading} />
-            <ProductPicker conversationId={activeId} disabled={sending || uploading}
-              onPick={(product) => void handleSendProduct(product)} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Sender
-                value={draft}
-                onChange={(next) =>
-                  activeId ? drafts.set(activeId, 'customer', next) : undefined
-                }
-                onSubmit={() => submitRef.current()}
-                onPasteFile={(files) => { if (files[0]) void imageUpload.upload(files[0]) }}
-                loading={sending}
-                disabled={!activeId || sending}
-                /* 窄屏输入盒被回形针与发送按钮占去两侧，长占位文案会折行 */
-                placeholder={
-                  activeId
-                    ? isNarrowList
-                      ? '描述问题…'
-                      : '描述您遇到的问题…'
-                    : '请先新建会话'
-                }
-                autoSize={{ minRows: 1, maxRows: 5 }}
-                submitType="enter"
-                components={{ input: CUSTOMER_COMPOSER_INPUT }}
-                suffix={(_, { components }) => (
-                  <SenderSendButton
-                    component={components.SendButton}
-                    disabled={(!draft.trim() && !uploadedImage) || !activeId || sending || uploading}
-                    loading={sending}
-                  />
-                )}
-              />
-            </div>
-          </div>
-        </div>
+        <CustomerComposer conversationId={activeId} draft={draft}
+          onDraft={(next) => { if (activeId) drafts.set(activeId, 'customer', next) }}
+          onSubmit={() => submitRef.current()} onSendProduct={(product) => void handleSendProduct(product)}
+          sending={sending} aiReplying={aiReplying} narrow={isNarrowList} imageUpload={imageUpload}
+          sendError={sendError} onClearSendError={() => setSendError(null)} />
       </section>
     </div>
   )
