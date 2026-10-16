@@ -43,6 +43,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { ApiError, platformApi, type ModelConfigView, type ModelProviderView, type UsageView } from '../api/client'
 import { UsagePanel } from '../features/platform/UsagePanel'
+import { PageHeader } from '../components/PageHeader'
 
 const { Text } = Typography
 
@@ -347,16 +348,14 @@ export function ModelConfigPage() {
   ]
 
   return (
-    <div className="yt-page">
+    <div className="desk-workbench">
       {contextHolder}
-      <div className="yt-page-head">
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <h1 className="yt-page-title">模型配置</h1>
-        </div>
+      <PageHeader title="模型配置" actions={
         <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
           刷新
         </Button>
-      </div>
+      } />
+      <div className="yt-page">
 
       {error ? (
         <Alert
@@ -577,6 +576,7 @@ export function ModelConfigPage() {
         ) : null}
       </Drawer>
       {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
+      </div>
     </div>
   )
 }

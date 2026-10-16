@@ -8,7 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
-import { QianniuTopbar } from '../components/QianniuTopbar'
+import { PageHeader } from '../components/PageHeader'
 import { makeSenderInput } from '../components/SenderParts'
 import { useDraftStore } from '../features/conversation/draftStore'
 import { newClientMessageKey } from '../features/conversation/messageDirection'
@@ -330,7 +330,7 @@ export function SupportWorkbench() {
   </div>
   return <div className="desk-workbench">
     {holder}
-    <QianniuTopbar title="客服工作台" stats={serviceMetricStats(metrics)} />
+    <PageHeader title="客服工作台" stats={serviceMetricStats(metrics)} />
     <div className="reception-workspace">
       {!mobile && queue}
       <section className="reception-chat" aria-label="客服对话">

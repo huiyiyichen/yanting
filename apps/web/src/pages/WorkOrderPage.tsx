@@ -3,7 +3,7 @@ import { Alert, Button, Descriptions, Drawer, Empty, Form, Input, Modal, Select,
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceContextView, type ReceptionItem, type TicketCreateRequest, type TicketUpdateRequest, type TicketView } from '../api/client'
-import { QianniuTopbar } from '../components/QianniuTopbar'
+import { PageHeader } from '../components/PageHeader'
 import { OrderFacts, TicketStatus, dateLabel, optionsOf, priorities, ticketStatuses, ticketTypes } from '../features/service-desk/shared'
 import { getDemoOperator, useDemoOperator } from '../features/service-desk/operator'
 import { TicketDetailFields, newTicketDetail } from '../features/service-desk/TicketDetailFields'
@@ -162,7 +162,7 @@ export function WorkOrderPage() {
       ? new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime() : 0)
 
   return <div className="desk-workbench">{holder}
-    <QianniuTopbar title="工单管理" stats={[
+    <PageHeader title="工单管理" stats={[
       { label: '全部工单', value: rows.length },
       { label: '我的待办', value: rows.filter((r) => r.status !== 'resolved' && r.assignee === operator).length },
       { label: '已到期', value: rows.filter((r) => ticketDeadline(r, clock) === 'overdue').length, warning: true },

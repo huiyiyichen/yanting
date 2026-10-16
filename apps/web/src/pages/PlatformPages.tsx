@@ -2,7 +2,7 @@ import { EditOutlined, PlusOutlined, ReloadOutlined, RocketOutlined, SaveOutline
 import { Alert, Button, Drawer, Empty, Form, Image, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { knowledgeApi, platformApi, type KnowledgeEditRequest, type KnowledgeEditorView, type KnowledgeOverviewView, type KnowledgeProductView, type KnowledgeSearchView } from '../api/client'
-import { QianniuTopbar } from '../components/QianniuTopbar'
+import { PageHeader } from '../components/PageHeader'
 
 const statuses: Record<string, string> = { draft: '待发布', published: '已发布', failed: '发布失败' }
 
@@ -104,7 +104,7 @@ export function KnowledgePage() {
     finally { setSearching(false) }
   }
   return <div className="desk-workbench">{holder}
-    <QianniuTopbar title="知识库" stats={[
+    <PageHeader title="知识库" stats={[
       { label: '文档', value: rows.length }, { label: '索引片段', value: overview?.chunkCount ?? 0 },
       { label: '待发布', value: rows.filter((r) => r.status !== 'published').length, warning: true },
     ]} actions={<Space wrap>

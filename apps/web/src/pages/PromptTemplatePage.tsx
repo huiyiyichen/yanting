@@ -30,6 +30,7 @@ import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
 import { ApiError, platformApi, promptApi, type PromptTemplateView, type PromptRevisionView } from '../api/client'
+import { PageHeader } from '../components/PageHeader'
 
 const { Text } = Typography
 
@@ -185,12 +186,9 @@ export function PromptTemplatePage() {
   ]
 
   return (
-    <div className="yt-page">
+    <div className="desk-workbench">
       {contextHolder}
-      <div className="yt-page-head">
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <h1 className="yt-page-title">Prompt 管理</h1>
-        </div>
+      <PageHeader title="Prompt 管理" actions={
         <Space>
           <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
             刷新
@@ -207,7 +205,8 @@ export function PromptTemplatePage() {
             新建模板
           </Button>
         </Space>
-      </div>
+      } />
+      <div className="yt-page">
 
       {error ? (
         <Alert
@@ -295,6 +294,7 @@ export function PromptTemplatePage() {
           </div><pre className="knowledge-text">{version.content}</pre>
         </section>)}
       </Drawer>
+      </div>
     </div>
   )
 }

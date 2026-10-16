@@ -3,7 +3,7 @@ import { Alert, Button, Collapse, Dropdown, Empty, Input, Modal, Select, Skeleto
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, deskApi, supportApi, type ProductClueView, type ConsumerProfileView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
-import { QianniuTopbar } from '../components/QianniuTopbar'
+import { PageHeader } from '../components/PageHeader'
 import { OrderFacts, ServiceTimeline, TicketStatus, dateLabel, optionsOf } from '../features/service-desk/shared'
 import { HighlightedText } from '../features/service-desk/HighlightedText'
 import { serviceRiskTypeLabels } from '../contracts/enums'
@@ -274,7 +274,7 @@ export function RiskDashboardPage() {
     </blockquote>
   }
   return <div className="desk-workbench yt-risk-page">{holder}
-    <QianniuTopbar title="风险预警" extra={<div className="yt-scope" role="radiogroup" aria-label="数据范围">
+    <PageHeader title="风险预警" extra={<div className="yt-scope" role="radiogroup" aria-label="数据范围">
       {(['official', 'live'] as const).map((key) => <button key={key} type="button" role="radio" aria-checked={scope === key}
         className={scope === key ? 'on' : undefined}
         onClick={() => setMode(key === 'official' ? 'historical' : 'active')}>{key === 'official' ? '官方记录' : '实时'}</button>)}

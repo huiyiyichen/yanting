@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { DemoOperatorSelect } from '../features/service-desk/DemoOperatorSelect'
 
-export function QianniuTopbar({ title, stats, actions, extra }: {
+/** 所有业务页统一页头：标题、可选范围切换、指标、操作区（含演示客服切换）。 */
+export function PageHeader({ title, stats, actions, extra }: {
   title: string
   extra?: ReactNode
   stats?: { label: string; value: number | string; warning?: boolean }[]

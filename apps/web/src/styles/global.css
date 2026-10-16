@@ -371,21 +371,6 @@ body {
   .reception-backdrop { position: absolute; inset: 0 0 0 72px; background: #0003; z-index: 19; border: 0; }
 }
 
-.yt-page-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.yt-page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--yt-text);
-  margin: 0;
-}
-
 .yt-page-desc {
   font-size: 13px;
   color: var(--yt-text-tertiary);
