@@ -20,7 +20,7 @@ export function ChatHead({ item, switching, onMode, onTicket, onRefresh, leading
 }) {
   const [confirming, setConfirming] = useState(false)
   const automatic = item?.serviceMode === 'autonomous'
-  return <header className="anker-chat-head anker-hairline-bottom yt-chat-head">
+  return <header className="yt-base-chat-head yt-hairline-bottom yt-chat-head">
     {leading}
     <span className="yt-chead-av">{item?.buyerAlias?.slice(0, 1) ?? <UserOutlined />}
       {item?.currentEmotion && <i className={`yt-emotion-dot is-${item.currentEmotion}`} />}</span>

@@ -51,20 +51,20 @@ function renderList(messages: MessageView[], viewRole: 'customer' | 'support') {
 
 describe('MessageList', () => {
   it('上翻保留阅读位置，新消息按钮回到底部，切换会话滚到底部', () => {
-    const { container, rerender } = render(<div className="anker-scroll"><MessageList
+    const { container, rerender } = render(<div className="yt-scroll"><MessageList
       conversationId="c1" messages={[message()]} viewRole="customer" /></div>)
     const scroller = container.firstChild as HTMLElement
     Object.defineProperties(scroller, { scrollHeight: { value: 1500, configurable: true },
       clientHeight: { value: 500 }, scrollTop: { value: 200, writable: true } })
     fireEvent.scroll(scroller)
-    rerender(<div className="anker-scroll"><MessageList conversationId="c1"
+    rerender(<div className="yt-scroll"><MessageList conversationId="c1"
       messages={[message(), message({ messageId: 'msg-2' })]} viewRole="customer" /></div>)
     expect(scroller.scrollTop).toBe(200)
     fireEvent.click(screen.getByRole('button', { name: '1 条新消息' }))
     expect(scroller.scrollTop).toBe(1500)
     scroller.scrollTop = 200
     fireEvent.scroll(scroller)
-    rerender(<div className="anker-scroll"><MessageList conversationId="c2"
+    rerender(<div className="yt-scroll"><MessageList conversationId="c2"
       messages={[message({ conversationId: 'c2' })]} viewRole="customer" /></div>)
     expect(scroller.scrollTop).toBe(1500)
   })

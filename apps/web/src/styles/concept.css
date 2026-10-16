@@ -74,7 +74,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 
 /* ---------- 聊天区 ---------- */
 .reception-chat { background: var(--yt-desk); }
-.anker-chat-head.yt-chat-head { gap: 10px; padding: 10px 18px; min-height: 0; background: var(--yt-card); border-bottom: 1px solid var(--yt-hair); }
+.yt-base-chat-head.yt-chat-head { gap: 10px; padding: 10px 18px; min-height: 0; background: var(--yt-card); border-bottom: 1px solid var(--yt-hair); }
 .yt-chead-av { position: relative; flex: none; width: 34px; height: 34px; border-radius: 50%; background: #ece6f1; color: var(--yt-ink-2); display: grid; place-items: center; font-weight: 600; }
 .yt-chead-av .yt-emotion-dot { width: 11px; height: 11px; }
 .yt-chat-head .chat-buyer { flex: 0 1 auto; min-width: 0; font-size: 16px; font-weight: 700; color: var(--yt-ink); }
@@ -112,17 +112,17 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .chat-system-message { font-size: 12px; color: var(--yt-ink-3); background: rgba(42, 31, 51, 0.05); padding: 2px 12px; border-radius: 999px; }
 
 /* 输入区卡片 */
-.reception-chat > .anker-composer { margin: 0 18px 14px; padding: 8px 10px 10px; background: var(--yt-card); border: 1px solid var(--yt-hair); border-radius: 16px; }
-.reception-chat > .anker-composer.anker-hairline-top { box-shadow: none; }
+.reception-chat > .yt-composer { margin: 0 18px 14px; padding: 8px 10px 10px; background: var(--yt-card); border: 1px solid var(--yt-hair); border-radius: 16px; }
+.reception-chat > .yt-composer.yt-hairline-top { box-shadow: none; }
 .reception-chat .composer-actions { gap: 2px; margin-bottom: 0; }
 .reception-chat .composer-actions .ant-btn { height: 30px; padding: 0 9px; border-radius: 8px; font-size: 13px; color: var(--yt-ink-2); }
 .reception-chat .composer-actions .ant-btn.yt-tool-ai { color: var(--yt-gold-ink); }
 .yt-tools-sep { width: 1px; height: 16px; background: var(--yt-hair); margin: 0 6px; }
-.reception-chat .anker-composer .ant-sender { border: 0; box-shadow: none; background: none; }
-.reception-chat .anker-composer .ant-sender-input { min-height: 44px; font-size: 14px; }
+.reception-chat .yt-composer .ant-sender { border: 0; box-shadow: none; background: none; }
+.reception-chat .yt-composer .ant-sender-input { min-height: 44px; font-size: 14px; }
 .ant-btn.yt-send { height: 34px; min-width: 34px; padding: 0 12px; border-radius: 10px; background: var(--yt-plum); border-color: var(--yt-plum); color: #fff; }
 .ant-btn.yt-send:not(:disabled):hover { background: var(--yt-plum-2) !important; }
-.reception-chat > .anker-composer:has(.yt-ai-bar) { padding: 0; border: 0; background: none; }
+.reception-chat > .yt-composer:has(.yt-ai-bar) { padding: 0; border: 0; background: none; }
 
 /* ---------- 插件 ---------- */
 .reception-plugin .desk-plugin-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; }

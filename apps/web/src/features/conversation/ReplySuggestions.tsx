@@ -87,7 +87,7 @@ export function ReplySuggestions({
         title="候选生成失败"
         description={
           <Space orientation="vertical" size={4}>
-            <span className="anker-wrap">{error}</span>
+            <span className="yt-wrap">{error}</span>
             <Text type="secondary" style={{ fontSize: 12 }}>
               仍可手动输入回复；候选失败不影响发送。
             </Text>
@@ -111,9 +111,9 @@ export function ReplySuggestions({
   const previewing = suggestions.items.map((item) => item.body).join('\n\n')
 
   return (
-    <div className="anker-suggest" aria-label="AI 话术候选">
-      <div className="anker-suggest-head">
-        <span className="anker-suggest-title">
+    <div className="yt-suggest" aria-label="AI 话术候选">
+      <div className="yt-suggest-head">
+        <span className="yt-suggest-title">
           <BulbOutlined aria-hidden="true" />
           AI 回复建议
         </span>
@@ -140,9 +140,9 @@ export function ReplySuggestions({
 
       {/* 三版候选同时铺开（`vertical`）；点整行即把该版写入草稿。
           过期的候选不允许采用，点击也走同一判定，不做「看似能点其实无效」。
-          限高与内部滚动由 `.anker-suggest-list` 负责（窄屏更矮），
+          限高与内部滚动由 `.yt-suggest-list` 负责（窄屏更矮），
           否则三版完整措辞会把输入区顶出视口——实测过 composer 被撑到 1001px。 */}
-      <div className="anker-scroll anker-suggest-list" style={{ marginTop: 6 }}>
+      <div className="yt-scroll yt-suggest-list" style={{ marginTop: 6 }}>
         <Prompts
           vertical
           style={{ background: 'transparent' }}
@@ -160,22 +160,22 @@ export function ReplySuggestions({
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span
-                    className="anker-wrap"
+                    className="yt-wrap"
                     style={{
                       display: 'block',
                       fontSize: 15,
                       lineHeight: 1.65,
                       whiteSpace: 'pre-wrap',
-                      color: 'var(--anker-graphite)',
+                      color: 'var(--yt-graphite)',
                     }}
                   >
                     {item.body}
                   </span>
-                  <span style={{ fontSize: 12, color: 'var(--anker-muted)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--yt-muted)' }}>
                     {item.variantLabel}
                   </span>
                 </span>
-                <span className="anker-adopt-pill" aria-hidden="true">
+                <span className="yt-adopt-pill" aria-hidden="true">
                   采用
                 </span>
               </span>
@@ -203,7 +203,7 @@ export function ReplySuggestions({
           gap: 4,
           marginTop: 6,
           paddingTop: 6,
-          borderTop: '1px solid var(--anker-hairline)',
+          borderTop: '1px solid var(--yt-hairline)',
           flexWrap: 'wrap',
         }}
       >
@@ -236,12 +236,12 @@ export function ReplySuggestions({
         <Text
           type="secondary"
           style={{ fontSize: 11, marginInlineStart: 'auto', minWidth: 0 }}
-          className="anker-wrap"
+          className="yt-wrap"
         >
           采用不等于发送，也不等于批准退款/换货
         </Text>
         {/* 屏幕阅读器可以一次读完整候选；视觉上仍是逐行阅读。 */}
-        <span className="anker-visually-hidden">候选全文：{previewing}</span>
+        <span className="yt-visually-hidden">候选全文：{previewing}</span>
       </div>
     </div>
   )

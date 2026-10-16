@@ -1,7 +1,7 @@
 /* 全局基础样式。
  *
  * 2026-10-14 起主色改为颜听深紫（见 theme.ts 与 yanting.css 的 `--yt-*` 令牌）；
- * `--anker-*` 变量保留旧名、指向新值，随 P2-1 改名为 `--yt-*`。
+ * `--yt-*` 变量保留旧名、指向新值，随 P2-1 改名为 `--yt-*`。
  * 这里只保留三类内容：
  * 1. 重置与页面基座（高度、滚动、换行）；
  * 2. 与 antd 默认色板一致的 CSS 变量，供少量自定义容器使用；
@@ -15,43 +15,43 @@
   color-scheme: light;
 
   /* 与 antd v6 默认色板一致的取值（改主题只改 styles/theme.ts 与这里两处） */
-  --anker-primary: #3b2a4a;
-  --anker-primary-hover: #574066;
-  --anker-primary-active: #2a1f33;
-  --anker-text: rgba(0, 0, 0, 0.88);
-  --anker-text-secondary: rgba(0, 0, 0, 0.65);
-  --anker-text-tertiary: rgba(0, 0, 0, 0.45);
-  --anker-border: #d9d9d9;
-  --anker-border-secondary: #f0f0f0;
-  --anker-layout-bg: #f5f5f5;
-  --anker-container: #ffffff;
+  --yt-primary: #3b2a4a;
+  --yt-primary-hover: #574066;
+  --yt-primary-active: #2a1f33;
+  --yt-text: rgba(0, 0, 0, 0.88);
+  --yt-text-secondary: rgba(0, 0, 0, 0.65);
+  --yt-text-tertiary: rgba(0, 0, 0, 0.45);
+  --yt-border: #d9d9d9;
+  --yt-border-secondary: #f0f0f0;
+  --yt-layout-bg: #f5f5f5;
+  --yt-container: #ffffff;
 
   /* 布局骨架尺寸（antd 无对应组件，属于本项目的壳层约定） */
-  --anker-gap: 12px;
-  --anker-rail-width: 168px;
-  --anker-banner-height: 44px;
+  --yt-gap: 12px;
+  --yt-rail-width: 168px;
+  --yt-banner-height: 44px;
 
   /* ── 兼容别名 ───────────────────────────────────────────────────────────
-   * 早期实现按参考图用了薄荷/珊瑚色名（`--anker-mint-*`、`--anker-coral` 等）。
+   * 早期实现按参考图用了薄荷/珊瑚色名（`--yt-mint-*`、`--yt-coral` 等）。
    * 用户 2026-09-25 决定统一到 antd 默认后，这些名字**全部映射到 antd 默认色板**，
    * 组件不必逐个改名即可获得一致外观；后续重构可逐步替换掉这些别名。 */
-  --anker-mint-bg: var(--anker-layout-bg);
-  --anker-mint-soft: #fafafa;
-  --anker-mint-surface: #efe9f3; /* antd 主色浅底（选中态） */
-  --anker-mint-border: var(--anker-border-secondary);
-  --anker-teal: var(--anker-primary);
-  --anker-teal-dark: var(--anker-primary-active);
-  --anker-teal-soft: #91caff;
-  --anker-coral: var(--anker-primary);
-  --anker-coral-hover: var(--anker-primary-hover);
-  --anker-coral-soft: #e6f4ff;
-  --anker-graphite: var(--anker-text);
-  --anker-graphite-soft: var(--anker-text-secondary);
-  --anker-muted: var(--anker-text-tertiary);
-  --anker-danger: #ff4d4f;
-  --anker-hairline: var(--anker-border-secondary);
-  --anker-bubble-in: #f5f5f5;
-  --anker-bubble-out: #e6f4ff;
+  --yt-mint-bg: var(--yt-layout-bg);
+  --yt-mint-soft: #fafafa;
+  --yt-mint-surface: #efe9f3; /* antd 主色浅底（选中态） */
+  --yt-mint-border: var(--yt-border-secondary);
+  --yt-teal: var(--yt-primary);
+  --yt-teal-dark: var(--yt-primary-active);
+  --yt-teal-soft: #91caff;
+  --yt-coral: var(--yt-primary);
+  --yt-coral-hover: var(--yt-primary-hover);
+  --yt-coral-soft: #e6f4ff;
+  --yt-graphite: var(--yt-text);
+  --yt-graphite-soft: var(--yt-text-secondary);
+  --yt-muted: var(--yt-text-tertiary);
+  --yt-danger: #ff4d4f;
+  --yt-hairline: var(--yt-border-secondary);
+  --yt-bubble-in: #f5f5f5;
+  --yt-bubble-out: #e6f4ff;
 }
 
 * {
@@ -71,14 +71,14 @@ body,
 }
 
 body {
-  background: var(--anker-layout-bg);
-  color: var(--anker-text);
+  background: var(--yt-layout-bg);
+  color: var(--yt-text);
   -webkit-font-smoothing: antialiased;
   letter-spacing: 0;
 }
 
 /* 长中文与长链接必须可换行，避免溢出容器 */
-.anker-wrap {
+.yt-wrap {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -89,21 +89,21 @@ body {
  * 布局会被撑高，聊天区不再内部滚动，输入框被推到视口之外（AGENTS 第 7 节
  * 要求检查遮挡与溢出）。窄屏移动浏览器的地址栏会改变可用高度，故补 dvh。
  */
-.anker-shell {
+.yt-shell {
   width: 100%;
   min-width: 0;
   height: 100vh;
-  background: var(--anker-layout-bg);
+  background: var(--yt-layout-bg);
 }
 
 @supports (height: 100dvh) {
-  .anker-shell {
+  .yt-shell {
     height: 100dvh;
   }
 }
 
 /* 视觉上隐藏但保留给屏幕阅读器 */
-.anker-visually-hidden {
+.yt-visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -117,7 +117,7 @@ body {
 
 /* 键盘焦点必须可见（不只靠颜色区分） */
 :focus-visible {
-  outline: 2px solid var(--anker-primary);
+  outline: 2px solid var(--yt-primary);
   outline-offset: 2px;
 }
 
@@ -125,31 +125,31 @@ body {
  * antd 的 `Menu` 在窄栏下会把文字折行/省略，而规范要求「图标配文字」，
  * 所以这里用一个按钮列表 + 悬停提示；样式尽量贴 antd Menu 的默认观感。 */
 
-.anker-rail {
-  width: var(--anker-rail-width);
+.yt-base-rail {
+  width: var(--yt-rail-width);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 12px 8px;
   min-height: 0;
-  background: var(--anker-container);
-  border-right: 1px solid var(--anker-border-secondary);
+  background: var(--yt-container);
+  border-right: 1px solid var(--yt-border-secondary);
   overflow-y: auto;
 }
 
-.anker-rail-brand {
+.yt-rail-brand {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 4px 8px 14px;
 }
 
-.anker-rail-logo {
+.yt-rail-logo {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  background: var(--anker-primary);
+  background: var(--yt-primary);
   color: #fff;
   display: flex;
   align-items: center;
@@ -159,15 +159,15 @@ body {
   flex-shrink: 0;
 }
 
-.anker-rail-wordmark {
+.yt-rail-wordmark {
   font-size: 15px;
   font-weight: 600;
-  color: var(--anker-text);
+  color: var(--yt-text);
   white-space: nowrap;
 }
 
 /* 导航项：图标 + 文字；选中态用 antd 主色浅底（与 Menu 选中态一致的观感） */
-.anker-rail-item {
+.yt-rail-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -176,7 +176,7 @@ body {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--anker-text-secondary);
+  color: var(--yt-text-secondary);
   font-size: 14px;
   font-family: inherit;
   text-align: left;
@@ -184,37 +184,37 @@ body {
   transition: background 0.2s, color 0.2s;
 }
 
-.anker-rail-item:hover {
+.yt-rail-item:hover {
   background: rgba(0, 0, 0, 0.04);
-  color: var(--anker-text);
+  color: var(--yt-text);
 }
 
-.anker-rail-item[aria-current='page'] {
+.yt-rail-item[aria-current='page'] {
   background: #e6f4ff;
-  color: var(--anker-primary);
+  color: var(--yt-primary);
   font-weight: 500;
 }
 
-.anker-rail-icon {
+.yt-rail-icon {
   font-size: 16px;
   display: inline-flex;
   flex-shrink: 0;
 }
 
-.anker-rail-label {
+.yt-rail-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* 分组小标题（导航里的「智能服务 / 平台管理」这类分区） */
-.anker-rail-group {
+.yt-rail-group {
   padding: 12px 10px 4px;
   font-size: 12px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
 }
 
-.anker-rail-foot {
+.yt-rail-foot {
   margin-top: auto;
   padding: 8px 4px 2px;
 }
@@ -222,26 +222,26 @@ body {
 /* 窄屏：只留图标，文字隐藏（外层加 Tooltip 保证仍可理解） */
 @media (max-width: 1099px) {
   :root {
-    --anker-rail-width: 72px;
+    --yt-rail-width: 72px;
   }
 
-  .anker-rail {
+  .yt-base-rail {
     align-items: center;
     padding: 10px 6px;
   }
 
-  .anker-rail-wordmark,
-  .anker-rail-label,
-  .anker-rail-group {
+  .yt-rail-wordmark,
+  .yt-rail-label,
+  .yt-rail-group {
     display: none;
   }
 
-  .anker-rail-brand {
+  .yt-rail-brand {
     justify-content: center;
     padding: 4px 0 10px;
   }
 
-  .anker-rail-item {
+  .yt-rail-item {
     justify-content: center;
     padding: 10px 0;
   }
@@ -250,9 +250,9 @@ body {
 /* ── 内容区与滚动 ───────────────────────────────────────────────────────── */
 
 /* 面板：白底 + antd 默认边框与圆角；只有布局需要，不定义组件外观 */
-.anker-panel {
-  background: var(--anker-container);
-  border: 1px solid var(--anker-border-secondary);
+.yt-base-panel {
+  background: var(--yt-container);
+  border: 1px solid var(--yt-border-secondary);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -261,8 +261,8 @@ body {
   overflow: hidden;
 }
 
-.anker-panel-bare {
-  background: var(--anker-container);
+.yt-panel-bare {
+  background: var(--yt-container);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -270,13 +270,13 @@ body {
   overflow: hidden;
 }
 
-.anker-scroll {
+.yt-scroll {
   overflow-y: auto;
   min-height: 0;
 }
 
 /* 对话头部身份区：标题与操作分成两个 flex 项，窄屏操作区整行换行 */
-.anker-chat-head {
+.yt-base-chat-head {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -284,12 +284,12 @@ body {
   flex-wrap: wrap;
 }
 
-.anker-chat-head-text {
+.yt-chat-head-text {
   flex: 1 1 200px;
   min-width: 0;
 }
 
-.anker-chat-head-actions {
+.yt-base-chat-head-actions {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -298,22 +298,22 @@ body {
 }
 
 @media (max-width: 1099px) {
-  .anker-chat-head-actions {
+  .yt-base-chat-head-actions {
     flex: 1 1 100%;
     margin-inline-start: 0;
   }
 }
 
-.anker-chat-title {
+.yt-chat-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--anker-text);
+  color: var(--yt-text);
   line-height: 1.4;
 }
 
-.anker-chat-sub {
+.yt-chat-sub {
   font-size: 12px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -322,19 +322,19 @@ body {
 }
 
 /* 输入区留白：容器自己排版，内部组件保持 antd 默认外观 */
-.anker-composer {
+.yt-composer {
   padding: 12px 16px;
 }
 
 /* 表格类页面（模型配置 / 知识库 / Prompt / 工单）的统一留白 */
-.anker-page {
+.yt-page {
   flex: 1;
   min-height: 0;
   min-width: 0;
   width: 100%;
   overflow-y: auto;
   padding: 16px;
-  background: var(--anker-container);
+  background: var(--yt-container);
 }
 
 .reception-workspace { display: flex; flex: 1 1 0; width: 100%; min-width: 0; min-height: 0; overflow: hidden; background: white; }
@@ -344,7 +344,7 @@ body {
 .reception-list { flex: 1; min-height: 0; overflow: auto; padding: 4px 0; }
 .reception-row { display: flex; width: 100%; height: 72px; align-items: center; gap: 10px; border: 0; border-bottom: 1px solid #f0f0f0; background: #fff; padding: 10px 12px; text-align: left; cursor: pointer; font: inherit; }
 .reception-row:hover { background: #f5f8fc; }
-.reception-row.is-active { background: #e6f4ff; border-left: 3px solid var(--anker-primary); padding-left: 9px; }
+.reception-row.is-active { background: #e6f4ff; border-left: 3px solid var(--yt-primary); padding-left: 9px; }
 .reception-row-main { flex: 1; min-width: 0; display: grid; gap: 5px; }
 .reception-row-title { display: flex; align-items: center; gap: 4px; }
 .reception-row-title strong { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
@@ -371,7 +371,7 @@ body {
   .reception-backdrop { position: absolute; inset: 0 0 0 72px; background: #0003; z-index: 19; border: 0; }
 }
 
-.anker-page-head {
+.yt-page-head {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -379,36 +379,36 @@ body {
   margin-bottom: 12px;
 }
 
-.anker-page-title {
+.yt-page-title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--anker-text);
+  color: var(--yt-text);
   margin: 0;
 }
 
-.anker-page-desc {
+.yt-page-desc {
   font-size: 13px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
   margin: 4px 0 0;
 }
 
-.anker-risk-timeline {
+.yt-risk-timeline {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
 }
 
-.anker-risk-timeline-item {
+.yt-risk-timeline-item {
   display: grid;
   grid-template-columns: 148px minmax(0, 1fr);
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid var(--anker-border-secondary);
+  border-bottom: 1px solid var(--yt-border-secondary);
 }
 
 @media (max-width: 640px) {
-  .anker-risk-timeline-item {
+  .yt-risk-timeline-item {
     grid-template-columns: 1fr;
     gap: 2px;
   }
@@ -418,61 +418,61 @@ body {
  * 只做「分隔线 / 选中态 / 双行文本」这类 antd 组件不提供的东西，
  * 颜色全部走 antd 默认色板，不再有品牌定制色。 */
 
-.anker-hairline-bottom {
-  border-bottom: 1px solid var(--anker-border-secondary);
+.yt-hairline-bottom {
+  border-bottom: 1px solid var(--yt-border-secondary);
 }
 
-.anker-hairline-top {
-  border-top: 1px solid var(--anker-border-secondary);
+.yt-hairline-top {
+  border-top: 1px solid var(--yt-border-secondary);
 }
 
 /* 会话列表头部 */
-.anker-list-head {
+.yt-list-head {
   padding: 12px 12px 8px;
 }
 
-.anker-list-title {
+.yt-list-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--anker-text);
+  color: var(--yt-text);
   margin: 0;
 }
 
 /* 会话行：选中态用 antd 主色浅底（与 Menu/Table 的选中观感一致） */
-.anker-conv-row {
+.yt-conv-row {
   border-radius: 6px;
   padding: 8px;
   transition: background 0.2s;
 }
 
-.anker-conv-row:hover {
+.yt-conv-row:hover {
   background: rgba(0, 0, 0, 0.04);
 }
 
-.anker-conv-row[aria-current='true'] {
+.yt-conv-row[aria-current='true'] {
   background: #e6f4ff;
 }
 
-.anker-conv-name {
+.yt-conv-name {
   font-size: 14px;
   font-weight: 500;
-  color: var(--anker-text);
+  color: var(--yt-text);
 }
 
-.anker-conv-time {
+.yt-conv-time {
   font-size: 12px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
   flex-shrink: 0;
 }
 
-.anker-conv-preview {
+.yt-conv-preview {
   font-size: 12px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
   line-height: 1.5;
 }
 
 /* 型号/状态小标签：薄荷底改成 antd 主色浅底 + 主色文字 */
-.anker-chip {
+.yt-base-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -480,60 +480,60 @@ body {
   border: 1px solid #91caff;
   border-radius: 4px;
   background: #e6f4ff;
-  color: var(--anker-primary-active);
+  color: var(--yt-primary-active);
   font-size: 12px;
   line-height: 18px;
   white-space: nowrap;
 }
 
 /* 信息行：观感对齐 antd `Descriptions`（标签列 + 取值列 + 细分隔线） */
-.anker-detail-row {
+.yt-detail-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--anker-border-secondary);
+  border-bottom: 1px solid var(--yt-border-secondary);
 }
 
-.anker-detail-row:last-child {
+.yt-detail-row:last-child {
   border-bottom: none;
 }
 
-.anker-detail-icon {
+.yt-detail-icon {
   font-size: 16px;
-  color: var(--anker-text-tertiary);
+  color: var(--yt-text-tertiary);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-.anker-detail-label {
+.yt-detail-label {
   font-size: 14px;
-  color: var(--anker-text-secondary);
+  color: var(--yt-text-secondary);
   width: 84px;
   flex-shrink: 0;
 }
 
-.anker-detail-value {
+.yt-detail-value {
   font-size: 14px;
-  color: var(--anker-text);
+  color: var(--yt-text);
   flex: 1;
   min-width: 0;
 }
 
 /* 需要注意的取值用 antd 错误色，且调用处同时给出文字含义（不只靠颜色） */
-.anker-detail-value.is-alert {
-  color: var(--anker-error, #ff4d4f);
+.yt-detail-value.is-alert {
+  color: var(--yt-error, #ff4d4f);
 }
 
-.anker-section-title {
+.yt-section-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--anker-text);
+  color: var(--yt-text);
   margin: 16px 0 8px;
 }
 
 /* AI 候选列表限高（窄屏更矮），避免把输入区顶出视口 */
-.anker-suggest-list {
+.yt-suggest-list {
   max-height: 220px;
 }
 
@@ -542,7 +542,7 @@ body {
  * 原因是面板与行都落在白底上，没有任何表面区分。这里给面板一层浅色底、
  * 给每行白底 + 细边，形成「面板 / 卡片」两级对比（仍然只用 antd 色板）。 */
 
-.anker-suggest {
+.yt-suggest {
   background: #f0f5ff; /* antd blue-1：与主色同一色系的最浅一档 */
   border: 1px solid #d6e4ff; /* antd blue-2 */
   border-radius: 8px;
@@ -550,42 +550,42 @@ body {
   margin-bottom: 10px;
 }
 
-.anker-suggest-head {
+.yt-suggest-head {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.anker-suggest-title {
+.yt-suggest-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--anker-primary-active);
+  color: var(--yt-primary-active);
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
 /* 每行措辞：白底卡片 + 细边，选中的「采用」胶囊用主色描边 */
-.anker-suggest .ant-prompts-item {
+.yt-suggest .ant-prompts-item {
   background: #ffffff;
-  border: 1px solid var(--anker-border-secondary);
+  border: 1px solid var(--yt-border-secondary);
   border-radius: 8px;
   margin-bottom: 6px;
   padding: 10px 12px;
 }
 
-.anker-suggest .ant-prompts-item:hover {
-  border-color: var(--anker-primary);
+.yt-suggest .ant-prompts-item:hover {
+  border-color: var(--yt-primary);
 }
 
-.anker-adopt-pill {
+.yt-adopt-pill {
   display: inline-flex;
   align-items: center;
   padding: 1px 10px;
-  border: 1px solid var(--anker-primary);
+  border: 1px solid var(--yt-primary);
   border-radius: 6px;
-  color: var(--anker-primary);
+  color: var(--yt-primary);
   background: #ffffff;
   font-size: 12px;
   line-height: 20px;
@@ -593,14 +593,14 @@ body {
 }
 
 @media (max-width: 480px) {
-  .anker-suggest-list {
+  .yt-suggest-list {
     max-height: 150px;
   }
 }
 
 /* 窄屏输入区收窄 */
 @media (max-width: 480px) {
-  .anker-composer {
+  .yt-composer {
     padding: 8px 10px 12px;
   }
 }
@@ -610,11 +610,11 @@ body {
 .desk-nav { width: 168px; flex: 0 0 168px; padding: 18px 10px; background: #fafbfc; border-right: 1px solid #e6e9ed; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
 .desk-brand { display: flex; align-items: center; gap: 9px; padding: 0 6px 24px; white-space: nowrap; }
 .desk-brand strong { font-size: 15px; }
-.desk-logo { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 6px; background: var(--anker-primary); color: white; font-size: 13px; font-weight: 600; }
+.desk-logo { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 6px; background: var(--yt-primary); color: white; font-size: 13px; font-weight: 600; }
 .desk-nav-item { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 12px; border-radius: 6px; color: #525963; text-decoration: none; font-size: 13px; }
 .desk-nav-item > .anticon { font-size: 18px; }
-.desk-nav-item:hover { color: var(--anker-primary); background: #f0f4f9; }
-.desk-nav-item.active { color: var(--anker-primary-active); background: #e6f0ff; font-weight: 600; }
+.desk-nav-item:hover { color: var(--yt-primary); background: #f0f4f9; }
+.desk-nav-item.active { color: var(--yt-primary-active); background: #e6f0ff; font-weight: 600; }
 .desk-nav-item.section-start { margin-top: 24px; }
 .desk-main { flex: 1; min-width: 0; min-height: 0; display: flex; overflow: hidden; }
 .desk-workbench { width: 100%; min-width: 0; min-height: 0; display: flex; flex-direction: column; background: white; }
@@ -671,7 +671,7 @@ body {
 .consumer-history-summary span { color: #737b86; font-size: 12px; }
 .consumer-history-item { padding: 10px 12px; border-bottom: 1px solid #eef0f2; }
 .consumer-history-item:last-child { border-bottom: 0; }
-.consumer-history-item.is-related { border-left: 3px solid var(--anker-primary); padding-left: 9px; background: #f5f9ff; }
+.consumer-history-item.is-related { border-left: 3px solid var(--yt-primary); padding-left: 9px; background: #f5f9ff; }
 .consumer-history-item-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
 .consumer-history-item-head strong { color: #475467; }
 .consumer-history-item-head time { color: #8a929d; white-space: nowrap; }
@@ -688,20 +688,20 @@ body {
 .emotion-arc-axis { display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0 17px; color: #9aa2ad; font-size: 10px; line-height: 1; }
 .emotion-arc-chart svg { display: block; width: 100%; min-width: 0; height: 150px; overflow: visible; }
 .emotion-arc-grid { stroke: #e7ebef; stroke-width: 1; stroke-dasharray: 3 4; }
-.emotion-arc-line { fill: none; stroke: var(--anker-primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.emotion-arc-line { fill: none; stroke: var(--yt-primary); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .emotion-arc-comparison-line { fill: none; stroke: #aeb8c5; stroke-width: 2; stroke-dasharray: 5 4; stroke-linecap: round; stroke-linejoin: round; }
 .emotion-arc-point { stroke: #fff; stroke-width: 2; cursor: pointer; }
 .emotion-arc-point:hover { stroke-width: 3; }
 .emotion-arc-rapid-zone { fill: #fff1f2; }
-.emotion-arc-intervention { stroke: var(--anker-primary); stroke-width: 1.5; stroke-dasharray: 4 4; }
-.emotion-arc-intervention-label { fill: var(--anker-primary); font-size: 10px; font-weight: 600; }
-.emotion-arc-service-point { fill: var(--anker-primary); stroke: #fff; stroke-width: 2; cursor: pointer; }
+.emotion-arc-intervention { stroke: var(--yt-primary); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.emotion-arc-intervention-label { fill: var(--yt-primary); font-size: 10px; font-weight: 600; }
+.emotion-arc-service-point { fill: var(--yt-primary); stroke: #fff; stroke-width: 2; cursor: pointer; }
 .emotion-arc-service-point:hover { r: 5; }
 .emotion-arc-foot { display: flex; justify-content: space-between; gap: 8px; color: #7a8490; font-size: 11px; }
-.emotion-arc-turn { color: var(--anker-primary); }
+.emotion-arc-turn { color: var(--yt-primary); }
 .emotion-arc-turns { display: grid; gap: 4px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #e9edf1; }
 .emotion-arc-turns div { display: flex; gap: 7px; min-width: 0; font-size: 11px; line-height: 1.5; }
-.emotion-arc-turns b { flex: 0 0 auto; color: var(--anker-primary); font-weight: 600; }
+.emotion-arc-turns b { flex: 0 0 auto; color: var(--yt-primary); font-weight: 600; }
 .emotion-arc-turns span { overflow: hidden; color: #697586; text-overflow: ellipsis; white-space: nowrap; }
 .emotion-arc-selected { display: grid; gap: 7px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9edf1; }
 .emotion-arc-selected-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
@@ -729,7 +729,7 @@ body {
 .knowledge-bases { flex: 0 0 208px; padding: 16px; border-right: 1px solid #e6e9ed; overflow: auto; background: #fafbfc; }
 .knowledge-base-item { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; border: 0; border-radius: 6px; padding: 10px 8px; margin-bottom: 5px; background: transparent; text-align: left; cursor: pointer; color: #505962; font: inherit; font-size: 13px; }
 .knowledge-base-item span:first-child { flex: 1; overflow-wrap: anywhere; }
-.knowledge-base-item.active { color: var(--anker-primary-active); background: #e6f0ff; }
+.knowledge-base-item.active { color: var(--yt-primary-active); background: #e6f0ff; }
 .knowledge-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.8; font-family: inherit; max-height: 500px; overflow-y: auto; }
 .ant-drawer-body .reception-queue { position: static; width: 100%; height: 100%; border: 0; box-shadow: none; }
 @media (max-width: 1350px) {

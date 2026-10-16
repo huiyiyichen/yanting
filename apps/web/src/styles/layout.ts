@@ -28,7 +28,7 @@ export const CUSTOMER_LAYOUT = {
  * 导航栏与浮层的定位参考。
  *
  * 外壳是「浅薄荷底 + 三块白色圆角面板 + 10px 缝隙」（`global.css` 的
- * `.anker-shell`／`--anker-gap`），所以浮层的左/上起点要把外壳内边距与缝隙算进去，
+ * `.yt-shell`／`--yt-gap`），所以浮层的左/上起点要把外壳内边距与缝隙算进去，
  * 否则会盖住运行状态横幅或压住左侧导航栏。
  */
 export const OVERLAY_LAYOUT = {

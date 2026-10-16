@@ -53,7 +53,7 @@ export function SenderAttachButton({
       loading={loading}
       onClick={onClick}
       icon={<PaperClipOutlined style={{ fontSize: 17 }} />}
-      style={{ flexShrink: 0, color: 'var(--anker-graphite-soft)' }}
+      style={{ flexShrink: 0, color: 'var(--yt-graphite-soft)' }}
     />
   )
 }

@@ -33,7 +33,7 @@ export function QuickReplies({ items, disabled = false, onPick }: QuickRepliesPr
               borderRadius: 16,
               border: '1px solid #d6e4ff',
               background: '#f0f5ff',
-              color: 'var(--anker-primary)',
+              color: 'var(--yt-primary)',
               fontSize: 13,
               font: 'inherit',
               cursor: disabled ? 'not-allowed' : 'pointer',

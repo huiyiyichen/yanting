@@ -54,8 +54,8 @@ function roleAvatar(senderRole: SenderRole, viewRole: ViewRole, buyerAlias?: str
     <Avatar
       size={38}
       style={{
-        background: isService ? 'var(--anker-mint-surface)' : '#eef1f0',
-        color: isService ? 'var(--anker-teal)' : 'var(--anker-muted)',
+        background: isService ? 'var(--yt-mint-surface)' : '#eef1f0',
+        color: isService ? 'var(--yt-teal)' : 'var(--yt-muted)',
       }}
       icon={isService ? <RobotOutlined /> : <UserOutlined />}
       aria-hidden="true"
@@ -115,13 +115,13 @@ export const MessageList = memo(function MessageList({
   const conversation = conversationId ?? messages[0]?.conversationId ?? ''
   const last = messages.at(-1)?.messageId ?? ''
   const bottom = () => {
-    const scroller = root.current?.closest<HTMLElement>('.anker-scroll')
+    const scroller = root.current?.closest<HTMLElement>('.yt-scroll')
     if (scroller) scroller.scrollTop = scroller.scrollHeight
     pinned.current = true
     setUnread(0)
   }
   useLayoutEffect(() => {
-    const scroller = root.current?.closest<HTMLElement>('.anker-scroll')
+    const scroller = root.current?.closest<HTMLElement>('.yt-scroll')
     if (!scroller) return
     const onScroll = () => {
       pinned.current = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 120
@@ -194,12 +194,12 @@ export const MessageList = memo(function MessageList({
                           paddingBottom: 4,
                         }}
                       >
-                        <span style={{ fontSize: 13, color: 'var(--anker-graphite-soft)' }}>
+                        <span style={{ fontSize: 13, color: 'var(--yt-graphite-soft)' }}>
                           {internal && senderRole === 'customer' && buyerAlias ? buyerAlias : senderLabel(senderRole)}
                         </span>
                         {emotionText && emotion ? <span className="yt-emotion-mark" style={{ color: EMOTION_COLOR[emotion] }}>
                           <i style={{ background: EMOTION_COLOR[emotion] }} />{emotionText}</span> : null}
-                        <span style={{ fontSize: 12, color: 'var(--anker-muted)' }}>
+                        <span style={{ fontSize: 12, color: 'var(--yt-muted)' }}>
                           {formatTime(message.createdAt)}
                         </span>
                       </span>
@@ -214,8 +214,8 @@ export const MessageList = memo(function MessageList({
                         internal && side !== 'center'
                           ? (side === 'end' ? '#ece6f3' : '#fff')
                           : side === 'end'
-                            ? 'var(--anker-bubble-out)'
-                            : 'var(--anker-bubble-in)',
+                            ? 'var(--yt-bubble-out)'
+                            : 'var(--yt-bubble-in)',
                       boxShadow: emotion && emotion !== 'calm' ? `inset 3px 0 0 ${EMOTION_COLOR[emotion]}` : undefined,
                       ...(internal && side !== 'center' ? {
                         border: `1px solid ${side === 'end' ? '#e0d7ea' : 'var(--yt-hair)'}`,
@@ -225,12 +225,12 @@ export const MessageList = memo(function MessageList({
                         fontSize: 14,
                       } : { borderRadius: 10, padding: '10px 14px', maxWidth: 560, fontSize: 15 }),
                       lineHeight: 1.65,
-                      color: 'var(--anker-graphite)',
+                      color: 'var(--yt-graphite)',
                     },
                     avatar: { alignSelf: 'flex-start' },
                   }}
                   content={
-                    <span className="anker-wrap" style={{ whiteSpace: 'pre-wrap' }}>
+                    <span className="yt-wrap" style={{ whiteSpace: 'pre-wrap' }}>
                       {/* 附件在气泡内展示：客户上传的故障照片必须看得见，
                           否则「传了图但没人看到」与没传没有区别。 */}
                       {message.attachments?.length

@@ -38,7 +38,7 @@ export function RatingCard({ busy = false, onSubmit, onSkip }: RatingCardProps) 
       style={{
         margin: '4px 18px 16px',
         padding: '16px 18px',
-        border: '1px solid var(--anker-hairline, #f0f0f0)',
+        border: '1px solid var(--yt-hairline, #f0f0f0)',
         borderRadius: 12,
         background: '#fff',
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
@@ -73,7 +73,7 @@ export function RatingCard({ busy = false, onSubmit, onSkip }: RatingCardProps) 
             <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden="true">
               {item.emoji}
             </span>
-            <span style={{ fontSize: 12, color: 'var(--anker-muted, #8c8c8c)' }}>
+            <span style={{ fontSize: 12, color: 'var(--yt-muted, #8c8c8c)' }}>
               {item.label}
             </span>
           </button>

@@ -54,7 +54,7 @@ function useHighRiskCount(enabled: boolean) {
 export function App() {
   const { pathname } = useLocation()
   const highRisk = useHighRiskCount(!pathname.startsWith('/customer'))
-  return <div className="anker-shell desk-shell">
+  return <div className="yt-shell desk-shell">
     <nav className="desk-nav yt-rail" aria-label="主导航">
       <div className="desk-brand"><VoiceprintLogo /><strong>颜听</strong></div>
       {navigation.map((item, index) => <Tooltip title={item.label} placement="right" key={item.path}>

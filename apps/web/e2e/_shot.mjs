@@ -5,13 +5,13 @@ import { chromium } from 'playwright-core'
  * 视觉走查截图（手工工具，不是测试用例）。
  *
  * 打开发的前后端，造一条有真实模型回复的会话，把客服/客户两个视角在
- * 1440×900 与 390×844 下截图到 `%TEMP%\anker-shots\`，用于和参考图逐块比对。
+ * 1440×900 与 390×844 下截图到 `%TEMP%\yt-shots\`，用于和参考图逐块比对。
  *
  * 运行（前后端已在 8000/5173 跑起来后）：
  *     cd code\apps\web
  *     node e2e\_shot.mjs
  */
-const OUT = process.env.ANKER_SHOT_DIR ?? `${process.env.TEMP}\\anker-shots`
+const OUT = process.env.YANTING_SHOT_DIR ?? `${process.env.TEMP}\\yt-shots`
 mkdirSync(OUT, { recursive: true })
 
 const CUSTOMER = { 'X-Demo-View-Role': 'customer' }

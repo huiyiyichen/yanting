@@ -104,7 +104,7 @@ function ConversationRow({
     <div style={{ position: 'relative' }}>
       <button
         type="button"
-        className="anker-conv-row"
+        className="yt-conv-row"
         aria-current={active ? 'true' : undefined}
         style={{
           display: 'flex',
@@ -123,8 +123,8 @@ function ConversationRow({
         <Avatar
           size={38}
           style={{
-            background: active ? 'var(--anker-mint-surface)' : '#f1f4f3',
-            color: active ? 'var(--anker-teal-dark)' : 'var(--anker-muted)',
+            background: active ? 'var(--yt-mint-surface)' : '#f1f4f3',
+            color: active ? 'var(--yt-teal-dark)' : 'var(--yt-muted)',
             flexShrink: 0,
           }}
           icon={<UserOutlined />}
@@ -132,7 +132,7 @@ function ConversationRow({
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
             <span
-              className="anker-conv-name anker-wrap"
+              className="yt-conv-name yt-wrap"
               style={{
                 flex: 1,
                 minWidth: 0,
@@ -151,10 +151,10 @@ function ConversationRow({
                 {item.badge}
               </Tag>
             ) : null}
-            {item.meta ? <span className="anker-conv-time">{item.meta}</span> : null}
+            {item.meta ? <span className="yt-conv-time">{item.meta}</span> : null}
           </span>
           <span
-            className="anker-conv-preview anker-wrap"
+            className="yt-conv-preview yt-wrap"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: 2,
@@ -249,7 +249,7 @@ export const ConversationList = memo(function ConversationList({
         />
       ) : null}
       <aside
-        className="anker-panel"
+        className="yt-base-panel"
         style={{
           width: PANEL_WIDTH,
           flexShrink: 0,
@@ -270,9 +270,9 @@ export const ConversationList = memo(function ConversationList({
         aria-hidden={!visible}
         data-overlay={overlay ? 'true' : undefined}
       >
-        <div className="anker-list-head anker-hairline-bottom">
+        <div className="yt-list-head yt-hairline-bottom">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 className="anker-list-title" style={{ flex: 1, minWidth: 0 }}>
+            <h2 className="yt-list-title" style={{ flex: 1, minWidth: 0 }}>
               {ariaLabel}
             </h2>
             {onCreate ? (
@@ -316,21 +316,21 @@ export const ConversationList = memo(function ConversationList({
             variant="borderless"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
-            prefix={<SearchOutlined style={{ color: 'var(--anker-muted)' }} />}
+            prefix={<SearchOutlined style={{ color: 'var(--yt-muted)' }} />}
             placeholder="客户、订单号、聊天记录"
             aria-label="搜索会话"
             style={{ padding: 0, marginTop: 2 }}
           />
         </div>
 
-        <div className="anker-scroll" style={{ flex: 1 }}>
+        <div className="yt-scroll" style={{ flex: 1 }}>
           {loading && items.length === 0 ? (
             <div style={{ padding: 16 }}>
               <Skeleton active paragraph={{ rows: 3 }} title={false} />
             </div>
           ) : error ? (
             <div style={{ padding: 16 }}>
-              <Text type="danger" className="anker-wrap" style={{ fontSize: 13 }}>
+              <Text type="danger" className="yt-wrap" style={{ fontSize: 13 }}>
                 {error}
               </Text>
               <Button size="small" onClick={onRefresh} style={{ marginTop: 8 }}>
@@ -341,7 +341,7 @@ export const ConversationList = memo(function ConversationList({
             <div style={{ padding: 16 }}>
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<span style={{ color: 'var(--anker-muted)' }}>{emptyText}</span>}
+                description={<span style={{ color: 'var(--yt-muted)' }}>{emptyText}</span>}
               />
             </div>
           ) : filtered.length === 0 ? (

@@ -347,11 +347,11 @@ export function ModelConfigPage() {
   ]
 
   return (
-    <div className="anker-page">
+    <div className="yt-page">
       {contextHolder}
-      <div className="anker-page-head">
+      <div className="yt-page-head">
         <div style={{ flex: 1, minWidth: 240 }}>
-          <h1 className="anker-page-title">模型配置</h1>
+          <h1 className="yt-page-title">模型配置</h1>
         </div>
         <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
           刷新
@@ -364,7 +364,7 @@ export function ModelConfigPage() {
           showIcon
           style={{ marginBottom: 12 }}
           title="读取模型配置失败"
-          description={<span className="anker-wrap">{error}</span>}
+          description={<span className="yt-wrap">{error}</span>}
           action={
             <Button size="small" onClick={() => void load()}>
               重试
@@ -576,7 +576,7 @@ export function ModelConfigPage() {
           </Space>
         ) : null}
       </Drawer>
-      {usage && <section className="yt-usage-section"><h2 className="anker-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
+      {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
     </div>
   )
 }

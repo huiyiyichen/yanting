@@ -185,11 +185,11 @@ export function PromptTemplatePage() {
   ]
 
   return (
-    <div className="anker-page">
+    <div className="yt-page">
       {contextHolder}
-      <div className="anker-page-head">
+      <div className="yt-page-head">
         <div style={{ flex: 1, minWidth: 240 }}>
-          <h1 className="anker-page-title">Prompt 管理</h1>
+          <h1 className="yt-page-title">Prompt 管理</h1>
         </div>
         <Space>
           <Button icon={<ReloadOutlined />} loading={loading} onClick={() => void load()}>
@@ -231,7 +231,7 @@ export function PromptTemplatePage() {
         expandable={{
           expandedRowRender: (row) => (
             <pre
-              className="anker-wrap"
+              className="yt-wrap"
               style={{
                 margin: 0,
                 maxHeight: 300,

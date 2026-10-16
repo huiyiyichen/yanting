@@ -401,28 +401,28 @@ export function CustomerView() {
         overlayTop={OVERLAY_LAYOUT.bannerHeight}
       />
 
-      <section className="anker-panel" style={{ flex: 1 }} aria-label="客户会话内容">
+      <section className="yt-base-panel" style={{ flex: 1 }} aria-label="客户会话内容">
         {/* 对话头部：这里只放真实存在的东西——会话标题、状态与两个真按钮。
             窄屏必须有进入会话列表的入口，否则无法切换或新建会话。 */}
-        <div className="anker-chat-head anker-hairline-bottom">
+        <div className="yt-base-chat-head yt-hairline-bottom">
           <Avatar
             size={40}
-            style={{ background: 'var(--anker-mint-surface)', color: 'var(--anker-teal)' }}
+            style={{ background: 'var(--yt-mint-surface)', color: 'var(--yt-teal)' }}
             icon={activeConversation?.serviceMode === 'operator_assisted' ? <CustomerServiceOutlined /> : <RobotOutlined />}
             aria-hidden="true"
           />
-          <div className="anker-chat-head-text">
+          <div className="yt-chat-head-text">
             <span
-              className="anker-chat-title anker-wrap"
+              className="yt-chat-title yt-wrap"
               style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
             >
               {activeConversation?.title || '智能助手'}
             </span>
-            {activeConversation && <span className="anker-chip">
+            {activeConversation && <span className="yt-base-chip">
               {activeConversation.serviceMode === 'operator_assisted' ? '人工接待' : aiReplying ? 'AI 回复中' : 'AI 接待'}
             </span>}
           </div>
-          <div className="anker-chat-head-actions">
+          <div className="yt-base-chat-head-actions">
             <Button size="small" icon={<CustomerServiceOutlined />} aria-label="转人工"
               disabled={!activeId || activeConversation?.serviceMode === 'operator_assisted'}
               loading={transferring} onClick={() => void handoff()}>转人工</Button>
@@ -437,7 +437,7 @@ export function CustomerView() {
             ) : null}
           </div>
         </div>
-        <div className="anker-scroll" style={{ flex: 1 }}>
+        <div className="yt-scroll" style={{ flex: 1 }}>
           {loadingMessages && messages.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center' }}>
               <Spin />
@@ -491,7 +491,7 @@ export function CustomerView() {
           )}
         </div>
 
-        <div className="anker-composer anker-hairline-top">
+        <div className="yt-composer yt-hairline-top">
           {aiReplying && <div className="auto-reply-state" role="status"><Spin size="small" /><span>AI 回复中</span></div>}
           {sendError ? (
             <Alert
@@ -510,7 +510,7 @@ export function CustomerView() {
               closable={{ onClose: () => imageUpload.clear() }}
               style={{ marginBottom: 8 }}
               title="图片上传失败"
-              description={<span className="anker-wrap">{imageUpload.image.error}</span>}
+              description={<span className="yt-wrap">{imageUpload.image.error}</span>}
             />
           ) : null}
           <ChatImagePreview image={imageUpload.image} onRemove={() => imageUpload.clear()}

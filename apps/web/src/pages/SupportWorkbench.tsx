@@ -363,11 +363,11 @@ export function SupportWorkbench() {
           onOpenOrder={() => { setPluginTab('profile'); if (compact) setPluginOpen(true) }} />}
         {(error || queueError) && <Alert type="error" title={error || queueError} showIcon
           action={<Button size="small" onClick={() => window.location.reload()}>刷新</Button>} />}
-        <div className="anker-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support"
+        <div className="yt-scroll chat-message-surface">{loading ? <Spin /> : <MessageList messages={messages} conversationId={id} viewRole="support"
           emotions={emotionsById} escalationMessageId={escalationId} buyerAlias={current?.buyerAlias} />}</div>
-        {id && automatic ? <div className="anker-composer anker-hairline-top">
+        {id && automatic ? <div className="yt-composer yt-hairline-top">
           <AiReceptionBar replying={aiReplying} switching={switching} onTakeOver={() => void switchMode('operator_assisted')} />
-        </div> : <div className="anker-composer anker-hairline-top">
+        </div> : <div className="yt-composer yt-hairline-top">
           {imageUpload.image?.error && <Alert type="error" showIcon title={imageUpload.image.error}
             closable={{ onClose: () => imageUpload.clear() }} />}
           <ChatImagePreview image={imageUpload.image} onRemove={() => imageUpload.clear()}
