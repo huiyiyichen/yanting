@@ -76,55 +76,6 @@ class RuntimeContext:
             rerank_provider=self.rerank_provider,
         )
 
-    def build_orchestrator(self, session: Session) -> Any:
-        from app.domain.agent.orchestrator import CaseOrchestrator, OrchestratorDeps
-        from app.domain.agent.understanding import UnderstandingAnalyzer
-
-        def resolve_understanding_prompt() -> str | None:
-            """取当前启用中的「售后理解」提示词模板（没有则返回 None，回退代码常量）。
-
-            取模板失败（如表缺失、库不可用）时记警告并回退：提示词是**可选项**，
-            不该因为它读不到就把整条对话链路打断。
-            """
-
-            from app.domain.platform.settings import UNDERSTANDING_CODE, get_enabled_template
-
-            try:
-                row = get_enabled_template(session, UNDERSTANDING_CODE)
-            except Exception as exc:
-                log_event(
-                    logger,
-                    "understanding_prompt_fallback",
-                    reason=type(exc).__name__,
-                )
-                return None
-            return row.content if row is not None else None
-
-        def resolve_reply_prompt() -> str | None:
-            """取启用中的 REPLY 提示词模板（Prompt 管理可编辑）；没有则用代码常量。"""
-
-            from app.domain.platform.settings import REPLY_CODE, get_enabled_template
-
-            try:
-                row = get_enabled_template(session, REPLY_CODE)
-            except Exception as exc:
-                log_event(logger, "reply_prompt_fallback", reason=type(exc).__name__)
-                return None
-            return row.content if row is not None else None
-
-        return CaseOrchestrator(
-            OrchestratorDeps(
-                session=session,
-                settings=self.settings,
-                embedding_provider=self.embedding_provider,
-                gateway=self.build_gateway(session),
-                analyzer=UnderstandingAnalyzer(self.model_provider, resolve_understanding_prompt),
-                # 回复生成用同一个模型提供者；Prompt 管理里的 REPLY 模板可覆盖提示词
-                reply_model=self.model_provider,
-                reply_prompt_resolver=resolve_reply_prompt,
-            )
-        )
-
     def apply_runtime_settings(self) -> None:
         """启动时套用页面保存的模型配置（地址 / 密钥 / 文本模型 / 多模态模型）。
 

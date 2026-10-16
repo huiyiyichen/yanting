@@ -29,8 +29,6 @@ export type EvidenceView = components['schemas']['EvidenceView']
 export type RatingView = components['schemas']['RatingView']
 export type CloseConversationView = components['schemas']['CloseConversationView']
 export type ServiceModeView = components['schemas']['ServiceModeView']
-export type SuggestionSetView = components['schemas']['SuggestionSetView']
-export type SuggestionView = components['schemas']['SuggestionView']
 export type AttachmentView = components['schemas']['AttachmentView']
 export type VisionAvailabilityView = components['schemas']['VisionAvailabilityView']
 export type HealthResponse = components['schemas']['HealthResponse']
@@ -45,8 +43,6 @@ export type KnowledgeBaseItem = components['schemas']['KnowledgeBaseItem']
 export type KnowledgeDocumentItem = components['schemas']['KnowledgeDocumentItem']
 export type WorkOrderView = components['schemas']['WorkOrderView']
 export type WorkOrderItem = components['schemas']['WorkOrderItem']
-export type PromptListView = components['schemas']['PromptListView']
-export type PromptItem = components['schemas']['PromptItem']
 export type PromptTemplateView = components['schemas']['PromptTemplateView']
 export type SaveModelConfigView = components['schemas']['SaveModelConfigView']
 export type SwitchModelView = components['schemas']['SwitchModelView']
@@ -98,19 +94,6 @@ export type NormalizedCaseView = CaseView & {
   forbiddenActions: NonNullable<CaseView['forbiddenActions']>
   evidence: NonNullable<CaseView['evidence']>
   requests: NonNullable<CaseView['requests']>
-}
-
-/** 候选集合：`items` 在生成类型中可选，边界处收敛为必填数组。 */
-export type NormalizedSuggestionSet = SuggestionSetView & {
-  items: NonNullable<SuggestionSetView['items']>
-}
-
-function normalizeSuggestionSet(value: SuggestionSetView): NormalizedSuggestionSet {
-  const record = value as unknown as Record<string, unknown>
-  if (!Array.isArray(record.items)) {
-    record.items = []
-  }
-  return value as NormalizedSuggestionSet
 }
 
 const ARRAY_KEYS = [
@@ -492,35 +475,6 @@ export const supportApi = {
     request<Record<string, unknown>[]>(`/api/support/audit/${conversationId}`, {
       role: 'support',
     }),
-
-  /** 读取当前话术候选。新客户消息到达后 expires=true，不得静默发送。 */
-  suggestions: async (conversationId: string) => {
-    const result = await request<SuggestionSetView | null>(
-      `/api/support/conversations/${conversationId}/suggestions`,
-      { role: 'support' },
-    )
-    return result ? normalizeSuggestionSet(result) : null
-  },
-
-  /** 生成三种措辞。必须来自真实模型，失败时向上暴露错误。 */
-  generateSuggestions: async (conversationId: string) =>
-    normalizeSuggestionSet(
-      await request<SuggestionSetView>(
-        `/api/support/conversations/${conversationId}/suggestions/generate`,
-        { method: 'POST', role: 'support' },
-      ),
-    ),
-
-  /** 采用或忽略候选：采用只写草稿，不发送。 */
-  suggestionAction: (
-    conversationId: string,
-    variant: string,
-    action: 'adopt' | 'ignore',
-  ) =>
-    request<SuggestionView>(
-      `/api/support/conversations/${conversationId}/suggestions/action`,
-      { method: 'POST', body: { variant, action }, role: 'support' },
-    ),
 }
 
 /**
@@ -579,7 +533,6 @@ export const platformApi = {
       role: 'support',
     }),
   workOrders: () => request<WorkOrderView>('/api/platform/work-orders', { role: 'support' }),
-  prompts: () => request<PromptListView>('/api/platform/prompts', { role: 'support' }),
   /** 切换生效的文本模型（服务端会校验模型确实存在，并持久化） */
   switchModel: (model: string) =>
     request<SwitchModelView>('/api/platform/models/active', {

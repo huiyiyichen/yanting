@@ -233,34 +233,6 @@ class ServiceModeView(ApiModel):
     mode_revision: int
 
 
-class SuggestionView(ApiModel):
-    suggestion_id: str
-    conversation_id: str
-    message_revision: int
-    variant: str
-    variant_label: str
-    body: str
-    is_mock: bool
-    expires: bool = False
-
-
-class SuggestionSetView(ApiModel):
-    conversation_id: str
-    message_revision: int
-    current_revision: int
-    expires: bool
-    is_mock: bool
-    model_id: str
-    items: list[SuggestionView] = Field(default_factory=list)
-
-
-class SuggestionActionRequest(ApiModel):
-    """采用或忽略候选。**采用只写草稿，不发送**。"""
-
-    variant: str = Field(pattern="^(recommended|concise|reassuring)$")
-    action: str = Field(pattern="^(adopt|ignore)$")
-
-
 class AttachmentView(ApiModel):
     attachment_id: str
     conversation_id: str

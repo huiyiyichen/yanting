@@ -560,70 +560,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/support/conversations/{conversation_id}/suggestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Suggestions
-         * @description 读取当前候选。新客户消息到达后 `expires=true`，不得静默发送。
-         */
-        get: operations["get_suggestions_api_support_conversations__conversation_id__suggestions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/support/conversations/{conversation_id}/suggestions/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate Suggestions
-         * @description 按当前上下文生成「推荐 / 简洁 / 安抚」三种措辞。
-         *
-         *     候选必须来自真实模型；模型不可用时返回明确错误，不提供预设文案兜底。
-         */
-        post: operations["generate_suggestions_api_support_conversations__conversation_id__suggestions_generate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/support/conversations/{conversation_id}/suggestions/action": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Suggestion Action
-         * @description 采用或忽略候选。
-         *
-         *     **采用只写入客服草稿，不发送、不审批、不接管**；发送仍是独立动作。
-         */
-        post: operations["suggestion_action_api_support_conversations__conversation_id__suggestions_action_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/support/conversations/{conversation_id}": {
         parameters: {
             query?: never;
@@ -769,30 +705,6 @@ export interface paths {
          *     会话维度聚合真实数据，不新造实体、也不提供不存在的操作（如派单、改单）。
          */
         get: operations["work_orders_api_platform_work_orders_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/platform/prompts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Prompt List
-         * @description 当前真正生效的提示词一览（只读）。
-         *
-         *     为什么要暴露：模型的行为由提示词决定，改提示词是改行为。本期提示词仍是
-         *     代码常量（版本号随代码走），因此这里**如实展示**内容与版本，并提供复制；
-         *     可编辑/启停需要模板表与版本化，已登记为下一步（DEV-027），不做只能点不能用的假按钮。
-         */
-        get: operations["prompt_list_api_platform_prompts_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3089,41 +3001,6 @@ export interface components {
             /** Purpose */
             purpose: string;
         };
-        /** PromptItem */
-        PromptItem: {
-            /** Code */
-            code: string;
-            /** Name */
-            name: string;
-            /** Scenario */
-            scenario: string;
-            /** Version */
-            version: string;
-            /** Source */
-            source: string;
-            /** Content */
-            content: string;
-            /**
-             * Editable
-             * @default false
-             */
-            editable: boolean;
-            /**
-             * Note
-             * @default
-             */
-            note: string;
-        };
-        /** PromptListView */
-        PromptListView: {
-            /** Items */
-            items?: components["schemas"]["PromptItem"][];
-            /**
-             * Note
-             * @default
-             */
-            note: string;
-        };
         /** PromptRestoreRequest */
         PromptRestoreRequest: {
             /** Revision */
@@ -4331,55 +4208,6 @@ export interface components {
             cachedTokens: number;
             /** Latencyseconds */
             latencySeconds: number;
-        };
-        /**
-         * SuggestionActionRequest
-         * @description 采用或忽略候选。**采用只写草稿，不发送**。
-         */
-        SuggestionActionRequest: {
-            /** Variant */
-            variant: string;
-            /** Action */
-            action: string;
-        };
-        /** SuggestionSetView */
-        SuggestionSetView: {
-            /** Conversationid */
-            conversationId: string;
-            /** Messagerevision */
-            messageRevision: number;
-            /** Currentrevision */
-            currentRevision: number;
-            /** Expires */
-            expires: boolean;
-            /** Ismock */
-            isMock: boolean;
-            /** Modelid */
-            modelId: string;
-            /** Items */
-            items?: components["schemas"]["SuggestionView"][];
-        };
-        /** SuggestionView */
-        SuggestionView: {
-            /** Suggestionid */
-            suggestionId: string;
-            /** Conversationid */
-            conversationId: string;
-            /** Messagerevision */
-            messageRevision: number;
-            /** Variant */
-            variant: string;
-            /** Variantlabel */
-            variantLabel: string;
-            /** Body */
-            body: string;
-            /** Ismock */
-            isMock: boolean;
-            /**
-             * Expires
-             * @default false
-             */
-            expires: boolean;
         };
         /** SwitchModelRequest */
         SwitchModelRequest: {
@@ -5761,109 +5589,6 @@ export interface operations {
             };
         };
     };
-    get_suggestions_api_support_conversations__conversation_id__suggestions_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuggestionSetView"] | null;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_suggestions_api_support_conversations__conversation_id__suggestions_generate_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuggestionSetView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    suggestion_action_api_support_conversations__conversation_id__suggestions_action_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path: {
-                conversation_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SuggestionActionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SuggestionView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     delete_conversation_support_api_support_conversations__conversation_id__delete: {
         parameters: {
             query?: never;
@@ -6082,37 +5807,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkOrderView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    prompt_list_api_platform_prompts_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PromptListView"];
                 };
             };
             /** @description Validation Error */

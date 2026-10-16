@@ -419,22 +419,6 @@ class WorkOrderView(ApiModel):
     items: list[WorkOrderItem] = Field(default_factory=list)
 
 
-class PromptItem(ApiModel):
-    code: str
-    name: str
-    scenario: str
-    version: str
-    source: str
-    content: str
-    editable: bool = False
-    note: str = ""
-
-
-class PromptListView(ApiModel):
-    items: list[PromptItem] = Field(default_factory=list)
-    note: str = ""
-
-
 @router.get("/knowledge", response_model=KnowledgeOverviewWithBasesView)
 async def knowledge_overview(
     session: Any = Depends(get_session),
@@ -608,45 +592,6 @@ async def work_orders(
         )
 
     return WorkOrderView(total=len(items), by_status=by_status, items=items)
-
-
-@router.get("/prompts", response_model=PromptListView)
-async def prompt_list(
-    _role: ViewRole = Depends(require_support),
-) -> PromptListView:
-    """当前真正生效的提示词一览（只读）。
-
-    为什么要暴露：模型的行为由提示词决定，改提示词是改行为。本期提示词仍是
-    代码常量（版本号随代码走），因此这里**如实展示**内容与版本，并提供复制；
-    可编辑/启停需要模板表与版本化，已登记为下一步（DEV-027），不做只能点不能用的假按钮。
-    """
-
-    from app.domain.agent import suggestions as suggestion_module
-    from app.domain.agent import understanding as understanding_module
-
-    return PromptListView(
-        items=[
-            PromptItem(
-                code="UNDERSTANDING",
-                name="售后理解（结构化事实）",
-                scenario="每一条客户消息进入 Agent 时调用",
-                version=understanding_module.PROMPT_VERSION,
-                source="app/domain/agent/understanding.py",
-                content=understanding_module.SYSTEM_PROMPT,
-                note="输出的枚举会被严格校验，非法取值按 unknown 处理",
-            ),
-            PromptItem(
-                code="REPLY_SUGGEST",
-                name="客服回复起草（三版措辞）",
-                scenario="客服点「AI 生成回复候选」时调用",
-                version=suggestion_module.SUGGESTION_PROMPT_VERSION,
-                source="app/domain/agent/suggestions.py",
-                content=suggestion_module.SYSTEM_PROMPT,
-                note="三版只改措辞，事实与策略一致；采用只写草稿",
-            ),
-        ],
-        note="提示词目前是代码常量：改内容即改行为，需要走代码评审与回归。可编辑/启停（模板表 + 版本化）为下一步。",
-    )
 
 
 class SwitchModelRequest(ApiModel):
