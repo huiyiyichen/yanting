@@ -1,8 +1,8 @@
 import {
   MenuOutlined, ProfileOutlined, ReloadOutlined,
-  SearchOutlined, SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
+  SendOutlined, ThunderboltOutlined, } from '@ant-design/icons'
 import { Sender } from '@ant-design/x'
-import { Alert, Button, Tooltip, Drawer, Empty, Input, Segmented, Spin, Tabs, Tag, message } from 'antd'
+import { Alert, Button, Tooltip, Drawer, Spin, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
@@ -16,7 +16,7 @@ import { newClientMessageKey } from '../features/conversation/messageDirection'
 import { SupportRiskPanel } from '../features/service-desk/SupportRiskPanel'
 import { escalationMessage, messageEmotions } from '../features/service-desk/messageEmotion'
 import { AiReceptionBar, ChatHead } from '../features/service-desk/ChatHead'
-import { QueueRow } from '../features/service-desk/QueueRow'
+import { ReceptionQueue } from '../features/service-desk/ReceptionQueue'
 import { DeskProductCard } from '../features/service-desk/DeskProductCard'
 import { ArchivePanel } from '../features/service-desk/ArchivePanel'
 import { PersonaCard } from '../features/service-desk/PersonaCard'
@@ -50,10 +50,6 @@ export function SupportWorkbench() {
   const [pluginOpen, setPluginOpen] = useState(false)
   const [pluginTab, setPluginTab] = useState('assistant')
   const [snapshot, setSnapshot] = useState<ReceptionSnapshot | null>(null)
-  const [mode, setMode] = useState('全部')
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 30000); return () => window.clearInterval(timer) }, [])
-  const [query, setQuery] = useState('')
   const [messages, setMessages] = useState<MessageView[]>([])
   const [context, setContext] = useState<ConsumerServiceContextView | null>(null)
   const [tickets, setTickets] = useState<TicketView[]>([])
@@ -249,30 +245,10 @@ export function SupportWorkbench() {
 
   const emotionsById = useMemo(() => messageEmotions(profile, id), [profile, id])
   const escalationId = useMemo(() => escalationMessage(profile, id), [profile, id])
-  const queueItems = useMemo(() => (snapshot?.items ?? []).filter((item) =>
-    (mode !== '未读' || item.unreadCount > 0)
-    && (mode !== '人工' || item.serviceMode === 'operator_assisted')
-    && (mode !== '风险' || Boolean(item.activeRiskTypes?.length || item.reviewRiskTypes?.length))
-    && `${item.buyerAlias} ${item.conversationId} ${item.preview}`.includes(query)), [snapshot, mode, query])
   const openConversation = useCallback((conversationId: string) => {
     setParams({ conversation: conversationId }); setQueueOpen(false)
   }, [setParams])
-  const allItems = snapshot?.items ?? []
-  const queueCounts: Record<string, number> = {
-    人工: allItems.filter((item) => item.serviceMode === 'operator_assisted').length,
-    风险: allItems.filter((item) => item.activeRiskTypes?.length || item.reviewRiskTypes?.length).length,
-  }
-  const queue = <div className="reception-queue">
-    <div className="reception-queue-head">
-      <Input variant="filled" prefix={<SearchOutlined />} placeholder="客户、订单号、聊天记录" aria-label="搜索会话" value={query} allowClear onChange={(e) => setQuery(e.target.value)} />
-      <Segmented className="yt-qtabs" options={(['全部', '人工', '风险', '未读'] as const).map((value) => ({ value,
-        label: <>{value}{queueCounts[value] ? <span className="n">{queueCounts[value]}</span> : null}</> }))} value={mode} onChange={setMode} />
-    </div>
-    <div className="reception-list">{queueItems.length ? <div className="yt-queue-group"><span>正在接待</span><span>最近消息</span></div> : null}
-      {queueItems.map((item) => <QueueRow key={item.conversationId} item={item} active={id === item.conversationId} now={now} onOpen={openConversation} />)}
-      {!queueItems.length && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无会话" />}
-    </div>
-  </div>
+  const queue = <ReceptionQueue items={snapshot?.items ?? []} activeId={id} onOpen={openConversation} />
 
   const riskRefreshKey = [
     current?.messageRevision ?? 0, current?.modeRevision ?? 0,
