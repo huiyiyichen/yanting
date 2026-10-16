@@ -333,7 +333,7 @@ export function RiskDashboardPage() {
             </Tag>)}{unique.length > 2 && <Tag title={unique.slice(2).map((signal) => serviceRiskTypeLabels[signal.riskType]).join('、')}>+{unique.length - 2}</Tag>}</Space>
               <div className="table-excerpt" title={row.latestMessage}>{row.latestMessage || '—'}</div></div>
           } },
-          { title: mode === 'historical' ? '结束时情绪' : '当前情绪', width: 150, render: (_, row) => <div className="yt-rk-emo"><RiskSpark seq={row.emotionSeq} /><span className={`yt-rk-emo-l is-${row.currentEmotion}`}><i />{emotionStatus(row)}</span></div> },
+          { title: '情绪走势', width: 150, render: (_, row) => <div className="yt-rk-emo"><RiskSpark seq={row.emotionSeq} /><span className={`yt-rk-emo-l is-${row.currentEmotion}`}><i />{emotionStatus(row)}</span></div> },
           { title: '最近消息', width: 120, render: (_, row) => <span className="yt-rk-time">{dateLabel(row.latestCustomerAt)}</span> },
           { title: '', width: 56, render: (_, row) => <Button aria-label={`打开会话 ${row.buyerAlias}`} title="打开会话" size="small" icon={<MessageOutlined />} disabled={!primaryConversation(row)}
             onClick={(event) => { event.stopPropagation(); const id = primaryConversation(row); if (id) openConversation(id) }} /> },

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Literal
 
 from pydantic import Field
@@ -59,6 +59,14 @@ def _utc(value: datetime) -> datetime:
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value
 
 
+CST = timezone(timedelta(hours=8))
+
+
+def _source_time(value: datetime) -> datetime:
+    """官方源时间无时区，本身就是北京时间。"""
+    return value.replace(tzinfo=CST) if value.tzinfo is None else value
+
+
 def service_score(session: Session, conversation_id: str) -> ServiceScoreView:
     from app.domain.consumer_service.workspace import active_batch
 
@@ -69,7 +77,7 @@ def service_score(session: Session, conversation_id: str) -> ServiceScoreView:
                 ServiceMessageRow.batch_id == batch, ServiceMessageRow.conversation_id == conversation_id)
                 .order_by(ServiceMessageRow.sent_at, ServiceMessageRow.sequence)):
             rows.append(({row.message_id, row.source_record_id, row.record_id}, row.message_id,
-                         _utc(row.sent_at), row.sender_role, row.body or ""))
+                         _source_time(row.sent_at), row.sender_role, row.body or ""))
     for row in ConversationRepository(session).list_messages(conversation_id):
         rows.append(({row.message_id}, row.message_id, _utc(row.created_at), row.sender_role, row.body or ""))
     if not rows:

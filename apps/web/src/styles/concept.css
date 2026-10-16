@@ -415,7 +415,8 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-queue .yt-rk-row.is-selected > td { background: rgba(217, 180, 124, 0.08) !important; }
 .yt-risk-queue .yt-rk-row.is-selected > td:first-child { box-shadow: inset 3px 0 0 #d9b47c; }
 .yt-risk-queue .yt-rk-row { cursor: pointer; }
-.yt-risk-queue .ant-table-measure-row > td { padding: 0 !important; border: 0 !important; height: 0 !important; }
+.yt-risk-queue .ant-table-tbody > tr.ant-table-measure-row, .yt-risk-queue .ant-table-tbody > tr.ant-table-measure-row > td { padding: 0 !important; border: 0 !important; height: 0 !important; line-height: 0; font-size: 0; }
+.yt-risk-queue .ant-table-measure-row > td > div { height: 0 !important; overflow: hidden; }
 .yt-risk-page .ant-select-placeholder { color: var(--m-ink-3) !important; }
 /* 声纹 v2：等比、圆角、段间留白、上下独立缩放 */
 .yt-risk-page .yt-dist { position: relative; padding: 0; margin-top: 4px; }

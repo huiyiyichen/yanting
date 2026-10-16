@@ -6,6 +6,7 @@ F8 客服/系统消息带情绪或信号；消费者消息缺情绪。
 F9 触发风险的消息没有信号；信号挂到了别的消息上。
 F10 等待从每条消费者消息各算一次（应从未回复的首条算到下一条服务回复）；系统消息被当作回复。
 F11 读取乐谱写库或调用模型。
+F12 官方源时间（无时区，北京时间）被当成 UTC，回放时间比结论晚 8 小时。
 """
 
 from tests.integration import test_reception_workspace as fixtures
@@ -42,6 +43,9 @@ def test_score_matches_messages_and_signals(workspace):
         target = next(n for n in notes if n["messageId"] == wait["toMessageId"])
         assert origin["role"] == "customer" and target["role"] in {"operator", "assistant"} and wait["ms"] >= 0
     assert len(provider.calls) == before
+    first = next(m for m in messages if m["messageId"] == notes[0]["messageId"])
+    if "+" not in first["createdAt"] and not first["createdAt"].endswith("Z"):
+        assert notes[0]["at"].startswith(first["createdAt"][:16]) and notes[0]["at"].endswith("+08:00")
 
 
 def test_wait_starts_at_first_unanswered_customer_message(workspace):

@@ -13,7 +13,7 @@ export const priorities: Record<TicketView['priority'], string> = {
   low: '低', normal: '普通', high: '高', urgent: '紧急',
 }
 export const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleString('zh-CN', {
-  month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+  timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
 }) : '未设置'
 export const optionsOf = (labels: Record<string, string>) => Object.entries(labels).map(([value, label]) => ({ value, label }))
 export const money = (value?: number | null) => value == null ? '暂无金额' : `¥${(value / 100).toFixed(2)}`
