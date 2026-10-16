@@ -54,7 +54,6 @@
 .yt-persona-emotion.is-calm strong { color: var(--yt-calm); }
 .yt-persona-emotion.is-dissatisfied strong { color: var(--yt-upset); }
 .yt-persona-emotion.is-angry strong { color: var(--yt-fury); }
-.yt-memory-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .yt-memory-tag {
   padding: 1px 8px; font-size: 12px; line-height: 20px; border-radius: 999px;
   background: var(--yt-porcelain); border: 1px solid var(--yt-hair); color: var(--yt-ink-2);
@@ -65,7 +64,6 @@
   background: var(--yt-gold-wash); border: 1px solid var(--yt-gold-line); border-radius: 10px;
   color: var(--yt-gold-ink); font-size: 12px;
 }
-.yt-promise-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--yt-ink); }
 .yt-promise-due { white-space: nowrap; font-weight: 600; font-variant-numeric: tabular-nums; }
 .yt-promise.is-due { background: #fbeef0; border-color: #efc4cc; color: var(--yt-fury); }
 .yt-promise.is-fulfilled { background: #eaf5f1; border-color: #bfe0d4; color: var(--yt-calm); }
@@ -238,8 +236,6 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 .yt-emotion-dot.is-dissatisfied { background: var(--yt-upset); }
 .yt-emotion-dot.is-angry { background: var(--yt-fury); }
 .yt-queue-wait { color: var(--yt-fury); font-weight: 600; }
-.reception-row-preview { display: flex; align-items: center; gap: 6px; min-width: 0; }
-.reception-row-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .yt-queue-group { font-size: 12px; color: var(--yt-ink-3); padding: 6px 12px 2px; }
 
 /* 聊天头部单行 + AI 接待条（P1-1） */

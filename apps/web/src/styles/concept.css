@@ -268,7 +268,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-fold.is-open > button .chev { transform: rotate(90deg); }
 .reception-plugin .yt-fold > button:focus-visible { outline: 2px solid #d9b47c; outline-offset: -2px; }
 .reception-plugin .yt-fold-body { padding: 0 14px 12px; font-size: 13px; color: #5e5468; display: grid; gap: 8px; }
-.reception-plugin .yt-fold-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* ---------- 风险预警：整页深色监控屏（yanting-concept-risk.html） ---------- */
 .yt-risk-page { --m-bg: #1d1524; --m-panel: #251b2e; --m-raised: #2d2238; --m-hi: #382b45; --m-line: rgba(236, 224, 245, 0.08);
@@ -308,8 +307,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist-markers { position: absolute; top: 0; left: 0; right: 0; width: auto !important; height: 10px; }
 .yt-risk-page .yt-dist-marker { position: absolute; transform: translateX(-50%) rotate(45deg); width: 7px; height: 7px; padding: 0; border: 0; background: var(--m-fury); cursor: pointer; }
 .yt-risk-page .yt-dist-peak { position: absolute; top: 12px; transform: translateX(6px); font-size: 12px; color: var(--m-ink); white-space: nowrap; pointer-events: none; }
-.yt-risk-page .yt-dist-axis { position: absolute; left: 0; right: 0; bottom: 0; height: 16px; }
-.yt-risk-page .yt-dist-axis span { position: absolute; font-family: Bahnschrift, 'DIN Alternate', sans-serif; font-size: 11px; color: var(--m-ink-3); }
 .yt-risk-page .yt-dist-mid, .yt-risk-page .yt-dist-day { stroke: var(--m-line-2); }
 .yt-risk-page .yt-dist-calm { fill: var(--m-calm); }
 .yt-risk-page .yt-monitor-grid { grid-template-columns: 0.8fr 1fr 1.5fr; }
@@ -435,7 +432,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist-tip b { color: var(--m-ink); font-weight: 600; }
 .yt-risk-page .yt-dist-tip i { display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: 5px; }
 .yt-risk-page .yt-dist-tip i.is-fury { background: #dd4a5f; } .yt-risk-page .yt-dist-tip i.is-upset { background: #c98216; } .yt-risk-page .yt-dist-tip i.is-calm { background: #34a07f; }
-.yt-risk-page .yt-dist-axis { display: none; }
 /* 风险详情分节（概念稿 .d-sec） */
 .yt-risk-detail { padding: 0; }
 .yt-risk-detail > .yt-risk-id, .yt-risk-detail > .yt-risk-tags { padding-left: 22px; padding-right: 50px; }
@@ -500,12 +496,6 @@ button.yt-link { cursor: pointer; } button.yt-link:hover { background: var(--m-h
 .reception-plugin .yt-jcontacts .dot.is-current { border-color: #2a1f33; background: #2a1f33; box-shadow: 0 0 0 3px rgba(42, 31, 51, 0.12); }
 .reception-plugin .yt-jcontacts small { position: absolute; top: 22px; font-size: 11px; color: #958ba1; font-variant-numeric: tabular-nums; }
 .reception-plugin .yt-jcontacts .from { left: 0; } .reception-plugin .yt-jcontacts .to { right: 0; }
-.reception-plugin .yt-jcurve { display: block; margin-top: 6px; overflow: visible; }
-.reception-plugin .yt-jcurve text { fill: #958ba1; font-size: 10px; }
-.reception-plugin .yt-jcurve line { stroke: #f0ecf3; }
-.reception-plugin .yt-jcurve polyline { fill: none; stroke: #2a1f33; stroke-width: 1.4; stroke-linejoin: round; }
-.reception-plugin .yt-jcurve circle { fill: #22906f; stroke: #fff; stroke-width: 1.5; }
-.reception-plugin .yt-jcurve circle.is-dissatisfied { fill: #d98a0f; } .reception-plugin .yt-jcurve circle.is-angry { fill: #cc3550; }
 .reception-plugin .yt-jnodes { list-style: none; margin: 10px 0 0; padding: 0; display: grid; }
 .reception-plugin .yt-jnodes li { position: relative; display: grid; grid-template-columns: 38px 36px 14px 1fr auto; align-items: start; gap: 4px; padding: 5px 0; font-size: 12px; }
 .reception-plugin .yt-jnodes li::before { content: ''; position: absolute; left: 84px; top: 0; bottom: 0; width: 1px; background: #f0ecf3; }

@@ -102,148 +102,16 @@ body {
   }
 }
 
-/* 视觉上隐藏但保留给屏幕阅读器 */
-.yt-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* 键盘焦点必须可见（不只靠颜色区分） */
 :focus-visible {
   outline: 2px solid var(--yt-primary);
   outline-offset: 2px;
 }
 
-/* ── 左栏导航 ────────────────────────────────────────────────────────────
- * antd 的 `Menu` 在窄栏下会把文字折行/省略，而规范要求「图标配文字」，
- * 所以这里用一个按钮列表 + 悬停提示；样式尽量贴 antd Menu 的默认观感。 */
-
-.yt-base-rail {
-  width: var(--yt-rail-width);
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px 8px;
-  min-height: 0;
-  background: var(--yt-container);
-  border-right: 1px solid var(--yt-border-secondary);
-  overflow-y: auto;
-}
-
-.yt-rail-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px 14px;
-}
-
-.yt-rail-logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--yt-primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-.yt-rail-wordmark {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--yt-text);
-  white-space: nowrap;
-}
-
-/* 导航项：图标 + 文字；选中态用 antd 主色浅底（与 Menu 选中态一致的观感） */
-.yt-rail-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--yt-text-secondary);
-  font-size: 14px;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.yt-rail-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--yt-text);
-}
-
-.yt-rail-item[aria-current='page'] {
-  background: #e6f4ff;
-  color: var(--yt-primary);
-  font-weight: 500;
-}
-
-.yt-rail-icon {
-  font-size: 16px;
-  display: inline-flex;
-  flex-shrink: 0;
-}
-
-.yt-rail-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 分组小标题（导航里的「智能服务 / 平台管理」这类分区） */
-.yt-rail-group {
-  padding: 12px 10px 4px;
-  font-size: 12px;
-  color: var(--yt-text-tertiary);
-}
-
-.yt-rail-foot {
-  margin-top: auto;
-  padding: 8px 4px 2px;
-}
-
 /* 窄屏：只留图标，文字隐藏（外层加 Tooltip 保证仍可理解） */
 @media (max-width: 1099px) {
   :root {
     --yt-rail-width: 72px;
-  }
-
-  .yt-base-rail {
-    align-items: center;
-    padding: 10px 6px;
-  }
-
-  .yt-rail-wordmark,
-  .yt-rail-label,
-  .yt-rail-group {
-    display: none;
-  }
-
-  .yt-rail-brand {
-    justify-content: center;
-    padding: 4px 0 10px;
-  }
-
-  .yt-rail-item {
-    justify-content: center;
-    padding: 10px 0;
   }
 }
 
@@ -254,15 +122,6 @@ body {
   background: var(--yt-container);
   border: 1px solid var(--yt-border-secondary);
   border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.yt-panel-bare {
-  background: var(--yt-container);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -311,16 +170,6 @@ body {
   line-height: 1.4;
 }
 
-.yt-chat-sub {
-  font-size: 12px;
-  color: var(--yt-text-tertiary);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 /* 输入区留白：容器自己排版，内部组件保持 antd 默认外观 */
 .yt-composer {
   padding: 12px 16px;
@@ -345,59 +194,16 @@ body {
 .reception-row { display: flex; width: 100%; height: 72px; align-items: center; gap: 10px; border: 0; border-bottom: 1px solid #f0f0f0; background: #fff; padding: 10px 12px; text-align: left; cursor: pointer; font: inherit; }
 .reception-row:hover { background: #f5f8fc; }
 .reception-row.is-active { background: #e6f4ff; border-left: 3px solid var(--yt-primary); padding-left: 9px; }
-.reception-row-main { flex: 1; min-width: 0; display: grid; gap: 5px; }
-.reception-row-title { display: flex; align-items: center; gap: 4px; }
-.reception-row-title strong { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .reception-row time { color: #888; font-size: 11px; }
-.reception-row-preview { color: #777; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reception-divider { flex: 0 0 16px; width: 16px; background: #fafafa; display: flex; align-items: center; border-right: 1px solid #eee; }
-.reception-divider button { padding: 0; width: 16px; height: 48px; }
 .reception-chat { flex: 1 1 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .reception-plugin { flex: 0 0 380px; width: 380px; border-left: 1px solid #eee; min-height: 0; overflow: auto; padding: 0 14px 14px; }
 .service-section { padding: 12px 0; border-bottom: 1px solid #eee; }
 .service-section h3 { font-size: 14px; margin: 0 0 10px; }
-.service-fact { display: grid; grid-template-columns: 72px minmax(0,1fr); gap: 10px; padding: 5px 0; font-size: 13px; overflow-wrap: anywhere; }
-.service-fact dt { color: #888; }
-.service-fact dd { margin: 0; }
-.service-product { padding: 10px 0; display: flex; align-items: flex-start; gap: 10px; }
-.service-product-info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .service-node { border-left: 2px solid #ddd; padding: 0 0 14px 12px; margin-left: 4px; display: grid; gap: 3px; font-size: 13px; }
 .service-node time { color: #888; font-size: 12px; }
 @media (max-width: 1350px) { .reception-queue { width: 230px; flex-basis: 230px; } .reception-plugin { width: 340px; flex-basis: 340px; } }
 @media (max-width: 1100px) { .reception-plugin { display: none; } }
 @media (max-width: 760px) { .reception-queue { position: absolute; z-index: 20; left: 72px; top: 0; bottom: 0; width: 260px; box-shadow: 2px 0 8px #0002; } }
-@media (max-width: 760px) {
-  .reception-divider.is-open { position: absolute; left: 332px; top: calc(50% - 24px); z-index: 21; }
-  .reception-backdrop { position: absolute; inset: 0 0 0 72px; background: #0003; z-index: 19; border: 0; }
-}
-
-.yt-page-desc {
-  font-size: 13px;
-  color: var(--yt-text-tertiary);
-  margin: 4px 0 0;
-}
-
-.yt-risk-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.yt-risk-timeline-item {
-  display: grid;
-  grid-template-columns: 148px minmax(0, 1fr);
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--yt-border-secondary);
-}
-
-@media (max-width: 640px) {
-  .yt-risk-timeline-item {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
-}
 
 /* ── 少量结构工具类 ───────────────────────────────────────────────────────
  * 只做「分隔线 / 选中态 / 双行文本」这类 antd 组件不提供的东西，
@@ -471,116 +277,11 @@ body {
   white-space: nowrap;
 }
 
-/* 信息行：观感对齐 antd `Descriptions`（标签列 + 取值列 + 细分隔线） */
-.yt-detail-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--yt-border-secondary);
-}
-
-.yt-detail-row:last-child {
-  border-bottom: none;
-}
-
-.yt-detail-icon {
-  font-size: 16px;
-  color: var(--yt-text-tertiary);
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.yt-detail-label {
-  font-size: 14px;
-  color: var(--yt-text-secondary);
-  width: 84px;
-  flex-shrink: 0;
-}
-
-.yt-detail-value {
-  font-size: 14px;
-  color: var(--yt-text);
-  flex: 1;
-  min-width: 0;
-}
-
-/* 需要注意的取值用 antd 错误色，且调用处同时给出文字含义（不只靠颜色） */
-.yt-detail-value.is-alert {
-  color: var(--yt-error, #ff4d4f);
-}
-
 .yt-section-title {
   font-size: 14px;
   font-weight: 600;
   color: var(--yt-text);
   margin: 16px 0 8px;
-}
-
-/* AI 候选列表限高（窄屏更矮），避免把输入区顶出视口 */
-.yt-suggest-list {
-  max-height: 220px;
-}
-
-/* ── AI 回复建议面板 ──────────────────────────────────────────────────────
- * 用户反馈：「生成的 3 条回复底色和背景一样都是白的，看不清」。
- * 原因是面板与行都落在白底上，没有任何表面区分。这里给面板一层浅色底、
- * 给每行白底 + 细边，形成「面板 / 卡片」两级对比（仍然只用 antd 色板）。 */
-
-.yt-suggest {
-  background: #f0f5ff; /* antd blue-1：与主色同一色系的最浅一档 */
-  border: 1px solid #d6e4ff; /* antd blue-2 */
-  border-radius: 8px;
-  padding: 10px 12px 6px;
-  margin-bottom: 10px;
-}
-
-.yt-suggest-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.yt-suggest-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--yt-primary-active);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* 每行措辞：白底卡片 + 细边，选中的「采用」胶囊用主色描边 */
-.yt-suggest .ant-prompts-item {
-  background: #ffffff;
-  border: 1px solid var(--yt-border-secondary);
-  border-radius: 8px;
-  margin-bottom: 6px;
-  padding: 10px 12px;
-}
-
-.yt-suggest .ant-prompts-item:hover {
-  border-color: var(--yt-primary);
-}
-
-.yt-adopt-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 10px;
-  border: 1px solid var(--yt-primary);
-  border-radius: 6px;
-  color: var(--yt-primary);
-  background: #ffffff;
-  font-size: 12px;
-  line-height: 20px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 480px) {
-  .yt-suggest-list {
-    max-height: 150px;
-  }
 }
 
 /* 窄屏输入区收窄 */
@@ -595,7 +296,6 @@ body {
 .desk-nav { width: 168px; flex: 0 0 168px; padding: 18px 10px; background: #fafbfc; border-right: 1px solid #e6e9ed; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
 .desk-brand { display: flex; align-items: center; gap: 9px; padding: 0 6px 24px; white-space: nowrap; }
 .desk-brand strong { font-size: 15px; }
-.desk-logo { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 6px; background: var(--yt-primary); color: white; font-size: 13px; font-weight: 600; }
 .desk-nav-item { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 12px; border-radius: 6px; color: #525963; text-decoration: none; font-size: 13px; }
 .desk-nav-item > .anticon { font-size: 18px; }
 .desk-nav-item:hover { color: var(--yt-primary); background: #f0f4f9; }
@@ -626,42 +326,18 @@ body {
 .section-title-row strong { overflow-wrap: anywhere; }
 .reception-queue { width: 246px; flex-basis: 246px; background: #f7f8fa; }
 .reception-row { height: 78px; background: transparent; }
-.reception-row-title { flex-wrap: wrap; }
 .reception-row time { font-size: 10px; }
-.reception-row-title strong { min-width: 65px; }
 .reception-row-item { border-bottom: 1px solid #f0f0f0; }
 .reception-row-item.is-active { background: #e6f4ff; }
 .reception-row-item .reception-row { min-height: 90px; height: auto; border-bottom: 0; }
-.reception-row-status, .reception-risk-links, .reception-riskbar { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
-.reception-risk-links { padding: 0 10px 8px; }
-.reception-riskbar { padding: 6px 16px; border-bottom: 1px solid #e6e9ed; }
-.reception-row-status .ant-tag, .reception-risk-links .ant-tag, .reception-riskbar .ant-tag { margin-inline-end: 0; white-space: normal; overflow-wrap: anywhere; }
-.reception-risk-links a, .reception-riskbar a { max-width: 100%; }
 .reception-plugin { width: 382px; flex-basis: 382px; padding: 0 16px 16px; display: block; }
 .chat-buyer { flex: 1; min-width: 70px; overflow-wrap: anywhere; }
 .chat-message-surface { flex: 1; background: #f4f6f8; padding: 12px 4px; }
-.chat-order-strip { width: 100%; display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: 0; border-bottom: 1px solid #e6e9ed; background: #fff; cursor: pointer; color: #525963; text-align: left; font: inherit; font-size: 12px; }
-.chat-order-strip > span:not(.anticon):not(.ant-tag) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .composer-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-.reception-modebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid #e6e9ed; }
 .auto-reply-state { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #697586; font-size: 12px; }
 .desk-plugin-inner { min-width: 0; overflow-wrap: anywhere; }
 .desk-plugin-inner p { font-size: 13px; line-height: 1.8; margin: 8px 0; }
 .reply-candidate { border: 1px solid #e4e9ee; background: #fafbfc; border-radius: 6px; padding: 12px; margin: 10px 0; }
-.reply-candidate-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.reply-candidate-head .ant-tag { margin-inline-end: 0; }
-.consumer-history-card { border: 1px solid #e6e9ed; border-radius: 8px; background: #fbfcfd; overflow: hidden; }
-.consumer-history-summary { display: flex; align-items: baseline; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #e6e9ed; }
-.consumer-history-summary strong { font-size: 13px; }
-.consumer-history-summary span { color: #737b86; font-size: 12px; }
-.consumer-history-item { padding: 10px 12px; border-bottom: 1px solid #eef0f2; }
-.consumer-history-item:last-child { border-bottom: 0; }
-.consumer-history-item.is-related { border-left: 3px solid var(--yt-primary); padding-left: 9px; background: #f5f9ff; }
-.consumer-history-item-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
-.consumer-history-item-head strong { color: #475467; }
-.consumer-history-item-head time { color: #8a929d; white-space: nowrap; }
-.consumer-history-item p { margin: 6px 0 4px; font-size: 13px; line-height: 1.65; }
-.consumer-history-item > span { display: block; color: #6b7280; font-size: 12px; line-height: 1.6; }
 .emotion-arc { margin: 12px 0 16px; padding: 14px 14px 12px; border: 1px solid #e6e9ed; border-radius: 8px; background: #f7fafc; }
 .emotion-arc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .emotion-arc-head h3 { margin: 0; font-size: 14px; }
@@ -684,10 +360,6 @@ body {
 .emotion-arc-service-point:hover { r: 5; }
 .emotion-arc-foot { display: flex; justify-content: space-between; gap: 8px; color: #7a8490; font-size: 11px; }
 .emotion-arc-turn { color: var(--yt-primary); }
-.emotion-arc-turns { display: grid; gap: 4px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #e9edf1; }
-.emotion-arc-turns div { display: flex; gap: 7px; min-width: 0; font-size: 11px; line-height: 1.5; }
-.emotion-arc-turns b { flex: 0 0 auto; color: var(--yt-primary); font-weight: 600; }
-.emotion-arc-turns span { overflow: hidden; color: #697586; text-overflow: ellipsis; white-space: nowrap; }
 .emotion-arc-selected { display: grid; gap: 7px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e9edf1; }
 .emotion-arc-selected-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
 .emotion-arc-selected p { margin: 0; color: #475467; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
@@ -708,8 +380,6 @@ body {
 .evidence-quote p { margin: 6px 0; }
 .evidence-quote small { color: #697586; }
 .next-action { color: var(--yt-calm); font-size: 13px; }
-.support-risk-incident + .support-risk-incident, .support-risk-signal + .support-risk-signal { padding-top: 10px; margin-top: 10px; border-top: 1px solid #eceef1; }
-.support-risk-signal { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
 .knowledge-layout { display: flex; flex: 1; min-height: 0; min-width: 0; }
 .knowledge-bases { flex: 0 0 208px; padding: 16px; border-right: 1px solid #e6e9ed; overflow: auto; background: #fafbfc; }
 .knowledge-base-item { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; border: 0; border-radius: 6px; padding: 10px 8px; margin-bottom: 5px; background: transparent; text-align: left; cursor: pointer; color: #505962; font: inherit; font-size: 13px; }
@@ -747,7 +417,6 @@ body {
   .knowledge-base-item { display: inline-flex; width: auto; max-width: 100%; margin-right: 6px; }
   .desk-filterbar > .ant-select { flex: 1; min-width: 115px; }
   .desk-filterbar > .ant-input-affix-wrapper { width: 100%; }
-  .chat-order-strip .ant-tag { max-width: 90px; overflow-wrap: anywhere; white-space: normal; }
 }
 /* Conversation scrolling and system events share the existing chat surface. */
 .chat-system-message { align-self: center; max-width: 90%; padding: 4px 10px; color: #777; font-size: 12px; text-align: center; }
