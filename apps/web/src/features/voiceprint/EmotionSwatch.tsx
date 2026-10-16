@@ -43,7 +43,7 @@ export const EmotionSwatch = memo(function EmotionSwatch({ bands, highRisk = fal
     }
     seen.current = shown.length
   }, [shown.length])
-  return <span className={`yt-swatch is-${size}`} role="img" aria-label={label} style={{ width: spec.w, height: spec.h }}>
+  return <span className={`yt-swatch is-${size}${shown.length ? '' : ' is-empty'}`} role="img" aria-label={label} style={{ width: spec.w, height: spec.h }}>
     <span className="yt-swatch-body" style={{ gap: spec.gap, clipPath: clip(spec.w, spec.h, spec.cut) }}>
       {shown.map((level, i) => <span key={i} ref={i === shown.length - 1 ? lastRef : undefined}
         className={`yt-swatch-band is-${level}`} style={{ height: heights[i], background: COLOR[level] }} />)}

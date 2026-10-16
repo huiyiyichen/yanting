@@ -163,7 +163,8 @@ export function SupportWorkbench() {
         if (!active.current && next.items.length) {
           const firstId = next.items[0].conversationId
           setFallbackId(firstId)
-          setParams({ conversation: firstId }, { replace: true })
+          // 保留 view 等其他参数：全景视图下自动选中首个会话不能把页面切回工作台
+          setParams((prev) => { const nextParams = new URLSearchParams(prev); nextParams.set('conversation', firstId); return nextParams }, { replace: true })
         }
       } catch (err) {
         if (!disposed) {

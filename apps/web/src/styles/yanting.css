@@ -255,3 +255,4 @@ mark.yt-trigger.is-dissatisfied { text-decoration-color: var(--yt-upset); }
 .yt-swatch-band { flex: none; display: block; transform-origin: 50% 100%; }
 .yt-swatch-risk { position: absolute; right: -4px; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--yt-fury); box-shadow: 0 0 0 2px var(--yt-card, #fff); }
 .yt-swatch.is-sm .yt-swatch-risk { width: 6px; height: 6px; right: -3px; top: -3px; box-shadow: 0 0 0 1.5px var(--yt-card, #fff); }
+.yt-swatch.is-empty .yt-swatch-body { background: var(--yt-staff, #e3dce9); }

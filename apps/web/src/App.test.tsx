@@ -152,6 +152,13 @@ describe('颜听工作台', () => {
       })
     })
   }, 15000)
+  it('全景视图：URL 保留 view=panorama，自动选中会话不切回工作台（全景方案 3.2）', async () => {
+    renderApp('/support?view=panorama')
+    expect(await screen.findByRole('radio', { name: '全景' })).toHaveAttribute('aria-checked', 'true')
+    await screen.findByRole('region', { name: 'AI 接待中' })
+    await new Promise((resolve) => setTimeout(resolve, 1800))
+    expect(screen.getByRole('radio', { name: '全景' })).toHaveAttribute('aria-checked', 'true')
+  }, 15000)
   it('保留管理导航并移除 JEV', async () => {
     renderApp()
     expect(screen.queryByText(/JEV/)).not.toBeInTheDocument()
