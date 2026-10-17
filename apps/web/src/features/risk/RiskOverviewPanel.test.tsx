@@ -5,6 +5,8 @@
  * V3 商品线索出现质量结论文字（如“质量问题”“同批次”），只允许计数。
  * V4 点击类型条不筛选下方列表（onFilterType 未带类型）。
  * V5 点击高风险会话标记不打开对应会话筛选（onFilterConversation 未带会话号）。
+ * V7 大声纹柱子过多挤成一团（1 小时一根 × 7 天 = 112 根）：总数应控制在约 60 根内；
+ *    范围切换压住图例；标题日期范围与图上显示的天数不一致。
  * V6 商品线索不能展开到订单与会话（反馈 ⑤）；展开后不按批次分组。
  */
 import { fireEvent, render, screen, within } from '@testing-library/react'
@@ -12,7 +14,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { ConfigProvider } from 'antd'
 import { describe, expect, it, vi } from 'vitest'
 import type { ProductClueView, RiskOverviewView } from '../../api/client'
-import { RiskOverviewPanel } from './RiskOverviewPanel'
+import { RiskOverviewPanel, mergeStep } from './RiskOverviewPanel'
 
 const overview: RiskOverviewView = {
   scope: 'official',
@@ -76,6 +78,11 @@ describe('RiskOverviewPanel', () => {
     expect(screen.getByRole('region', { name: '其他工单' })).toHaveTextContent('无订单')
     fireEvent.click(within(batch).getByRole('button', { name: '半d** · S00012' }))
     expect(handlers.onFilterConversation).toHaveBeenCalledWith('S00012')
+  })
+  it('V7 柱子总数不超过 60：7 天 16 小时按 2 小时合并，19 天按 6 小时', () => {
+    expect(mergeStep(7, 16)).toBe(2)
+    expect(mergeStep(19, 16)).toBe(6)
+    expect(mergeStep(1, 16)).toBe(1)
   })
 })
 

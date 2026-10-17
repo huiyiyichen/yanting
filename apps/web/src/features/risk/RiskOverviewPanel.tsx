@@ -15,19 +15,23 @@ const typeLabel = (key: string) => (serviceRiskTypeLabels as Record<string, stri
  * 中线以上不满（琥珀）与激烈（红）分段堆叠、段间留 2px，中线以下平稳（绿，半透明），上下各自按最大值缩放；
  * 圆角柱、等比缩放（不拉伸），上方一条带画高风险会话菱形，只标注一个负面峰值；悬停整列高亮并显示该小时数量。
  */
-function DistributionVoiceprint({ overview, onMarker }: {
-  overview: RiskOverviewView; onMarker: (conversationId: string) => void
+const STACK_GAP = 1
+
+/** 每根柱合并几个小时：柱子总数尽量不超过 60。 */
+export function mergeStep(dayCount: number, hoursPerDay: number, maxBars = 60): number {
+  return [1, 2, 3, 4, 6, 8].find((step) => dayCount * Math.ceil(hoursPerDay / step) <= maxBars) ?? 12
+}
+
+function DistributionVoiceprint({ overview, days, onMarker }: {
+  overview: RiskOverviewView; days: string[]; onMarker: (conversationId: string) => void
 }) {
   const [hover, setHover] = useState<number | null>(null)
-  const [all, setAll] = useState(false)
-  const allDays = [...new Set(overview.hourly.map((b) => b.date))].sort()
-  const days = all ? allDays : densestWindow(overview.hourly)
   const breaks = axisBreaks(days)
   const buckets = overview.hourly.filter((b) => days.includes(b.date))
   const hours = buckets.map((b) => b.hour)
   const h0 = Math.min(8, ...hours), h1 = Math.max(23, ...hours)
-  // 天数多时按 2 小时合并，保证柱宽不细成线
-  const step = days.length > 10 ? 2 : 1
+  // 柱子总数控制在约 60 根以内：按 1/2/3/4/6 小时合并，柱宽才不会细成线、挤成一团
+  const step = mergeStep(days.length, h1 - h0 + 1)
   const perDay = Math.ceil((h1 - h0 + 1) / step)
   const slots = days.flatMap((date) => Array.from({ length: perDay }, (_, k) => ({ date, hour: h0 + k * step, calm: 0, dissatisfied: 0, angry: 0 })))
   for (const b of buckets) {
@@ -40,7 +44,9 @@ function DistributionVoiceprint({ overview, onMarker }: {
   const u = (H - top - bottomPad) / (maxUp + maxDown + 1)
   const mid = top + (maxUp + 0.5) * u
   const slot = W / Math.max(1, slots.length)
-  const bw = Math.max(2, Math.min(6, slot - 2))
+  const bw = Math.max(3, Math.min(12, slot * 0.62))
+  // 激烈直接叠在不满上方，只留 1 个单位的缝；小段圆角随高度收小，避免看起来像分开的点
+  const r = (h: number) => Math.min(2, h / 2)
   const negative = buckets.reduce((sum, b) => sum + b.dissatisfied + b.angry, 0)
   const summary = `情绪声纹：消费者消息 ${overview.customerMessages} 条，负面 ${negative} 条，高风险会话 ${overview.highRiskMarkers.length} 个`
   const peakIndex = slots.reduce((best, b, i) => (b.dissatisfied + b.angry > slots[best].dissatisfied + slots[best].angry ? i : best), 0)
@@ -49,10 +55,6 @@ function DistributionVoiceprint({ overview, onMarker }: {
   const indexOf = (date: string, hour: number) => days.indexOf(date) * perDay + Math.floor((hour - h0) / step)
   const hovered = hover === null ? null : slots[hover]
   return <div className="yt-dist">
-    {days.length < allDays.length || all ? <div className="yt-dist-range" role="group" aria-label="声纹范围">
-      <button type="button" aria-pressed={!all} onClick={() => setAll(false)}>密集 7 天</button>
-      <button type="button" aria-pressed={all} onClick={() => setAll(true)}>全部 {allDays.length} 天</button>
-    </div> : null}
     <svg role="img" aria-label={summary} viewBox={`0 0 ${W} ${H}`} width="100%" onMouseLeave={() => setHover(null)}
       onMouseMove={(event) => {
         const box = event.currentTarget.getBoundingClientRect()
@@ -71,14 +73,14 @@ function DistributionVoiceprint({ overview, onMarker }: {
         const x = xOf(i)
         const delay = { animationDelay: `${(i * 0.004).toFixed(3)}s` }
         return <g key={`${b.date}-${b.hour}`}>
-          {b.calm > 0 && <rect x={x} y={mid + 2} width={bw} height={b.calm * u} rx={2} className="yt-dist-calm yt-dist-bar is-down" style={delay} />}
-          {b.dissatisfied > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u} width={bw} height={b.dissatisfied * u} rx={2} className="yt-dist-upset yt-dist-bar" style={delay} />}
-          {b.angry > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u - (b.dissatisfied ? 2 : 0) - b.angry * u} width={bw} height={b.angry * u} rx={2}
+          {b.calm > 0 && <rect x={x} y={mid + 2} width={bw} height={b.calm * u} rx={r(b.calm * u)} className="yt-dist-calm yt-dist-bar is-down" style={delay} />}
+          {b.dissatisfied > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u} width={bw} height={b.dissatisfied * u} rx={r(b.dissatisfied * u)} className="yt-dist-upset yt-dist-bar" style={delay} />}
+          {b.angry > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u - (b.dissatisfied ? STACK_GAP : 0) - b.angry * u} width={bw} height={b.angry * u} rx={r(b.angry * u)}
             className="yt-dist-fury yt-dist-bar" style={delay} />}
         </g>
       })}
       {peak && peak.dissatisfied + peak.angry > 0 && <text x={xOf(peakIndex) + bw + 6}
-        y={mid - 2 - (peak.dissatisfied + peak.angry) * u - (peak.angry && peak.dissatisfied ? 2 : 0) + 4} className="yt-dist-peak">
+        y={mid - 2 - (peak.dissatisfied + peak.angry) * u - (peak.angry && peak.dissatisfied ? STACK_GAP : 0) + 4} className="yt-dist-peak">
         {peak.date.slice(5).replace('-', '/')} {peak.hour}时{step > 1 ? '起' : ''} 负面 {peak.dissatisfied + peak.angry}
       </text>}
     </svg>
@@ -128,6 +130,11 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
   const levelTotal = Math.max(1, Object.values(overview.levels).reduce((a, b) => a + b, 0))
   const typeRows = Object.entries(overview.types).sort((a, b) => b[1] - a[1])
   const typeMax = Math.max(1, ...typeRows.map(([, v]) => v))
+  const [allDays, setAllDays] = useState(false)
+  const everyDay = [...new Set(overview.hourly.map((b) => b.date))].sort()
+  const dense = densestWindow(overview.hourly)
+  const days = allDays ? everyDay : dense
+  const md = (d?: string) => d?.slice(5).replace('-', '/')
   return <section className="yt-monitor" aria-label="风险总览">
     <div className="yt-monitor-hero">
       <div className="yt-kpis">
@@ -140,11 +147,15 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
       </div>
       <div className="yt-dist-wrap">
         <div className="yt-panel-head"><h3>情绪声纹</h3>
-          <span className="yt-num">{overview.hourly[0]?.date.slice(5).replace('-', '/')}–{overview.hourly.at(-1)?.date.slice(5).replace('-', '/')}</span>
+          <span className="yt-num">{days.length ? `${md(days[0])}–${md(days.at(-1))}` : '—'}</span>
           <span>消费者消息 <b>{overview.customerMessages}</b> 负面 <b>{Math.round(overview.negativeShare * 100)}%</b></span>
+          {dense.length < everyDay.length && <span className="yt-dist-range" role="group" aria-label="声纹范围">
+            <button type="button" aria-pressed={!allDays} onClick={() => setAllDays(false)}>密集 7 天</button>
+            <button type="button" aria-pressed={allDays} onClick={() => setAllDays(true)}>全部 {everyDay.length} 天</button>
+          </span>}
           <span className="yt-legend"><i className="is-fury" />激烈<i className="is-upset" />不满<i className="is-calm" />平稳<i className="is-marker" />高风险会话</span>
         </div>
-        <DistributionVoiceprint overview={overview} onMarker={onFilterConversation} />
+        <DistributionVoiceprint overview={overview} days={days} onMarker={onFilterConversation} />
       </div>
     </div>
     <div className="yt-monitor-grid">

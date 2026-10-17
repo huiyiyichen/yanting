@@ -712,7 +712,8 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-clue-cases a { color: var(--yt-gold-ink); font-family: var(--yt-num); }
 
 /* 大声纹范围与断轴（X-1） */
-.yt-risk-page .yt-dist-range { position: absolute; top: -30px; right: 0; display: inline-flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--m-hair, rgba(255,255,255,.08)); }
+.yt-risk-page .yt-dist-range { margin-left: auto; display: inline-flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--m-hair, rgba(255,255,255,.08)); }
 .yt-risk-page .yt-dist-range button { border: 0; background: none; font: inherit; font-size: 12px; height: 22px; padding: 0 9px; border-radius: 5px; color: var(--m-ink-3); cursor: pointer; }
 .yt-risk-page .yt-dist-range button[aria-pressed="true"] { background: var(--m-card, rgba(255,255,255,.12)); color: var(--m-ink); }
 .yt-risk-page .yt-dist-break { fill: var(--m-ink-3); font-size: 22px; }
+.yt-risk-page .yt-dist-range + .yt-legend { margin-left: 14px; }
