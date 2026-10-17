@@ -26,7 +26,7 @@ def check(session: Session) -> dict[str, Any]:
     auto_messages = list(session.scalars(select(MessageRow).where(
         MessageRow.sender_role == "assistant", MessageRow.client_message_key.like("auto:%"))))
     citations = list(session.scalars(select(ReplyCitationRow)))
-    records = {r for r in session.scalars(select(SourceRecordRow.record_id))}
+    records = set(session.scalars(select(SourceRecordRow.record_id)))
     jobs = {j.job_id: j for j in session.scalars(select(AutoReplyJobRow))}
 
     def item(name: str, ok: int, total: int, failures: list[str]) -> dict[str, Any]:
