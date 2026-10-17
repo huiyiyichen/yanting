@@ -24,3 +24,23 @@ export function axisBreaks(days: string[]): Set<number> {
   days.forEach((d, i) => { if (i > 0 && dayNo(d) - dayNo(days[i - 1]) > 1) breaks.add(i) })
   return breaks
 }
+
+/** 缩略条点某一天：以该天为起点取连续日历 span 天内有数据的日期；越过末尾时整体前移。 */
+export function windowFrom(buckets: Bucket[], start: string, span = 7): string[] {
+  const days = [...new Set(buckets.map((b) => b.date))].sort()
+  if (!days.length) return []
+  const last = dayNo(days[days.length - 1])
+  const s0 = Math.max(dayNo(days[0]), Math.min(dayNo(start), last - span + 1))
+  return days.filter((d) => dayNo(d) >= s0 && dayNo(d) < s0 + span)
+}
+
+/** 缩略条数据：每天负面条数（不满+激烈）与总数。 */
+export function dailyTotals(buckets: Bucket[]): { date: string; negative: number; total: number }[] {
+  const map = new Map<string, { date: string; negative: number; total: number }>()
+  for (const b of buckets) {
+    const row = map.get(b.date) ?? { date: b.date, negative: 0, total: 0 }
+    row.negative += b.dissatisfied + b.angry; row.total += b.calm + b.dissatisfied + b.angry
+    map.set(b.date, row)
+  }
+  return [...map.values()].sort((a, b) => a.date.localeCompare(b.date))
+}

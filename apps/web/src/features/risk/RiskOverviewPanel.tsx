@@ -2,7 +2,7 @@ import { Popover } from 'antd'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shMonthDay } from '../service-desk/shTime'
-import { axisBreaks, densestWindow } from './distDays'
+import { axisBreaks, dailyTotals, densestWindow, windowFrom } from './distDays'
 import type { ProductClueView, RiskOverviewView } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 
@@ -20,6 +20,17 @@ const STACK_GAP = 1
 /** 每根柱合并几个小时：柱子总数尽量不超过 60。 */
 export function mergeStep(dayCount: number, hoursPerDay: number, maxBars = 60): number {
   return [1, 2, 3, 4, 6, 8].find((step) => dayCount * Math.ceil(hoursPerDay / step) <= maxBars) ?? 12
+}
+
+/** X-1 缩略条：全部日期每天一格，高度=负面条数，亮框为当前显示的 7 天；点某天把窗口移到那天起。 */
+function DistOverview({ overview, shown, onPick }: { overview: RiskOverviewView; shown: string[]; onPick: (date: string) => void }) {
+  const rows = dailyTotals(overview.hourly)
+  const max = Math.max(1, ...rows.map((r) => r.negative))
+  return <div className="yt-dist-overview" role="group" aria-label="声纹缩略条">
+    {rows.map((r) => <button type="button" key={r.date} aria-pressed={shown.includes(r.date)}
+      aria-label={`${r.date.slice(5).replace('-', '/')} 负面 ${r.negative}`} onClick={() => onPick(r.date)}>
+      <i style={{ height: `${Math.max(8, (r.negative / max) * 100)}%` }} /></button>)}
+  </div>
 }
 
 function DistributionVoiceprint({ overview, days, onMarker }: {
@@ -127,7 +138,8 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
   const [allDays, setAllDays] = useState(false)
   const everyDay = [...new Set(overview.hourly.map((b) => b.date))].sort()
   const dense = densestWindow(overview.hourly)
-  const days = allDays ? everyDay : dense
+  const [windowStart, setWindowStart] = useState<string | null>(null)
+  const days = allDays ? everyDay : windowStart ? windowFrom(overview.hourly, windowStart) : dense
   const md = (d?: string) => d?.slice(5).replace('-', '/')
   return <section className="yt-monitor" aria-label="风险总览">
     <div className="yt-monitor-hero">
@@ -144,12 +156,13 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
           <span className="yt-num">{days.length ? `${md(days[0])}–${md(days.at(-1))}` : '—'}</span>
           <span>消费者消息 <b>{overview.customerMessages}</b> 负面 <b>{Math.round(overview.negativeShare * 100)}%</b></span>
           {dense.length < everyDay.length && <span className="yt-dist-range" role="group" aria-label="声纹范围">
-            <button type="button" aria-pressed={!allDays} onClick={() => setAllDays(false)}>密集 7 天</button>
+            <button type="button" aria-pressed={!allDays} onClick={() => { setAllDays(false); setWindowStart(null) }}>密集 7 天</button>
             <button type="button" aria-pressed={allDays} onClick={() => setAllDays(true)}>全部 {everyDay.length} 天</button>
           </span>}
           <span className="yt-legend"><i className="is-fury" />激烈<i className="is-upset" />不满<i className="is-calm" />平稳<i className="is-marker" />高风险会话</span>
         </div>
         <DistributionVoiceprint overview={overview} days={days} onMarker={onFilterConversation} />
+        {!allDays && dense.length < everyDay.length && <DistOverview overview={overview} shown={days} onPick={setWindowStart} />}
       </div>
     </div>
     <div className="yt-monitor-grid">

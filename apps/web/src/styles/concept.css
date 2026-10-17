@@ -722,3 +722,9 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-risk-page .yt-monitor-grid > .yt-panel { display: flex; flex-direction: column; }
 .yt-risk-page .yt-level-legend { flex: 1; align-content: space-evenly; }
 .yt-risk-page .yt-level-legend b { font-size: 22px; font-weight: 600; }
+
+/* X-1 缩略条 */
+.yt-risk-page .yt-dist-overview { display: flex; gap: 3px; height: 22px; margin-top: 6px; padding: 3px; border-radius: 8px; background: var(--m-line); }
+.yt-risk-page .yt-dist-overview button { flex: 1; display: flex; align-items: flex-end; padding: 0 1px; border: 0; border-radius: 4px; background: transparent; cursor: pointer; opacity: 0.45; }
+.yt-risk-page .yt-dist-overview button[aria-pressed='true'] { opacity: 1; background: var(--m-panel); }
+.yt-risk-page .yt-dist-overview i { display: block; width: 100%; border-radius: 2px; background: var(--m-upset); }
