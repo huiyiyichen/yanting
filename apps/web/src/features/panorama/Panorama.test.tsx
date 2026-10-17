@@ -6,6 +6,7 @@
  * P4 “打开会话”不回到工作台并选中会话。
  * P5 暂停刷新后仍在请求。
  * P6 待人工的预览缺少转人工原因与原话；步骤缺失。
+ * P7 上一轮不按 Agent 列出：并行组不缩进、没有逐项耗时、没有跳到模型配置页「Agent 追踪」的入口（多 Agent 8.2）。
  */
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { ConfigProvider } from 'antd'
@@ -14,6 +15,7 @@ import type { PanoramaItem } from '../../api/client'
 
 const api = vi.hoisted(() => ({ panorama: vi.fn(), receptionMessages: vi.fn(), setReceptionMode: vi.fn() }))
 vi.mock('../../api/client', async (orig) => ({ ...(await orig<object>()), supportApi: api }))
+import { MemoryRouter } from 'react-router-dom'
 import { Panorama } from './Panorama'
 
 const at = new Date().toISOString()
@@ -28,14 +30,16 @@ beforeEach(() => {
   api.panorama.mockResolvedValue({ running: 1, queued: 0, activeWindowMinutes: 120, items: [
     item('甲', { aiJob: 'running', currentRun: { steps: steps.map((s) => ({ ...s, status: s.name === '起草' ? 'active' : 'pending' })) } }),
     item('乙', { lane: 'wait', highRisk: true, emotionBands: ['dissatisfied', 'angry'], waitingSince: at,
-      handoffReason: '投诉风险', handoffQuote: '不然我直接投诉到平台', lastRun: { outcome: 'handoff', steps } }),
+      handoffReason: '投诉风险', handoffQuote: '不然我直接投诉到平台', lastRun: { outcome: 'handoff', traceId: 'trc-1', steps: [
+      { name: '安全闸门', status: 'done', durationMs: 5 }, { name: '轨迹查询', status: 'done', durationMs: 300, group: 'fanout' },
+      { name: '知识', status: 'done', durationMs: 800, group: 'fanout' }, { name: '共情起草', status: 'fail', durationMs: 1200, attempts: 2 }] } }),
     item('丙', { lane: 'human', handler: '客服' }),
   ] })
   api.receptionMessages.mockResolvedValue([])
   api.setReceptionMode.mockResolvedValue({})
 })
 
-const mount = (onOpen = vi.fn()) => { render(<ConfigProvider><Panorama onOpen={onOpen} /></ConfigProvider>); return onOpen }
+const mount = (onOpen = vi.fn()) => { render(<MemoryRouter><ConfigProvider><Panorama onOpen={onOpen} /></ConfigProvider></MemoryRouter>); return onOpen }
 
 describe('Panorama', () => {
   it('P1/P2 泳道归属与筛选淡化', async () => {
@@ -54,7 +58,13 @@ describe('Panorama', () => {
     const reason = screen.getByRole('region', { name: '转人工原因' })
     expect(reason).toHaveTextContent('投诉风险')
     expect(reason).toHaveTextContent('不然我直接投诉到平台')
-    expect(screen.getByRole('region', { name: '上一轮 AI 处理' })).toHaveTextContent('转人工')
+    const last = screen.getByRole('region', { name: '上一轮 AI 处理' })
+    expect(last).toHaveTextContent('转人工')
+    const rows = within(last).getAllByRole('listitem')
+    expect(rows.map((row) => row.className.includes('is-par'))).toEqual([false, true, true, false])
+    expect(rows[2]).toHaveTextContent('0.8s')
+    expect(rows[3]).toHaveTextContent('×2')
+    expect(within(last).getByRole('link', { name: '查看追踪' })).toHaveAttribute('href', '/platform/models?tab=trace&trace=trc-1')
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /接\s?管/ })) })
     expect(api.setReceptionMode).toHaveBeenCalledWith('乙', 'operator_assisted')
     fireEvent.click(screen.getByRole('button', { name: '打开会话' }))

@@ -25,8 +25,11 @@ MEDICAL = ("医院", "就医", "看医生", "呼吸困难", "喉咙肿", "脸肿
 
 class PanoramaStep(ApiModel):
     name: str
-    status: Literal["pending", "active", "done", "fail"]
+    status: Literal["pending", "active", "done", "fail", "skipped"]
     duration_ms: int = 0
+    #: 并行组（同组的 Agent 并行运行，预览中缩进显示）
+    group: str | None = None
+    attempts: int = 1
 
 
 class PanoramaRun(ApiModel):
@@ -92,14 +95,15 @@ def handoff_label(reason: str, quote: str | None) -> str:
     return HANDOFF_REASONS.get(reason, "待人工跟进")
 
 
-SPAN_TO_STEP = {
-    "safety_gate": "安全检查", "trajectory": "读取轨迹", "vision": "读取轨迹", "knowledge": "知识检索",
-    "composer": "起草", "program_check": "核验", "verifier": "核验", "output_gate": "核验", "send_gate": "发送",
+AGENT_LABEL = {
+    "safety_gate": "安全闸门", "triage": "分诊", "trajectory": "轨迹查询", "knowledge": "知识", "vision": "视觉",
+    "composer": "共情起草", "program_check": "程序核验", "verifier": "核验", "output_gate": "输出闸门",
+    "send_gate": "发送闸门", "rewriter": "改写",
 }
 
 
 def _last_run_from_trace(session: Session, conversation_id: str) -> dict | None:
-    """上一轮 AI 处理从落库的追踪读取，进程重启后仍在（追溯 T8）。"""
+    """上一轮 AI 处理从落库的追踪读取，进程重启后仍在（追溯 T8）；按实际运行的 Agent 列出（8.2）。"""
     from app.audit.trace_models import AgentSpanRow, AgentTraceRow
 
     trace = session.scalar(select(AgentTraceRow).where(
@@ -108,18 +112,21 @@ def _last_run_from_trace(session: Session, conversation_id: str) -> dict | None:
     ).order_by(AgentTraceRow.started_at.desc()).limit(1))
     if trace is None:
         return None
-    steps: dict[str, dict] = {name: {"name": name, "status": "pending", "durationMs": 0}
-                              for name in job_progress.DISPLAY_STEPS}
+    steps: dict[str, dict] = {}
     for span in session.scalars(select(AgentSpanRow).where(
-            AgentSpanRow.trace_id == trace.trace_id, AgentSpanRow.parent_span_id.is_(None))):
-        name = SPAN_TO_STEP.get(span.name)
-        if name is None:
-            continue
-        step = steps[name]
-        step["durationMs"] += span.duration_ms or 0
+            AgentSpanRow.trace_id == trace.trace_id, AgentSpanRow.parent_span_id.is_(None),
+            AgentSpanRow.kind != "model").order_by(AgentSpanRow.seq)):
         failed = span.status not in {"ok", "skipped"} or (
             span.kind == "decision" and "转人工" in (span.reasons_json or ""))
-        step["status"] = "fail" if failed or step["status"] == "fail" else "done"
+        status = "fail" if failed else "skipped" if span.status == "skipped" else "done"
+        step = steps.get(span.name)
+        if step is None:
+            steps[span.name] = {"name": AGENT_LABEL.get(span.name) or span.label or span.name, "status": status,
+                                "durationMs": span.duration_ms or 0, "group": span.parallel_group, "attempts": 1}
+            continue
+        step["durationMs"] += span.duration_ms or 0
+        step["attempts"] += 1
+        step["status"] = status
     return {"outcome": trace.status, "steps": list(steps.values()), "traceId": trace.trace_id}
 
 
@@ -127,7 +134,8 @@ def _run(raw: dict | None) -> PanoramaRun | None:
     if not raw:
         return None
     return PanoramaRun(outcome=raw.get("outcome"), trace_id=raw.get("traceId"), steps=[
-        PanoramaStep(name=s["name"], status=s["status"], duration_ms=s["durationMs"]) for s in raw["steps"]])
+        PanoramaStep(name=s["name"], status=s["status"], duration_ms=s["durationMs"], group=s.get("group"),
+                     attempts=s.get("attempts", 1)) for s in raw["steps"]])
 
 
 def panorama(session: Session, *, window_minutes: int, now: datetime | None = None) -> PanoramaView:

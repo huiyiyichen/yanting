@@ -91,6 +91,14 @@
 .yt-psteps li.is-fail { color: var(--yt-fury); font-weight: 600; }
 .yt-psteps li.is-fail::before { background: var(--yt-fury); border-color: var(--yt-fury); }
 .yt-psteps .d { font: 12px var(--yt-num); color: var(--yt-ink-3); }
+.yt-psteps li.is-skipped { color: var(--yt-ink-3); }
+.yt-psteps li.is-skipped::before { border-style: dashed; }
+.yt-psteps li.is-par { padding-left: 14px; }
+.yt-psteps li.is-par::before { margin-left: 0; }
+.yt-psteps li.is-par:not(:last-child)::after { left: 21.5px; }
+.yt-psteps .x { margin-left: 6px; font: 11px var(--yt-num); font-style: normal; color: var(--yt-ink-3); }
+.yt-ptrace { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--yt-gold-ink); }
+.yt-ptrace:hover { text-decoration: underline; }
 .yt-pmsgs { display: grid; gap: 8px; }
 .yt-pm { display: grid; gap: 2px; max-width: 92%; }
 .yt-pm .who { font-size: 11px; color: var(--yt-ink-3); display: flex; gap: 6px; align-items: center; }

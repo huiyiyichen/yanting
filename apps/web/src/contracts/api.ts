@@ -907,6 +907,8 @@ export interface paths {
         /**
          * Generate Handoff Summary Route
          * @description 转人工后生成交接摘要：同一次转人工只生成一次；失败时给出转人工原因与触发原话。
+         *
+         *     多 Agent 编排下，转人工同时在响应之后触发 A8 风险哨兵（10 分钟内合并）。
          */
         post: operations["generate_handoff_summary_route_api_support_reception__conversation_id__handoff_summary_post"];
         delete?: never;
@@ -3006,12 +3008,19 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "active" | "done" | "fail";
+            status: "pending" | "active" | "done" | "fail" | "skipped";
             /**
              * Durationms
              * @default 0
              */
             durationMs: number;
+            /** Group */
+            group?: string | null;
+            /**
+             * Attempts
+             * @default 1
+             */
+            attempts: number;
         };
         /** PanoramaView */
         PanoramaView: {

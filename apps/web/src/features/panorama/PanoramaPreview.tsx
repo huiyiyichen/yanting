@@ -1,4 +1,5 @@
 import { Button } from 'antd'
+import { Link } from 'react-router-dom'
 import { UserOutlined } from '@ant-design/icons'
 import type { MessageView, PanoramaItem } from '../../api/client'
 import { EmotionSwatch, SWATCH_LABEL, type SwatchLevel } from '../voiceprint/EmotionSwatch'
@@ -7,14 +8,23 @@ import { LANE_LABEL, clock, waitSeconds } from './panoramaModel'
 
 type Run = NonNullable<PanoramaItem['currentRun']>
 
+const DONE = new Set(['done', 'skipped'])
+
+/** AI 处理：按追踪里实际运行的 Agent 列出，并行组缩进，逐项耗时（多 Agent 8.2）。 */
 function Steps({ run, title }: { run: Run; title: string }) {
   const total = run.outcome === 'sent' ? `${(run.steps.reduce((sum, step) => sum + step.durationMs, 0) / 1000).toFixed(1)} 秒` : ''
   return <section className="yt-pcard" aria-label={title}>
     <h3>{title}<span className="r">{total}</span></h3>
-    <ol className="yt-psteps">{run.steps.map((step) => <li key={step.name} className={`is-${step.status}`}>
-      <span>{step.name}</span>
-      <span className="d">{step.status === 'fail' ? '转人工' : step.status === 'pending' ? '' : `${(step.durationMs / 1000).toFixed(1)}s`}</span>
-    </li>)}</ol>
+    <ol className="yt-psteps">{run.steps.map((step, i) => {
+      const par = Boolean(step.group)
+      const first = par && run.steps[i - 1]?.group !== step.group
+      return <li key={`${step.name}-${i}`} className={`is-${step.status}${par ? ' is-par' : ''}${first ? ' is-par-first' : ''}`}>
+        <span>{step.name}{(step.attempts ?? 1) > 1 && <em className="x">×{step.attempts}</em>}</span>
+        <span className="d">{step.status === 'fail' ? '转人工' : step.status === 'skipped' ? '跳过'
+          : DONE.has(step.status) || step.durationMs ? `${(step.durationMs / 1000).toFixed(1)}s` : ''}</span>
+      </li>
+    })}</ol>
+    {run.traceId && <Link className="yt-ptrace" to={`/platform/models?tab=trace&trace=${encodeURIComponent(run.traceId)}`}>查看追踪</Link>}
   </section>
 }
 
