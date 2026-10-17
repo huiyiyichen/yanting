@@ -161,7 +161,6 @@ class CaseView(ApiModel):
     dealer_authorization_status: str | None = None
     knowledge_hit_status: str | None = None
     retrieval_id: str | None = None
-    troubleshooting_result: str
     rating_status: RatingStatus
     user_rating: int | None = None
     missing_facts: list[str] = Field(default_factory=list)

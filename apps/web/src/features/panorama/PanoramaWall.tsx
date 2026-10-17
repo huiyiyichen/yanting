@@ -7,13 +7,15 @@ const EASE = 'cubic-bezier(.2,.8,.2,1)'
 const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
 /** 墙面：上排待人工、人工处理中，下排 AI 接待中；换泳道用 FLIP 位移。 */
-export function PanoramaWall({ items, now, filter, selectedId, running, queued, onSelect }: {
+export function PanoramaWall({ items, now, filter, selectedId, running, queued, windowMinutes, onSelect }: {
   items: PanoramaItem[]
   now: number
   filter: PanoramaFilter
   selectedId: string | null
   running: number
   queued: number
+  /** 全景只看最近 N 分钟有动静的会话；为空时用来解释"为什么墙上是空的"。 */
+  windowMinutes?: number
   onSelect: (id: string) => void
 }) {
   const host = useRef<HTMLDivElement>(null)
@@ -51,6 +53,11 @@ export function PanoramaWall({ items, now, filter, selectedId, running, queued, 
     </section>
   }
   return <div className="yt-pwall" ref={host}>
+    {items.length === 0 &&
+      <div className="yt-pwall-empty" role="status">
+        <strong>最近 {windowMinutes ?? 120} 分钟没有正在进行的会话</strong>
+        <span>全景只显示近期有活动的接待会话；左侧队列里的历史会话仍可正常打开。</span>
+      </div>}
     <div className="yt-pwall-top">{lane('wait')}{lane('human')}</div>
     {lane('ai')}
   </div>

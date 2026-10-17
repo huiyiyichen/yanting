@@ -35,7 +35,6 @@ from app.domain.enums import (
     RatingStatus,
     SenderRole,
     ServiceMode,
-    TroubleshootingResult,
 )
 
 
@@ -461,7 +460,6 @@ class ConversationRepository:
         dealer_authorization_status: str | None = None,
         knowledge_hit_status: str | None = None,
         retrieval_id: str | None = None,
-        troubleshooting_result: TroubleshootingResult | None = None,
         closure_reason: str | None = None,
     ) -> None:
         """更新案件事实。
@@ -502,8 +500,6 @@ class ConversationRepository:
             case.knowledge_hit_status = knowledge_hit_status
         if retrieval_id is not None:
             case.retrieval_id = retrieval_id
-        if troubleshooting_result is not None:
-            case.troubleshooting_result = troubleshooting_result.value
         if closure_reason is not None:
             case.closure_reason = closure_reason
         case.updated_at = _now()

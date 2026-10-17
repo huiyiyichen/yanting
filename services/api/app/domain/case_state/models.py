@@ -149,8 +149,6 @@ class CaseRow(Base):
     warranty_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     dealer_authorization_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
-    troubleshooting_result: Mapped[str] = mapped_column(String(32), default="not_attempted")
-
     rating_status: Mapped[str] = mapped_column(String(32), default="not_requested")
     user_rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
 

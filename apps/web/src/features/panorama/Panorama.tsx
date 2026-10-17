@@ -60,7 +60,8 @@ export function Panorama({ onOpen }: { onOpen: (conversationId: string) => void 
       </div>
       {error && <Alert type="error" title={error} showIcon />}
       <PanoramaWall items={items} now={now} filter={filter} selectedId={selectedId}
-        running={view?.running ?? 0} queued={view?.queued ?? 0} onSelect={setSelectedId} />
+        running={view?.running ?? 0} queued={view?.queued ?? 0} windowMinutes={view?.activeWindowMinutes}
+        onSelect={setSelectedId} />
     </div>
     <PanoramaPreview item={selected} messages={messages} now={now} busy={busy} onTakeover={(id) => void takeover(id)} onOpen={onOpen} />
   </div>

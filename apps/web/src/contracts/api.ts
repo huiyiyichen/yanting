@@ -1,6 +1,6 @@
 /**
  * 本文件由 scripts/generateContracts.mjs 自动生成，请勿手工修改。
- * 来源：data/runtime/contracts-export/openapi.json
+ * 来源：http://127.0.0.1:8000/openapi.json
  * 字段命名为 camelCase，与后端 Pydantic 序列化别名一致。
  */
 
@@ -1766,8 +1766,6 @@ export interface components {
             knowledgeHitStatus?: string | null;
             /** Retrievalid */
             retrievalId?: string | null;
-            /** Troubleshootingresult */
-            troubleshootingResult: string;
             ratingStatus: components["schemas"]["RatingStatus"];
             /** Userrating */
             userRating?: number | null;

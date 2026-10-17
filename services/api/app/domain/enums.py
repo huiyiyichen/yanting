@@ -39,7 +39,6 @@ __all__ = [
     "ServiceRiskType",
     "ToolName",
     "ToolResultStatus",
-    "TroubleshootingResult",
     "ViewRole",
     "WarrantyStatus",
     "enum_values",
@@ -145,10 +144,7 @@ class ToolName(_Base):
 
     KNOWLEDGE_SEARCH = "knowledge_search"
     ORDER_LOOKUP = "order_lookup"
-    DEALER_LOOKUP = "dealer_lookup"
     PRODUCT_LOOKUP = "product_lookup"
-    WARRANTY_EVALUATE = "warranty_evaluate"
-    TROUBLESHOOTING_PLAN = "troubleshooting_plan"
     CREATE_AFTER_SALES_REQUEST = "create_after_sales_request"
     RECORD_CASE_FACT = "record_case_fact"
     RECORD_RATING = "record_rating"
@@ -215,7 +211,6 @@ class KnowledgeSourceType(_Base):
     """知识源类型。权限由 visibility 决定，不由类型或名称决定。"""
 
     PRODUCT_KNOWLEDGE = "product_knowledge"
-    TROUBLESHOOTING = "troubleshooting"
     SOP = "sop"
     WARRANTY_POLICY = "warranty_policy"
 
@@ -340,15 +335,6 @@ class KnowledgeHitStatus(_Base):
     CONFLICTING = "conflicting"
 
 
-class TroubleshootingResult(_Base):
-    """排障结果。只有用户确认才能记为 resolved。"""
-
-    RESOLVED = "resolved"
-    UNRESOLVED = "unresolved"
-    NOT_ATTEMPTED = "not_attempted"
-    UNKNOWN = "unknown"
-
-
 class ServiceMode(_Base):
     """会话服务模式，与页面视角无关。"""
 
@@ -439,10 +425,7 @@ _LABELS: dict[_Base, str] = {
     # ToolName
     ToolName.KNOWLEDGE_SEARCH: "知识检索",
     ToolName.ORDER_LOOKUP: "订单查询",
-    ToolName.DEALER_LOOKUP: "经销商核验",
     ToolName.PRODUCT_LOOKUP: "产品查询",
-    ToolName.WARRANTY_EVALUATE: "质保判定",
-    ToolName.TROUBLESHOOTING_PLAN: "排障方案",
     ToolName.CREATE_AFTER_SALES_REQUEST: "生成申请草稿",
     ToolName.RECORD_CASE_FACT: "记录案件事实",
     ToolName.RECORD_RATING: "记录满意度",
@@ -485,7 +468,6 @@ _LABELS: dict[_Base, str] = {
     ServiceRiskStatus.IGNORED: "已忽略",
     # KnowledgeSourceType
     KnowledgeSourceType.PRODUCT_KNOWLEDGE: "产品资料",
-    KnowledgeSourceType.TROUBLESHOOTING: "排障资料",
     KnowledgeSourceType.SOP: "业务 SOP",
     KnowledgeSourceType.WARRANTY_POLICY: "质保政策",
     # Visibility
@@ -564,11 +546,6 @@ _LABELS: dict[_Base, str] = {
     KnowledgeHitStatus.INSUFFICIENT: "命中不足",
     KnowledgeHitStatus.NOT_FOUND: "未命中",
     KnowledgeHitStatus.CONFLICTING: "依据冲突",
-    # TroubleshootingResult
-    TroubleshootingResult.RESOLVED: "用户确认解决",
-    TroubleshootingResult.UNRESOLVED: "未解决",
-    TroubleshootingResult.NOT_ATTEMPTED: "未尝试",
-    TroubleshootingResult.UNKNOWN: "未知",
     # ServiceMode
     ServiceMode.AUTONOMOUS: "AI 托管",
     ServiceMode.OPERATOR_ASSISTED: "客服接管",
@@ -641,7 +618,6 @@ def enum_values() -> dict[str, dict[str, str]]:
         "warrantyStatus": WarrantyStatus,
         "dealerAuthorizationStatus": DealerAuthorizationStatus,
         "knowledgeHitStatus": KnowledgeHitStatus,
-        "troubleshootingResult": TroubleshootingResult,
         "serviceMode": ServiceMode,
         "senderRole": SenderRole,
         "viewRole": ViewRole,

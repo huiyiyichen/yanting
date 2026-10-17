@@ -4,7 +4,12 @@ param(
     # demo：路演用 data/runtime/demo.sqlite3（由 build_demo_database.py + reset_demo.ps1 准备）
     # dev：日常开发用默认运行库
     [ValidateSet('demo', 'dev')][string]$Profile = 'dev',
-    [switch]$Restart
+    [switch]$Restart,
+    # 演示/验收用生产包预览：前端改为 `vite preview` 提供已打包产物。
+    # 实测 dev 模式首次加载 3.8s、610 个模块请求、切换有 100-300ms 长任务；
+    # 生产包首次加载 0.54s、1 个脚本请求、切换无长任务。改过前端源码后加 -Rebuild。
+    [switch]$Preview,
+    [switch]$Rebuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,7 +33,16 @@ try {
     } else {
         & (Join-Path $PSScriptRoot 'start_loreal_backend.ps1') -Background
     }
-    & (Join-Path $PSScriptRoot 'start_loreal_frontend.ps1') -Background
+    # 前端形态（dev / preview）由启动参数决定；-Restart 时先停掉旧进程，
+    # 避免 dev 与 preview 互相占端口（两个形态的进程校验互不兼容）。
+    if ($Restart) {
+        & (Join-Path $PSScriptRoot 'start_loreal_frontend.ps1') -Stop
+    }
+    if ($Preview) {
+        & (Join-Path $PSScriptRoot 'start_loreal_frontend.ps1') -Background -Preview -Rebuild:$Rebuild
+    } else {
+        & (Join-Path $PSScriptRoot 'start_loreal_frontend.ps1') -Background
+    }
 
     $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 5
     if ($health.runMode -ne 'live' -or $health.database.state -ne 'ready') {

@@ -267,7 +267,6 @@ class ConversationService:
             dealer_authorization_status=case.dealer_authorization_status,
             knowledge_hit_status=case.knowledge_hit_status,
             retrieval_id=case.retrieval_id,
-            troubleshooting_result=case.troubleshooting_result,
             rating_status=RatingStatus(case.rating_status),
             user_rating=case.user_rating,
             missing_facts=_parse_json_list(case.missing_facts_json),
@@ -327,8 +326,6 @@ class ConversationService:
         actions = ["knowledge_search"]
         if status is CaseStatus.PENDING_REVIEW:
             actions.append("review_request")
-        if case.troubleshooting_result != "resolved":
-            actions.append("troubleshooting_plan")
         return actions
 
 

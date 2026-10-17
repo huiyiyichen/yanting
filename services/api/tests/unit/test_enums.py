@@ -39,7 +39,6 @@ REQUIRED_ENUMS = {
     "warrantyStatus",
     "dealerAuthorizationStatus",
     "knowledgeHitStatus",
-    "troubleshootingResult",
 }
 
 # 工程规范第 4.2 节明确禁止的人工超时状态

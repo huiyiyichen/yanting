@@ -88,10 +88,7 @@ export const requestStatusLabels: Record<RequestStatus, string> = {
 export const TOOL_NAME_VALUES = [
   'knowledge_search',
   'order_lookup',
-  'dealer_lookup',
   'product_lookup',
-  'warranty_evaluate',
-  'troubleshooting_plan',
   'create_after_sales_request',
   'record_case_fact',
   'record_rating',
@@ -102,10 +99,7 @@ export type ToolName = (typeof TOOL_NAME_VALUES)[number]
 export const toolNameLabels: Record<ToolName, string> = {
   "knowledge_search": "知识检索",
   "order_lookup": "订单查询",
-  "dealer_lookup": "经销商核验",
   "product_lookup": "产品查询",
-  "warranty_evaluate": "质保判定",
-  "troubleshooting_plan": "排障方案",
   "create_after_sales_request": "生成申请草稿",
   "record_case_fact": "记录案件事实",
   "record_rating": "记录满意度"
@@ -217,7 +211,6 @@ export const serviceRiskStatusLabels: Record<ServiceRiskStatus, string> = {
 
 export const KNOWLEDGE_SOURCE_TYPE_VALUES = [
   'product_knowledge',
-  'troubleshooting',
   'sop',
   'warranty_policy',
 ] as const
@@ -226,7 +219,6 @@ export type KnowledgeSourceType = (typeof KNOWLEDGE_SOURCE_TYPE_VALUES)[number]
 
 export const knowledgeSourceTypeLabels: Record<KnowledgeSourceType, string> = {
   "product_knowledge": "产品资料",
-  "troubleshooting": "排障资料",
   "sop": "业务 SOP",
   "warranty_policy": "质保政策"
 }
@@ -447,22 +439,6 @@ export const knowledgeHitStatusLabels: Record<KnowledgeHitStatus, string> = {
   "insufficient": "命中不足",
   "not_found": "未命中",
   "conflicting": "依据冲突"
-}
-
-export const TROUBLESHOOTING_RESULT_VALUES = [
-  'resolved',
-  'unresolved',
-  'not_attempted',
-  'unknown',
-] as const
-
-export type TroubleshootingResult = (typeof TROUBLESHOOTING_RESULT_VALUES)[number]
-
-export const troubleshootingResultLabels: Record<TroubleshootingResult, string> = {
-  "resolved": "用户确认解决",
-  "unresolved": "未解决",
-  "not_attempted": "未尝试",
-  "unknown": "未知"
 }
 
 export const SERVICE_MODE_VALUES = [

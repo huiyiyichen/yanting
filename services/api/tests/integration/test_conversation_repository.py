@@ -20,7 +20,6 @@ from app.domain.enums import (
     RatingStatus,
     SenderRole,
     ServiceMode,
-    TroubleshootingResult,
 )
 from app.errors import ValidationRejected
 from app.repositories.conversation_repository import ConversationRepository
@@ -336,12 +335,12 @@ class TestCaseFacts:
         assert case.emotion_level == "angry"
         assert case.missing_facts_json == '["purchase_channel"]'
 
-    def test_troubleshooting_not_resolved_by_default(self, repo: ConversationRepository) -> None:
-        """未经用户确认不得记为已解决。"""
+    def test_rating_not_requested_by_default(self, repo: ConversationRepository) -> None:
+        """新案件默认未请求满意度，需在服务结束后才可评价。"""
 
         conversation = repo.create_conversation(customer_id="CUST-DEMO-01")
         case, _ = repo.create_case_for_conversation(conversation)
-        assert case.troubleshooting_result == TroubleshootingResult.NOT_ATTEMPTED.value
+        assert case.rating_status == RatingStatus.NOT_REQUESTED.value
 
 
 class TestRating:
