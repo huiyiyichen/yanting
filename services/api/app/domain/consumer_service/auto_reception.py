@@ -208,13 +208,13 @@ def _safety_handoff(text: str) -> bool:
 
 def validate_auto_reply(body: str, context: Any, *, claims=None, sources=None) -> None:
     """Conservative automatic-send gate; uncertain factual claims go to a person."""
-    if claims is not None and sources is not None:
+    grounded = claims is not None and sources is not None
+    if grounded:
         from app.domain.consumer_service.grounding import validate_claims
 
         errors = validate_claims(body, claims, {s.source_id: s for s in sources})
         if errors:
             raise ModelOutputInvalid("自动回复依据核验失败", detail="；".join(errors))
-        return
     if not body.strip():
         raise ModelOutputInvalid("自动回复为空")
     forbidden = (
@@ -227,6 +227,9 @@ def validate_auto_reply(body: str, context: Any, *, claims=None, sources=None) -
     )
     if any(re.search(pattern, body) for pattern in forbidden):
         raise ModelOutputInvalid("自动回复需要人工核实")
+    if grounded:
+        # Facts were checked claim by claim against their cited sources above.
+        return
     amounts = set()
     identifiers = set()
     for order in context.orders:
@@ -416,12 +419,9 @@ def process_job(runtime: Any, job_id: str) -> None:
             get_logger(__name__).warning(
                 "Automatic reply rejected: %s detail=%s", exc.message, exc.detail
             )
-            fallback = body if 'body' in locals() else ""
-            if fallback:
-                _finish_handoff(runtime, job_id, "invalid_reply", reply=fallback)
-            else:
-                record_failed_attempt(exc)
-                _finish_handoff(runtime, job_id, "invalid_reply")
+            # S1: a draft that failed verification or the send gate is never shown to the consumer.
+            record_failed_attempt(exc)
+            _finish_handoff(runtime, job_id, "invalid_reply")
             return
         except Exception as exc:
             record_failed_attempt(exc)
