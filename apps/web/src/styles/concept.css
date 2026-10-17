@@ -425,7 +425,7 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist-date { fill: var(--m-ink-3); font-size: 12px; font-family: Bahnschrift, 'DIN Alternate', sans-serif; }
 .yt-risk-page .yt-dist-upset { fill: #c98216; }
 .yt-risk-page .yt-dist-fury { fill: #dd4a5f; }
-.yt-risk-page .yt-dist-calm { fill: #34a07f; fill-opacity: 0.5; opacity: 1; }
+.yt-risk-page .yt-dist-calm { fill: #23c48a; fill-opacity: 0.86; opacity: 1; }
 .yt-risk-page .yt-dist-hover { fill: rgba(255, 255, 255, 0.05); }
 .yt-dist-bar { transform-box: fill-box; transform-origin: 50% 100%; animation: yt-rise 0.9s cubic-bezier(.2, .8, .2, 1) both; }
 .yt-dist-bar.is-down { transform-origin: 50% 0%; }
@@ -713,7 +713,6 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-risk-page .yt-dist-range { margin-left: auto; display: inline-flex; gap: 2px; padding: 2px; border-radius: 7px; background: var(--m-hair, rgba(255,255,255,.08)); }
 .yt-risk-page .yt-dist-range button { border: 0; background: none; font: inherit; font-size: 12px; height: 22px; padding: 0 9px; border-radius: 5px; color: var(--m-ink-3); cursor: pointer; }
 .yt-risk-page .yt-dist-range button[aria-pressed="true"] { background: var(--m-card, rgba(255,255,255,.12)); color: var(--m-ink); }
-.yt-risk-page .yt-dist-break { fill: var(--m-ink-3); font-size: 22px; }
 .yt-risk-page .yt-dist-range + .yt-legend { margin-left: 14px; }
 
 /* 5.4 收尾：图例与图上菱形同色；三块面板等高，风险等级数字放大填满 */
@@ -761,3 +760,8 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 
 /* 工单类型图标与标题留空 */
 .yt-ticket-ic { display: inline-flex; margin-right: 6px; color: var(--yt-ink-2); }
+
+/* 风险页反馈 3：近7天/全部/自选；自选显示缩略条并可拖选 */
+.yt-risk-page .yt-dist-overview button.is-drag { opacity: 1; background: var(--m-panel); box-shadow: inset 0 0 0 1px var(--m-calm); }
+.yt-risk-page .yt-dist-overview { user-select: none; }
+html[data-theme='light'] .yt-risk-page .yt-dist-calm { fill: #14a577; fill-opacity: 0.82; }

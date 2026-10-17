@@ -1,4 +1,4 @@
-/** 大声纹的日期取舍（全景方案 X-1）：默认只看最密集的连续 7 天；相邻有数据的日期间隔超过 1 天时断轴。 */
+/** 大声纹的日期取舍（全景方案 X-1，风险页反馈 1/3）：默认近 7 天；不画断轴。 */
 type Bucket = { date: string; calm: number; dissatisfied: number; angry: number }
 
 const dayNo = (date: string) => Math.round(Date.parse(`${date}T00:00:00Z`) / 86400000)
@@ -18,11 +18,12 @@ export function densestWindow(buckets: Bucket[], span = 7): string[] {
   return best
 }
 
-/** 返回需要画断轴的日期下标：该日与前一个有数据的日期之间隔了至少一天空白。 */
-export function axisBreaks(days: string[]): Set<number> {
-  const breaks = new Set<number>()
-  days.forEach((d, i) => { if (i > 0 && dayNo(d) - dayNo(days[i - 1]) > 1) breaks.add(i) })
-  return breaks
+/** 近 7 天：以最后一个有数据的日期为终点，往前 span 个日历天内有数据的日期。 */
+export function recentWindow(buckets: Bucket[], span = 7): string[] {
+  const days = [...new Set(buckets.map((b) => b.date))].sort()
+  if (!days.length) return []
+  const last = dayNo(days[days.length - 1])
+  return days.filter((d) => dayNo(d) > last - span)
 }
 
 /** 缩略条点某一天：以该天为起点取连续日历 span 天内有数据的日期；越过末尾时整体前移。 */

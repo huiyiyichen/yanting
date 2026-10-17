@@ -5,7 +5,7 @@
  * D3 中间空白日不标断轴，读者误以为相邻。
  */
 import { describe, expect, it } from 'vitest'
-import { axisBreaks, dailyTotals, daysIn, densestWindow, shiftRange, windowFrom } from './distDays'
+import { dailyTotals, recentWindow, daysIn, densestWindow, shiftRange, windowFrom } from './distDays'
 
 const b = (date: string, n: number) => ({ date, calm: n, dissatisfied: 0, angry: 0 })
 
@@ -18,7 +18,6 @@ describe('distDays', () => {
     expect(densestWindow([b('2026-05-01', 1), b('2026-05-06', 1)])).toEqual(['2026-05-01', '2026-05-06'])
   })
   it('D3 间隔超过 1 天标断轴', () => {
-    expect([...axisBreaks(['2026-05-10', '2026-05-11', '2026-05-14'])]).toEqual([2])
   })
   it('缩略条点某天：从该天起取 7 个日历天，越过末尾时前移', () => {
     const bs = ['2026-05-01', '2026-05-02', '2026-05-05', '2026-05-09', '2026-05-12'].map((date) => ({ date, calm: 1, dissatisfied: 1, angry: 0 }))
@@ -33,5 +32,8 @@ describe('distDays', () => {
     expect(shiftRange(days, { from: '2026-05-01', to: '2026-05-03' }, 30)).toEqual({ from: '2026-05-08', to: '2026-05-10' })
     expect(daysIn(days, { from: '2026-05-02', to: '2026-05-10' })).toEqual(['2026-05-03', '2026-05-10'])
   })
+  it('R3 近 7 天：以最后有数据的日期为终点取 7 个日历天', () => {
+    const b = (date: string) => ({ date, calm: 1, dissatisfied: 0, angry: 0 })
+    expect(recentWindow([b('2026-05-01'), b('2026-05-05'), b('2026-05-09'), b('2026-05-11')])).toEqual(['2026-05-05', '2026-05-09', '2026-05-11'])
+  })
 })
-

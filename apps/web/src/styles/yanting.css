@@ -101,7 +101,7 @@
 .yt-dist-day { stroke: var(--m-line); stroke-dasharray: 2 3; }
 .yt-dist-upset { fill: var(--m-upset); }
 .yt-dist-fury { fill: var(--m-fury); }
-.yt-dist-calm { fill: var(--m-calm); opacity: 0.5; }
+.yt-dist-calm { fill: var(--m-calm); opacity: 0.86; }
 .yt-dist-markers { position: absolute; top: 2px; left: 0; height: 10px; }
 .yt-dist-marker {
   position: absolute; top: 0; width: 8px; height: 8px; padding: 0; border: 0; cursor: pointer;
