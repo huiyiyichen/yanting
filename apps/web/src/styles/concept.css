@@ -616,22 +616,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-conclusion mark { background: none; color: inherit; padding: 0; border-bottom: 1.5px solid #f07a8b; }
 .yt-conclusion-foot { margin: 6px 0 0; font-size: 12px; color: var(--m-ink-3); }
 
-.yt-score { overflow-x: auto; padding: 4px 0 6px; }
-.yt-score svg { display: block; }
-.yt-score-label { font-size: 10px; fill: var(--m-ink-3, var(--yt-ink-3)); }
-.yt-score-staff { stroke: var(--m-line-2, #e3dce9); stroke-width: 1; }
-.yt-score-head { stroke: var(--m-panel, var(--yt-card)); stroke-width: 2; cursor: pointer; }
-.yt-score-note.is-on .yt-score-head { stroke: #d9b47c; }
-.yt-score-accent { fill: none; stroke: var(--m-fury, #cc3550); stroke-width: 1.6; stroke-linecap: round; }
-.yt-score-up, .yt-score-down { fill: none; stroke-width: 1.2; }
-.yt-score-up { stroke: var(--m-fury, #cc3550); } .yt-score-down { stroke: var(--m-calm, #22906f); }
-.yt-score-svc { fill: #d9b47c; stroke: #d9b47c; stroke-width: 1.4; cursor: pointer; }
-.yt-score-svc.is-ai { fill: var(--m-panel, var(--yt-card)); }
-.yt-score-svc.is-on { stroke: var(--m-ink, var(--yt-ink)); }
-.yt-score-rest { fill: var(--m-ink-3, var(--yt-ink-3)); opacity: 0.55; }
-.yt-score-rest.is-over { fill: var(--m-upset, #d98a0f); opacity: 1; }
-.yt-score-wait { font: 10px var(--yt-num); fill: var(--m-upset, #d98a0f); }
-.yt-score-break, .yt-score-time { font: 10px var(--yt-num); fill: var(--m-ink-3, var(--yt-ink-3)); }
 
 .yt-replay-convs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 .yt-replay-convs button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--m-line-2); background: none; color: var(--m-ink-2); border-radius: 8px; padding: 3px 8px; font: 12px var(--yt-num); cursor: pointer; }
@@ -765,3 +749,27 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-risk-page .yt-dist-overview button.is-drag { opacity: 1; background: var(--m-panel); box-shadow: inset 0 0 0 1px var(--m-calm); }
 .yt-risk-page .yt-dist-overview { user-select: none; }
 html[data-theme='light'] .yt-risk-page .yt-dist-calm { fill: #14a577; fill-opacity: 0.82; }
+
+/* 对话回放图（风险页反馈 4） */
+.yt-replay-chart { overflow-x: auto; padding: 4px 0 6px; }
+.yt-replay-chart svg { display: block; }
+.yt-rc-grid-t { font-size: 10px; fill: var(--m-ink-3, var(--yt-ink-3)); }
+.yt-rc-grid { stroke: var(--m-line-2, #e3dce9); stroke-width: 1; opacity: 0.6; }
+.yt-rc-axis { stroke: var(--m-line-2, #e3dce9); stroke-width: 1.2; }
+.yt-rc-line { stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.yt-rc-guide { stroke: var(--m-ink-3, var(--yt-ink-3)); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.45; }
+.yt-rc-node { cursor: pointer; }
+.yt-rc-node circle { stroke: var(--m-panel, var(--yt-card)); stroke-width: 1.6; }
+.yt-rc-node.is-angry circle { fill: var(--m-fury, #dd4a5f); }
+.yt-rc-node.is-dissatisfied circle { fill: var(--m-upset, #c98216); }
+.yt-rc-node.is-calm circle { fill: var(--m-calm, #23c48a); }
+.yt-rc-node.is-on circle { stroke: #d9b47c; stroke-width: 2.2; }
+.yt-rc-tag { font-size: 10px; font-weight: 600; fill: var(--m-fury, #dd4a5f); }
+.yt-rc-ev { cursor: pointer; }
+.yt-rc-ev circle { fill: #d9b47c; }
+.yt-rc-ev text { font-size: 10px; fill: var(--m-ink-2, var(--yt-ink-2)); }
+.yt-rc-ev.is-warn circle { fill: var(--m-upset, #c98216); } .yt-rc-ev.is-warn text { fill: var(--m-upset, #c98216); font-weight: 600; }
+.yt-rc-ev.is-ai circle { fill: var(--m-panel, var(--yt-card)); stroke: #d9b47c; stroke-width: 1.4; }
+.yt-rc-ev.is-handoff circle { fill: var(--m-low, #8d93c9); } .yt-rc-ev.is-handoff text { fill: var(--m-low, #8d93c9); font-weight: 600; }
+.yt-rc-ev.is-action text { fill: var(--m-ink, var(--yt-ink)); font-weight: 600; }
+.yt-rc-time { font: 10px var(--yt-num); fill: var(--m-ink-3, var(--yt-ink-3)); }
