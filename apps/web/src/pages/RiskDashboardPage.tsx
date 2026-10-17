@@ -1,8 +1,8 @@
 import { CheckOutlined, CloseOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { Alert, Button, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, message } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError, deskApi, supportApi, type ProductClueView, type ConsumerProfileView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
+import { ApiError, deskApi, supportApi, type DateRange, type ProductClueView, type ConsumerProfileView, type ReceptionItem, type RiskIncidentDetailView, type RiskIncidentView, type RiskOverviewView } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
 import { dateLabel, optionsOf } from '../features/service-desk/shared'
 import { serviceRiskTypeLabels } from '../contracts/enums'
@@ -74,7 +74,17 @@ export function RiskDashboardPage() {
   const [detailProfile, setDetailProfile] = useState<ConsumerProfileView | null>(null)
   const [toast, holder] = message.useMessage()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const rangeFrom = searchParams.get('from'), rangeTo = searchParams.get('to')
+  const range = useMemo(() => rangeFrom && rangeTo ? { from: rangeFrom, to: rangeTo } : null, [rangeFrom, rangeTo])
+  // X-1：框选时间段写入 URL（from/to），刷新保留
+  const setRange = useCallback((next: DateRange | null) => setSearchParams((old) => {
+    const params = new URLSearchParams(old)
+    if (next) { params.set('from', next.from); params.set('to', next.to) } else { params.delete('from'); params.delete('to') }
+    return params
+  }, { replace: true }), [setSearchParams])
+  const [hotConversation, setHotConversation] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
   const requestedConversation = searchParams.get('conversation')
   const requestedType = searchParams.get('type')
   const requestedIncident = searchParams.get('incident')
@@ -106,7 +116,7 @@ export function RiskDashboardPage() {
   const mode = scope === 'official' ? 'historical' : 'active'
   useEffect(() => {
     let cancelled = false
-    Promise.all([deskApi.riskOverview(scope), deskApi.productClues()])
+    Promise.all([deskApi.riskOverview(scope, range), deskApi.productClues(range)])
       .then(([nextOverview, nextClues]) => {
         if (cancelled) return
         setOverview(nextOverview?.counts ? nextOverview : null)
@@ -114,7 +124,7 @@ export function RiskDashboardPage() {
       })
       .catch(() => undefined)
     return () => { cancelled = true }
-  }, [scope, scanning])
+  }, [scope, scanning, range])
   useEffect(() => {
     void load()
     const sync = () => { if (!document.hidden) void load(true) }
@@ -147,15 +157,16 @@ export function RiskDashboardPage() {
   const openConversation = (id: string) => navigate(`/support?conversation=${encodeURIComponent(id)}`)
   const closeDetail = () => { setSelectedId(null); setAction(null) }
   useEffect(() => {
-    if (!selectedId) return
+    if (!selectedId && !range) return
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (event.key !== 'Escape' || target?.closest('input, textarea, [contenteditable="true"], .ant-modal')) return
-      setSelectedId(null); setAction(null)
+      // Esc 先关详情，再清时间段
+      if (selectedId) { setSelectedId(null); setAction(null) } else setRange(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedId])
+  }, [selectedId, range, setRange])
   const refreshDetail = async (incidentId: string, request = detailRequest.current) => {
     const detail = await deskApi.risk(incidentId)
     if (request === detailRequest.current) setSelected(detail)
@@ -239,7 +250,9 @@ export function RiskDashboardPage() {
       }
     } finally { setSaving(false) }
   }
-  const inScope = rows.filter((row) => (row.currentAction === 'record_only') === (scope === 'official'))
+  const rangeIds = range && overview?.rangeConversationIds ? new Set(overview.rangeConversationIds) : null
+  const inScope = rows.filter((row) => (row.currentAction === 'record_only') === (scope === 'official')
+    && (!rangeIds || row.conversationIds.some((cid) => rangeIds.has(cid))))
   const tabOf = (row: RiskIncidentView) => row.attentionState === 'closed' ? 'closed'
     : row.currentAction === 'review' || row.attentionState === 'review' ? 'review'
       : row.currentAction === 'intervene' ? 'active' : 'other'
@@ -291,7 +304,15 @@ export function RiskDashboardPage() {
       {error && <Alert type="error" title={error} showIcon />}
       {runtimeWarning && <Alert type="warning" title="风险接口版本过旧，请更新后端" showIcon />}
       {overview && <RiskOverviewPanel overview={overview} clues={clues}
-        onFilterType={(next) => setType(next)} onFilterConversation={(cid) => setQuery(cid)} />}
+        onFilterType={(next) => setType(next)} onFilterConversation={(cid) => setQuery(cid)}
+        range={range} onRange={(next) => { setRange(next); setPage(1) }} hotConversation={hotConversation}
+        onMarker={(cid) => {
+          // 点菱形：选中对应列表行并滚动到可见
+          const at = filtered.findIndex((row) => row.conversationIds.includes(cid))
+          if (at < 0) { setQuery(cid); return }
+          setPage(Math.floor(at / 10) + 1); setSelectedId(filtered[at].incidentId)
+          requestAnimationFrame(() => document.querySelector(`[data-row-key="${filtered[at].incidentId}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
+        }} />}
       <div className={`yt-risk-md${selectedId ? ' has-detail' : ''}`}>
       <section className="yt-risk-queue" aria-label="风险队列">
       <Tabs activeKey={currentTab} onChange={(key) => setTab(key as typeof tab)} items={[
@@ -315,7 +336,10 @@ export function RiskDashboardPage() {
           { title: '最新消费者消息', render: (_, item) => <div className="table-cell-stack"><div className="table-excerpt">{item.preview || '暂无消息'}</div><span>{dateLabel(item.updatedAt)}</span></div> },
           { title: '操作', width: 100, render: (_, item) => <Button aria-label={`打开会话 ${item.buyerAlias}`} size="small" icon={<MessageOutlined />} onClick={() => openConversation(item.conversationId)} /> },
         ]} /> : <Table<RiskIncidentView> rowKey="incidentId" size="small" rowClassName={(row) => `yt-rk-row is-${row.riskLevel}${row.incidentId === selectedId ? ' is-selected' : ''}`}
-        onRow={(row) => ({ onClick: () => setSelectedId(row.incidentId), 'aria-selected': row.incidentId === selectedId })} dataSource={filtered} loading={loading} scroll={{ x: 1000 }} pagination={{ pageSize: 10, showSizeChanger: false }}
+        onRow={(row) => ({ onClick: () => setSelectedId(row.incidentId), 'aria-selected': row.incidentId === selectedId,
+          onMouseEnter: () => setHotConversation(row.conversationIds[0] ?? null), onMouseLeave: () => setHotConversation(null) })}
+        dataSource={filtered} loading={loading} scroll={{ x: 1000 }}
+        pagination={{ pageSize: 10, showSizeChanger: false, current: Math.min(page, Math.max(1, Math.ceil(filtered.length / 10))), onChange: setPage }}
         locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={runtimeWarning ? '当前预警未加载' : '暂无风险事件'} /> }}
         columns={[
           { title: '等级 / 状态', width: 125, render: (_, row) => <div className="table-cell-stack">

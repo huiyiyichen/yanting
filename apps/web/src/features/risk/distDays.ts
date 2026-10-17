@@ -44,3 +44,19 @@ export function dailyTotals(buckets: Bucket[]): { date: string; negative: number
   }
   return [...map.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
+
+/** 区间内有数据的日期。 */
+export function daysIn(days: string[], range: { from: string; to: string }): string[] {
+  return days.filter((d) => d >= range.from && d <= range.to)
+}
+
+const dayStr = (n: number) => new Date(n * 86400000).toISOString().slice(0, 10)
+
+/** 缩略条方向键：区间整体平移 n 个日历天，不越过数据首尾。 */
+export function shiftRange(days: string[], range: { from: string; to: string }, n: number): { from: string; to: string } {
+  if (!days.length) return range
+  const span = dayNo(range.to) - dayNo(range.from)
+  const lo = dayNo(days[0]), hi = dayNo(days[days.length - 1])
+  const start = Math.max(lo, Math.min(dayNo(range.from) + n, hi - span))
+  return { from: dayStr(start), to: dayStr(Math.min(hi, start + span)) }
+}

@@ -2,8 +2,8 @@ import { Popover } from 'antd'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shMonthDay } from '../service-desk/shTime'
-import { axisBreaks, dailyTotals, densestWindow, windowFrom } from './distDays'
-import type { ProductClueView, RiskOverviewView } from '../../api/client'
+import { axisBreaks, dailyTotals, daysIn, densestWindow, shiftRange, windowFrom } from './distDays'
+import type { DateRange, ProductClueView, RiskOverviewView } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 
 const LEVEL_LABELS: Record<string, string> = { high: '高风险', medium: '中风险', low: '低风险' }
@@ -23,20 +23,28 @@ export function mergeStep(dayCount: number, hoursPerDay: number, maxBars = 60): 
 }
 
 /** X-1 缩略条：全部日期每天一格，高度=负面条数，亮框为当前显示的 7 天；点某天把窗口移到那天起。 */
-function DistOverview({ overview, shown, onPick }: { overview: RiskOverviewView; shown: string[]; onPick: (date: string) => void }) {
+function DistOverview({ overview, shown, onPick, onShift }: {
+  overview: RiskOverviewView; shown: string[]; onPick: (date: string) => void; onShift: (days: number) => void
+}) {
   const rows = dailyTotals(overview.hourly)
   const max = Math.max(1, ...rows.map((r) => r.negative))
-  return <div className="yt-dist-overview" role="group" aria-label="声纹缩略条">
+  return <div className="yt-dist-overview" role="group" aria-label="声纹缩略条"
+    onKeyDown={(event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+      event.preventDefault(); onShift((event.key === 'ArrowLeft' ? -1 : 1) * (event.shiftKey ? 7 : 1))
+    }}>
     {rows.map((r) => <button type="button" key={r.date} aria-pressed={shown.includes(r.date)}
       aria-label={`${r.date.slice(5).replace('-', '/')} 负面 ${r.negative}`} onClick={() => onPick(r.date)}>
       <i style={{ height: `${Math.max(8, (r.negative / max) * 100)}%` }} /></button>)}
   </div>
 }
 
-function DistributionVoiceprint({ overview, days, onMarker }: {
-  overview: RiskOverviewView; days: string[]; onMarker: (conversationId: string) => void
+function DistributionVoiceprint({ overview, days, hot, onMarker, onBrush }: {
+  overview: RiskOverviewView; days: string[]; hot?: string | null
+  onMarker: (conversationId: string) => void; onBrush: (range: DateRange | null) => void
 }) {
   const [hover, setHover] = useState<number | null>(null)
+  const [drag, setDrag] = useState<{ a: number; b: number } | null>(null)
   const breaks = axisBreaks(days)
   const buckets = overview.hourly.filter((b) => days.includes(b.date))
   const hours = buckets.map((b) => b.hour)
@@ -63,12 +71,29 @@ function DistributionVoiceprint({ overview, days, onMarker }: {
   const xOf = (i: number) => i * slot + (slot - bw) / 2
   const indexOf = (date: string, hour: number) => days.indexOf(date) * perDay + Math.floor((hour - h0) / step)
   const hovered = hover === null ? null : slots[hover]
-  return <div className="yt-dist">
-    <svg role="img" aria-label={summary} viewBox={`0 0 ${W} ${H}`} width="100%" onMouseLeave={() => setHover(null)}
+  // 悬停列表行：该会话的高风险标记所在柱提亮，其余降到 40%
+  const hotMarker = hot ? overview.highRiskMarkers.find((m) => m.conversationId === hot && days.includes(m.date)) : undefined
+  const hotIndex = hotMarker ? indexOf(hotMarker.date, hotMarker.hour) : null
+  const slotAt = (event: React.MouseEvent<SVGSVGElement>) => {
+    const box = event.currentTarget.getBoundingClientRect()
+    return Math.max(0, Math.min(slots.length - 1, Math.floor(((event.clientX - box.left) / box.width) * W / slot)))
+  }
+  return <div className={`yt-dist${hotIndex !== null ? ' is-focus' : ''}`}>
+    <svg role="img" aria-label={summary} viewBox={`0 0 ${W} ${H}`} width="100%"
+      onMouseLeave={() => { setHover(null); setDrag(null) }}
+      onMouseDown={(event) => { const k = slotAt(event); setDrag({ a: k, b: k }) }}
+      onMouseUp={() => {
+        if (drag && drag.a !== drag.b) {
+          const [lo, hi] = [Math.min(drag.a, drag.b), Math.max(drag.a, drag.b)]
+          onBrush({ from: slots[lo].date, to: slots[hi].date })
+        }
+        setDrag(null)
+      }}
+      onDoubleClick={() => onBrush(null)}
       onMouseMove={(event) => {
-        const box = event.currentTarget.getBoundingClientRect()
-        const k = Math.floor(((event.clientX - box.left) / box.width) * W / slot)
-        setHover(Math.max(0, Math.min(slots.length - 1, k)))
+        const k = slotAt(event)
+        setHover(k)
+        if (drag) setDrag({ ...drag, b: k })
       }}>
       {days.map((date, di) => <g key={date}>
         {di > 0 && (breaks.has(di)
@@ -77,11 +102,13 @@ function DistributionVoiceprint({ overview, days, onMarker }: {
         <text x={di * perDay * slot + 6} y={H - 6} className="yt-dist-date">{date.slice(5).replace('-', '/')}</text>
       </g>)}
       <line x1={0} x2={W} y1={mid} y2={mid} className="yt-dist-mid" />
+      {drag && drag.a !== drag.b && <rect x={Math.min(drag.a, drag.b) * slot} y={top - 6} width={(Math.abs(drag.b - drag.a) + 1) * slot}
+        height={H - top - bottomPad + 12} rx={4} className="yt-dist-brush" />}
       {hover !== null && <rect x={hover * slot} y={top - 6} width={slot} height={H - top - bottomPad + 12} rx={3} className="yt-dist-hover" />}
       {slots.map((b, i) => {
         const x = xOf(i)
         const delay = { animationDelay: `${(i * 0.004).toFixed(3)}s` }
-        return <g key={`${b.date}-${b.hour}`}>
+        return <g key={`${b.date}-${b.hour}`} className={i === hotIndex ? 'is-hot' : undefined}>
           {b.calm > 0 && <rect x={x} y={mid + 2} width={bw} height={b.calm * u} rx={r(b.calm * u)} className="yt-dist-calm yt-dist-bar is-down" style={delay} />}
           {b.dissatisfied > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u} width={bw} height={b.dissatisfied * u} rx={r(b.dissatisfied * u)} className="yt-dist-upset yt-dist-bar" style={delay} />}
           {b.angry > 0 && <rect x={x} y={mid - 2 - b.dissatisfied * u - (b.dissatisfied ? STACK_GAP : 0) - b.angry * u} width={bw} height={b.angry * u} rx={r(b.angry * u)}
@@ -93,7 +120,7 @@ function DistributionVoiceprint({ overview, days, onMarker }: {
       {overview.highRiskMarkers.map((m) => {
         const i = indexOf(m.date, m.hour)
         if (days.indexOf(m.date) < 0) return null
-        return <button key={m.conversationId} type="button" className="yt-dist-marker"
+        return <button key={m.conversationId} type="button" className={`yt-dist-marker${m.conversationId === hot ? ' is-hot' : ''}`}
           style={{ left: `${((i * slot + slot / 2) / W) * 100}%` }} title={`${m.alias} · ${m.types.map(typeLabel).join('、')}`}
           aria-label={`${m.alias} ${m.conversationId}`} onClick={() => onMarker(m.conversationId)} />
       })}
@@ -127,9 +154,13 @@ export function ClueCases({ clue, onFilterConversation }: { clue: ProductClueVie
   </section>)}</div>
 }
 
-export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConversation }: {
+export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConversation, range = null, onRange = () => undefined,
+  hotConversation = null, onMarker }: {
   overview: RiskOverviewView; clues: ProductClueView[]
   onFilterType: (type: string) => void; onFilterConversation: (conversationId: string) => void
+  /** 框选的时间段（X-1）：三块面板与风险列表按它筛选 */
+  range?: DateRange | null; onRange?: (range: DateRange | null) => void
+  hotConversation?: string | null; onMarker?: (conversationId: string) => void
 }) {
   const { counts } = overview
   const levelTotal = Math.max(1, Object.values(overview.levels).reduce((a, b) => a + b, 0))
@@ -138,8 +169,15 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
   const [allDays, setAllDays] = useState(false)
   const everyDay = [...new Set(overview.hourly.map((b) => b.date))].sort()
   const dense = densestWindow(overview.hourly)
-  const [windowStart, setWindowStart] = useState<string | null>(null)
-  const days = allDays ? everyDay : windowStart ? windowFrom(overview.hourly, windowStart) : dense
+  const days = range ? daysIn(everyDay, range) : allDays ? everyDay : dense
+  const pick = (date: string) => {
+    const shown = windowFrom(overview.hourly, date)
+    if (shown.length) onRange({ from: shown[0], to: shown.at(-1)! })
+  }
+  // 标题数字随当前显示的日期
+  const shownBuckets = overview.hourly.filter((b) => days.includes(b.date))
+  const shownTotal = shownBuckets.reduce((sum, b) => sum + b.calm + b.dissatisfied + b.angry, 0)
+  const shownNegative = shownBuckets.reduce((sum, b) => sum + b.dissatisfied + b.angry, 0)
   const md = (d?: string) => d?.slice(5).replace('-', '/')
   return <section className="yt-monitor" aria-label="风险总览">
     <div className="yt-monitor-hero">
@@ -154,15 +192,19 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
       <div className="yt-dist-wrap">
         <div className="yt-panel-head"><h3>情绪声纹</h3>
           <span className="yt-num">{days.length ? `${md(days[0])}–${md(days.at(-1))}` : '—'}</span>
-          <span>消费者消息 <b>{overview.customerMessages}</b> 负面 <b>{Math.round(overview.negativeShare * 100)}%</b></span>
+          <span>消费者消息 <b>{shownTotal}</b> 负面 <b>{shownTotal ? Math.round((shownNegative / shownTotal) * 100) : 0}%</b></span>
+          {range && <button type="button" className="yt-dist-clear" aria-label="清除时间段" onClick={() => onRange(null)}>
+            {md(range.from)}–{md(range.to)} ×</button>}
           {dense.length < everyDay.length && <span className="yt-dist-range" role="group" aria-label="声纹范围">
-            <button type="button" aria-pressed={!allDays} onClick={() => { setAllDays(false); setWindowStart(null) }}>密集 7 天</button>
-            <button type="button" aria-pressed={allDays} onClick={() => setAllDays(true)}>全部 {everyDay.length} 天</button>
+            <button type="button" aria-pressed={!allDays && !range} onClick={() => { setAllDays(false); onRange(null) }}>密集 7 天</button>
+            <button type="button" aria-pressed={allDays && !range} onClick={() => { setAllDays(true); onRange(null) }}>全部 {everyDay.length} 天</button>
           </span>}
           <span className="yt-legend"><i className="is-fury" />激烈<i className="is-upset" />不满<i className="is-calm" />平稳<i className="is-marker" />高风险会话</span>
         </div>
-        <DistributionVoiceprint overview={overview} days={days} onMarker={onFilterConversation} />
-        {!allDays && dense.length < everyDay.length && <DistOverview overview={overview} shown={days} onPick={setWindowStart} />}
+        <DistributionVoiceprint overview={overview} days={days} hot={hotConversation}
+          onMarker={onMarker ?? onFilterConversation} onBrush={onRange} />
+        {(range || !allDays) && dense.length < everyDay.length && <DistOverview overview={overview} shown={days} onPick={pick}
+          onShift={(n) => onRange(shiftRange(everyDay, range ?? { from: days[0], to: days.at(-1)! }, n))} />}
       </div>
     </div>
     <div className="yt-monitor-grid">
@@ -181,6 +223,7 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
           </button></li>)}</ul>
       </div>
       <div className="yt-panel"><div className="yt-panel-head"><h3>商品风险线索</h3></div>
+        {!clues.length && <p className="yt-clues-empty">{range ? '该时段无商品线索' : '暂无商品线索'}</p>}
         <ul className="yt-clues">{clues.slice(0, 4).map((clue) => <li key={clue.productName}>
           <Popover trigger="click" placement="bottomLeft" title={clue.productName} destroyOnHidden
             content={<ClueCases clue={clue} onFilterConversation={onFilterConversation} />}>

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter, defaultdict
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Literal
 
 from sqlalchemy import select
@@ -62,6 +62,8 @@ class RiskOverviewView(ApiModel):
     customer_messages: int
     negative_share: float
     emotion_source: Literal["rule"]
+    # 指定 from/to 时：该时段内有消费者消息的会话（风险列表按它筛选）；未指定为 None
+    range_conversation_ids: list[str] | None = None
 
 
 class ProductClueCase(ApiModel):
@@ -111,7 +113,12 @@ def _customer_messages(session: Session, scope: Scope, batch: str | None) -> lis
     return [(cid, body or "", _cst(at, imported=False)) for cid, body, at in rows if body]
 
 
-def risk_overview(session: Session, scope: Scope) -> RiskOverviewView:
+def _in_range(day: str, date_from: date | None, date_to: date | None) -> bool:
+    return (date_from is None or day >= date_from.isoformat()) and (date_to is None or day <= date_to.isoformat())
+
+
+def risk_overview(session: Session, scope: Scope, date_from: date | None = None,
+                  date_to: date | None = None) -> RiskOverviewView:
     from app.domain.consumer_service.emotion import score_message
     from app.domain.consumer_service.incidents import is_pending, list_incidents
     from app.domain.consumer_service.models import ServiceConversationRow, ServiceRiskAlertRow
@@ -124,12 +131,19 @@ def risk_overview(session: Session, scope: Scope) -> RiskOverviewView:
     def in_scope(conversation_id: str) -> bool:
         return (conversation_id in imported) == (scope == "official")
 
-    alerts = [row for row in session.scalars(select(ServiceRiskAlertRow).where(
-        ServiceRiskAlertRow.batch_id == batch)) if in_scope(row.conversation_id)] if batch else []
-    incidents = [item for item in list_incidents(session)
-                 if item.conversation_ids and all(in_scope(cid) for cid in item.conversation_ids)]
-
     messages = _customer_messages(session, scope, batch)
+    ranged = date_from is not None or date_to is not None
+    active = {cid for cid, _, at in messages if _in_range(at.date().isoformat(), date_from, date_to)}
+
+    def in_view(conversation_id: str) -> bool:
+        return in_scope(conversation_id) and (not ranged or conversation_id in active)
+
+    alerts = [row for row in session.scalars(select(ServiceRiskAlertRow).where(
+        ServiceRiskAlertRow.batch_id == batch)) if in_view(row.conversation_id)] if batch else []
+    incidents = [item for item in list_incidents(session)
+                 if item.conversation_ids and all(in_scope(cid) for cid in item.conversation_ids)
+                 and (not ranged or any(cid in active for cid in item.conversation_ids))]
+
     buckets: dict[tuple[str, int], Counter] = defaultdict(Counter)
     last_message: dict[str, datetime] = {}
     for cid, body, at in messages:
@@ -171,10 +185,12 @@ def risk_overview(session: Session, scope: Scope) -> RiskOverviewView:
         types=dict(types), hourly=hourly, high_risk_markers=markers,
         customer_messages=counted, negative_share=round(negative / counted, 4) if counted else 0.0,
         emotion_source="rule",
+        range_conversation_ids=sorted(active) if ranged else None,
     )
 
 
-def product_clues(session: Session) -> list[ProductClueView]:
+def product_clues(session: Session, date_from: date | None = None,
+                  date_to: date | None = None) -> list[ProductClueView]:
     from app.domain.consumer_service.models import (
         AdverseReactionRow,
         ReturnRefundRow,
@@ -196,6 +212,8 @@ def product_clues(session: Session) -> list[ProductClueView]:
     clues: dict[str, dict] = defaultdict(lambda: {"adverse": 0, "medical": 0, "batches": set(),
                                                     "tickets": 0, "abnormal": 0, "ids": [], "cases": []})
     for work in session.scalars(select(WorkOrderRow).where(WorkOrderRow.batch_id == batch)):
+        if not _in_range(_cst(work.created_at, imported=True).date().isoformat(), date_from, date_to):
+            continue
         detail = details.get(work.record_id, {})
         name = detail.get("product_name") or products.get(work.order_id or "")
         if not name:

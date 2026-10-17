@@ -1327,7 +1327,7 @@ export interface paths {
         };
         /**
          * Risk Overview View
-         * @description 风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记。
+         * @description 风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记；from/to 为北京时间日期。
          */
         get: operations["risk_overview_view_api_support_desk_risks_overview_get"];
         put?: never;
@@ -1347,7 +1347,7 @@ export interface paths {
         };
         /**
          * Risk Product Clues
-         * @description 商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数。
+         * @description 商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数；from/to 按工单创建日期（北京时间）。
          */
         get: operations["risk_product_clues_api_support_desk_risks_product_clues_get"];
         put?: never;
@@ -3996,6 +3996,8 @@ export interface components {
              * @constant
              */
             emotionSource: "rule";
+            /** Rangeconversationids */
+            rangeConversationIds?: string[] | null;
         };
         /** RiskScanView */
         RiskScanView: {
@@ -7277,6 +7279,8 @@ export interface operations {
         parameters: {
             query?: {
                 scope?: "official" | "live";
+                from?: string | null;
+                to?: string | null;
             };
             header?: {
                 "X-Demo-View-Role"?: string | null;
@@ -7308,7 +7312,10 @@ export interface operations {
     };
     risk_product_clues_api_support_desk_risks_product_clues_get: {
         parameters: {
-            query?: never;
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
             header?: {
                 "X-Demo-View-Role"?: string | null;
             };

@@ -1,6 +1,7 @@
+from datetime import date
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.deps import get_context, get_session, require_support
@@ -113,15 +114,31 @@ def risk_list(session: Session = Depends(get_session)):
 
 
 @router.get("/risks/overview", response_model=RiskOverviewView)
-def risk_overview_view(scope: Literal["official", "live"] = "official", session: Session = Depends(get_session)):
-    """风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记。"""
-    return risk_overview(session, scope)
+def risk_overview_view(
+    scope: Literal["official", "live"] = "official",
+    date_from: date | None = Query(default=None, alias="from"),
+    date_to: date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    """风险看板总览：事件/信号分开计数、等级与类型构成、每小时情绪分布、高风险会话标记；from/to 为北京时间日期。"""
+    _check_range(date_from, date_to)
+    return risk_overview(session, scope, date_from, date_to)
+
+
+def _check_range(date_from: date | None, date_to: date | None) -> None:
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="from 不能晚于 to")
 
 
 @router.get("/risks/product-clues", response_model=list[ProductClueView])
-def risk_product_clues(session: Session = Depends(get_session)):
-    """商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数。"""
-    return product_clues(session)
+def risk_product_clues(
+    date_from: date | None = Query(default=None, alias="from"),
+    date_to: date | None = Query(default=None, alias="to"),
+    session: Session = Depends(get_session),
+):
+    """商品风险线索：按商品聚合不良反应、就医、批次与关联工单计数；from/to 按工单创建日期（北京时间）。"""
+    _check_range(date_from, date_to)
+    return product_clues(session, date_from, date_to)
 
 
 @router.get("/conversations/{conversation_id}/risks", response_model=list[RiskIncidentView])

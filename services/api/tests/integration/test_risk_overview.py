@@ -10,6 +10,8 @@ O6 商品线索排序分不是 不良反应×3 + 就医×5 + 其他工单×1；�
 O7 商品线索给出质量结论文字（只允许计数与原始记录入口）。
 O8 读取看板触发模型调用或写库。
 O10 商品线索只有计数，展不开到具体工单、订单与会话（反馈 ⑤）。
+O11 框选时间段（全景方案 X-1）后三块面板仍按全量计数：from/to 须把信号、事件、等级、类型限定在该时段内有消费者消息的会话；
+    声纹 hourly 保持全量（缩略条要显示全部日期）；商品线索按工单创建日期筛选；from>to 返回 422。
 O9 同一“待处理风险”四处四个数（全景方案 5.1）：看板 pending、工作台 pendingRisks、风险列表 intervene 必须同口径；导航徽标=高风险且待处理。
 """
 
@@ -79,3 +81,26 @@ def test_pending_risk_single_definition(workspace):
     assert totals["pending"] == len(pending)
     assert totals["pendingHigh"] == sum(row["riskLevel"] == "high" for row in pending)
 
+
+
+def test_overview_and_clues_filtered_by_date_range(workspace):
+    client, _, _ = workspace
+    client.post("/api/support/desk/risks/scan", headers=SUPPORT)
+    full = client.get("/api/support/desk/risks/overview?scope=official", headers=SUPPORT).json()
+    days = sorted({b["date"] for b in full["hourly"]})
+    first = days[0]
+    part = client.get(f"/api/support/desk/risks/overview?scope=official&from={first}&to={first}", headers=SUPPORT)
+    assert part.status_code == 200, part.text
+    view = part.json()
+    assert view["hourly"] == full["hourly"]
+    assert 0 < view["counts"]["signals"] < full["counts"]["signals"]
+    assert view["counts"]["events"] <= full["counts"]["events"]
+    assert sum(view["levels"].values()) == view["counts"]["signals"]
+    assert view["rangeConversationIds"] and all(m["date"] == first for m in view["highRiskMarkers"]
+                                                  if m["conversationId"] in view["rangeConversationIds"])
+    assert full["rangeConversationIds"] is None
+    clues_all = client.get("/api/support/desk/risks/product-clues", headers=SUPPORT).json()
+    late = client.get(f"/api/support/desk/risks/product-clues?from=2099-01-01&to=2099-01-02", headers=SUPPORT)
+    assert late.status_code == 200 and late.json() == [] and clues_all
+    bad = client.get(f"/api/support/desk/risks/overview?scope=official&from={days[-1]}&to={first}", headers=SUPPORT)
+    assert bad.status_code == 422

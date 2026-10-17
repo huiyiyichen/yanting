@@ -583,6 +583,11 @@ export const platformApi = {
     }),
 }
 
+/** 北京时间日期区间（YYYY-MM-DD，含两端）。 */
+export type DateRange = { from: string; to: string }
+const rangeQuery = (range: DateRange | null | undefined, lead: '?' | '&') =>
+  range ? `${lead}from=${range.from}&to=${range.to}` : ''
+
 export const deskApi = {
   operators: () => request<DemoOperatorRosterView>('/api/support/desk/operators', { role: 'support' }),
   stats: () => request<ReceptionStatsView>('/api/support/desk/stats', { role: 'support' }),
@@ -596,9 +601,10 @@ export const deskApi = {
   risks: () => request<RiskIncidentView[]>('/api/support/desk/risks', { role: 'support' }),
   conversationScore: (id: string) => request<ServiceScoreView>(
     `/api/support/desk/conversations/${encodeURIComponent(id)}/score`, { role: 'support' }),
-  riskOverview: (scope: 'official' | 'live') =>
-    request<RiskOverviewView>(`/api/support/desk/risks/overview?scope=${scope}`, { role: 'support' }),
-  productClues: () => request<ProductClueView[]>('/api/support/desk/risks/product-clues', { role: 'support' }),
+  riskOverview: (scope: 'official' | 'live', range?: DateRange | null) =>
+    request<RiskOverviewView>(`/api/support/desk/risks/overview?scope=${scope}${rangeQuery(range, '&')}`, { role: 'support' }),
+  productClues: (range?: DateRange | null) =>
+    request<ProductClueView[]>(`/api/support/desk/risks/product-clues${rangeQuery(range, '?')}`, { role: 'support' }),
   conversationRisks: (id: string) => request<RiskIncidentView[]>(
     `/api/support/desk/conversations/${encodeURIComponent(id)}/risks`, { role: 'support' }),
   risk: (id: string) => request<RiskIncidentDetailView>(`/api/support/desk/risks/${id}`, { role: 'support' }),

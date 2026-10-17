@@ -8,6 +8,10 @@
  * V7 大声纹柱子过多挤成一团（1 小时一根 × 7 天 = 112 根）：总数应控制在约 60 根内；
  *    范围切换压住图例；标题日期范围与图上显示的天数不一致。
  * V8 声纹图上常驻峰值文字（“05/07 16时起 负面 10”）压在柱子中间：不应常驻，只在悬停提示里出现。
+ * V9 X-1 框选：在主图拖动选时间段不回调 onRange；双击不清除；缩略条点某天不把 7 天写成区间；
+ *    方向键不平移；有区间时没有清除入口；悬停列表行时对应菱形不放大。
+ * V9 X-1 框选：在主图拖动选时间段不回调 onRange；双击不清除；缩略条点某天不把 7 天写成区间；
+ *    方向键不平移；有区间时没有清除入口；悬停列表行时对应菱形不放大。
  * V6 商品线索不能展开到订单与会话（反馈 ⑤）；展开后不按批次分组。
  */
 import { fireEvent, render, screen, within } from '@testing-library/react'
@@ -88,6 +92,52 @@ describe('RiskOverviewPanel', () => {
     expect(mergeStep(7, 16)).toBe(2)
     expect(mergeStep(19, 16)).toBe(6)
     expect(mergeStep(1, 16)).toBe(1)
+  })
+  it('V9 框选、缩略条、方向键、清除与悬停联动', () => {
+    const many: RiskOverviewView = { ...overview, hourly: Array.from({ length: 12 }, (_, i) => (
+      { date: `2026-05-${String(i + 1).padStart(2, '0')}`, hour: 10, calm: 1, dissatisfied: i < 7 ? 2 : 0, angry: 0 })),
+    highRiskMarkers: [{ date: '2026-05-02', hour: 10, conversationId: 'S1', alias: '甲', types: [] }] }
+    const onRange = vi.fn()
+    const { container, rerender } = render(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={many} clues={[]}
+      onFilterType={vi.fn()} onFilterConversation={vi.fn()} onRange={onRange} hotConversation="S1" /></ConfigProvider></MemoryRouter>)
+    expect(screen.getByLabelText('甲 S1')).toHaveClass('is-hot')
+    const svg = container.querySelector('.yt-dist svg')!
+    svg.getBoundingClientRect = () => ({ left: 0, width: 1080, top: 0, height: 214, right: 1080, bottom: 214, x: 0, y: 0, toJSON: () => ({}) })
+    fireEvent.mouseDown(svg, { clientX: 5 }); fireEvent.mouseMove(svg, { clientX: 1075 }); fireEvent.mouseUp(svg)
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-01', to: '2026-05-07' })
+    fireEvent.doubleClick(svg)
+    expect(onRange).toHaveBeenLastCalledWith(null)
+    fireEvent.click(screen.getByRole('button', { name: /^05\/09/ }))
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-06', to: '2026-05-12' })
+    rerender(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={many} clues={[]} onFilterType={vi.fn()}
+      onFilterConversation={vi.fn()} onRange={onRange} range={{ from: '2026-05-03', to: '2026-05-09' }} /></ConfigProvider></MemoryRouter>)
+    fireEvent.keyDown(screen.getByRole('group', { name: '声纹缩略条' }), { key: 'ArrowRight' })
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-04', to: '2026-05-10' })
+    fireEvent.click(screen.getByRole('button', { name: '清除时间段' }))
+    expect(onRange).toHaveBeenLastCalledWith(null)
+  })
+  it('V9 框选、缩略条、方向键、清除与悬停联动', () => {
+    const many: RiskOverviewView = { ...overview, hourly: Array.from({ length: 12 }, (_, i) => (
+      { date: `2026-05-${String(i + 1).padStart(2, '0')}`, hour: 10, calm: 1, dissatisfied: i < 7 ? 2 : 0, angry: 0 })),
+    highRiskMarkers: [{ date: '2026-05-02', hour: 10, conversationId: 'S1', alias: '甲', types: [] }] }
+    const onRange = vi.fn()
+    const { container, rerender } = render(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={many} clues={[]}
+      onFilterType={vi.fn()} onFilterConversation={vi.fn()} onRange={onRange} hotConversation="S1" /></ConfigProvider></MemoryRouter>)
+    expect(screen.getByLabelText('甲 S1')).toHaveClass('is-hot')
+    const svg = container.querySelector('.yt-dist svg')!
+    svg.getBoundingClientRect = () => ({ left: 0, width: 1080, top: 0, height: 214, right: 1080, bottom: 214, x: 0, y: 0, toJSON: () => ({}) })
+    fireEvent.mouseDown(svg, { clientX: 5 }); fireEvent.mouseMove(svg, { clientX: 1075 }); fireEvent.mouseUp(svg)
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-01', to: '2026-05-07' })
+    fireEvent.doubleClick(svg)
+    expect(onRange).toHaveBeenLastCalledWith(null)
+    fireEvent.click(screen.getByRole('button', { name: /^05\/09/ }))
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-06', to: '2026-05-12' })
+    rerender(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={many} clues={[]} onFilterType={vi.fn()}
+      onFilterConversation={vi.fn()} onRange={onRange} range={{ from: '2026-05-03', to: '2026-05-09' }} /></ConfigProvider></MemoryRouter>)
+    fireEvent.keyDown(screen.getByRole('group', { name: '声纹缩略条' }), { key: 'ArrowRight' })
+    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-04', to: '2026-05-10' })
+    fireEvent.click(screen.getByRole('button', { name: '清除时间段' }))
+    expect(onRange).toHaveBeenLastCalledWith(null)
   })
 })
 
