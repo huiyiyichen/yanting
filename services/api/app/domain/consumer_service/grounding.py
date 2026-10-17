@@ -207,6 +207,7 @@ def collect_sources(session: Session, conversation_id: str, context: Any = None)
                 fields={"conversationId": cid, **({
                     "orderId": imported.order_id, "workOrderId": imported.work_order_id,
                 } if imported else {})},
+                source_record_id=imported.source_record_id if imported else None,
             )
     orders = {o.order_id: o for c in contexts.values() for o in c.orders}
     work_orders = {w.work_order_id: w for c in contexts.values() for w in c.work_orders}
@@ -225,6 +226,7 @@ def collect_sources(session: Session, conversation_id: str, context: Any = None)
         sources[source_id] = GroundingSource(
             source_id=source_id, kind="order", subject_id=order.order_id, label=f"订单 {order.order_id}",
             text=_flatten(fields), fields=fields, occurred_at=order.ordered_at,
+            source_record_id=getattr(order, "source_record_id", None),
         )
     safe_work_fields = {
         "paymentType", "refundAmount", "refundId", "transferStatus", "originalTrackingNo",
@@ -244,7 +246,7 @@ def collect_sources(session: Session, conversation_id: str, context: Any = None)
         sources[source_id] = GroundingSource(
             source_id=source_id, kind="work_order", subject_id=work.order_id or work.work_order_id,
             label=f"源工单 {work.work_order_id}", text=_flatten(fields), fields=fields,
-            occurred_at=work.created_at,
+            occurred_at=work.created_at, source_record_id=getattr(work, "source_record_id", None),
         )
     for ticket in list_tickets(session):
         if ticket.conversation_id not in related and ticket.order_id not in orders:
@@ -656,4 +658,8 @@ def record_failure(session: Session, conversation_id: str, error: Exception) -> 
         event_type="assistant_generation_failed",
         detail={"errorCode": code, "usage": usage_for(calls)},
     )
+    trace = getattr(error, "trace_buffer", None)
+    if trace is not None:
+        trace.finish("superseded" if code == "conflict" else "failed")
+        trace.flush(session)
     session.flush()

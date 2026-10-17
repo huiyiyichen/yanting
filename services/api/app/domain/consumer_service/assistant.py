@@ -202,8 +202,13 @@ class ConsumerServiceAssistant:
             )
         )
         suggestions: list[AssistantReplySuggestionView] = []
-        for item in parsed.reply_suggestions:
+        review_flags = state.get("review_flags") or []
+        for reply_index, item in enumerate(parsed.reply_suggestions):
             body = item.body
+            review_notes = [
+                flag["detail"] for flag in review_flags
+                if flag.get("replyIndex") in (None, reply_index)
+            ]
             customer_text = " ".join(customer_messages)
             emotion_present = bool(
                 any(term in body for term in ("理解", "抱歉", "着急", "担心", "不容易", "辛苦", "别担心"))
@@ -247,7 +252,7 @@ class ConsumerServiceAssistant:
             ]
             suggestions.append(AssistantReplySuggestionView(
                 style=item.style, body=body, claims=item.claims,
-                empathy_dimensions=dimensions,
+                empathy_dimensions=dimensions, review_notes=review_notes,
             ))
         if only_style and previous is not None and not previous.stale and previous.input_hash == input_hash:
             # 单风格重生成：只替换该风格，其余风格保留上次已核验的内容
@@ -277,18 +282,39 @@ class ConsumerServiceAssistant:
             )
         usage = usage_for(state["calls"])
         dropped = state.get("segments_dropped", 0)
-        verification_status = "partial" if dropped else "verified"
+        verification_status = (
+            "needs_review" if review_flags else "partial" if dropped else "verified"
+        )
         usage.update({
             "verifyInvoked": state.get("verify_invoked", False),
             "verifyReasons": state.get("verify_reasons", []),
             "blockedCategories": sorted({item.category for item in state.get("verification_issues", [])}),
             "segmentsDropped": dropped,
+            "auxiliaryDropped": state.get("auxiliary_dropped", []),
+            "reviewFlags": review_flags,
             "verificationFormatErrors": state.get("verification_format_errors", 0),
             "styleIssues": state.get("style_issues", []),
         })
         from app.domain.consumer_service.image_evidence import save_image_observations
 
         save_image_observations(self._session, state["images"], provider=self._provider)
+        trace = state.get("trace")
+        if trace is not None:
+            usage["traceId"] = trace.trace_id
+            catalog = {source.source_id: source for source in state["sources"]}
+            verified = state.get("verify_invoked", False)
+            for reply_index, item in enumerate(parsed.reply_suggestions):
+                flagged = any(f.get("replyIndex") in (None, reply_index) for f in review_flags)
+                for segment_index, claim in enumerate(item.claims):
+                    for ref in claim.source_refs:
+                        trace.cite(
+                            message_id=None, style=item.style, segment_index=segment_index,
+                            text=claim.text, source_id=ref,
+                            source_record_id=getattr(catalog.get(ref), "source_record_id", None),
+                            verdict="needs_review" if flagged else "verified" if verified else "not_required",
+                        )
+            if not automatic:
+                trace.finish("needs_review" if review_flags else "partial" if dropped else "draft")
         save_memory(self._session, conversation_id, state["sources"], parsed.memory, result.model)
         self._session.add(AssistantRunRow(
             run_id=observation_id, conversation_id=conversation_id, input_hash=input_hash,
@@ -296,6 +322,8 @@ class ConsumerServiceAssistant:
             status=verification_status, trace_json=json.dumps([s.dump() for s in state["steps"]], ensure_ascii=False),
             usage_json=json.dumps(usage),
         ))
+        if trace is not None:
+            trace.flush(self._session)
         from app.domain.consumer_service.service_breakpoints import save_assessment
 
         save_assessment(
@@ -461,7 +489,7 @@ def record_suggestion_action(
     view = read_assistant(session, conversation_id)
     if view is None:
         raise NotFoundError("暂无建议")
-    if view.verification_status not in {"verified", "partial"}:
+    if view.verification_status not in {"verified", "partial", "needs_review"}:
         raise ConflictError("回复尚未完成依据核验")
     if view.stale or view.input_hash != payload.input_hash:
         raise ConflictError("建议已过期")

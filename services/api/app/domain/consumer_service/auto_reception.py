@@ -14,6 +14,7 @@ from uuid import uuid4
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.audit import tracer
 from app.audit.recorder import AuditContext, AuditRecorder
 from app.domain.case_state.models import ConversationRow, MessageRow, new_id
 from app.domain.consumer_service import job_progress as progress
@@ -291,6 +292,11 @@ def _finish_handoff(
                     reply = None
             if remaining_job_seconds(runtime, job) <= 0:
                 reason, reply = "reply_timeout", None
+            trace = tracer.current()
+            if trace is not None and trace.job_id == job_id:
+                trace.decision("send_gate", [f"转人工：{reason}"], label="发送闸门")
+                trace.finish("handoff")
+                trace.flush(session)
             try:
                 change_mode(
                     session, job.conversation_id, ServiceMode.OPERATOR_ASSISTED,
@@ -353,9 +359,16 @@ def process_job(runtime: Any, job_id: str) -> None:
             remaining = remaining_job_seconds(runtime, job)
             session.commit()
             context = ConsumerServiceRepository(session).context(conversation_id)
+            trace = tracer.start_trace(
+                "reception", "customer_message", conversation_id=conversation_id, job_id=job_id,
+                trigger_message_id=job.trigger_message_id, mode=conversation.service_mode,
+                mode_revision=job.mode_revision, message_revision=job.message_revision,
+            )
             progress.begin(job_id, conversation_id)
             progress.mark(job_id, "安全检查", "running")
             handoff = _safety_handoff(trigger.body or "")
+            trace.decision("safety_gate", ["命中人工、就医或投诉信号，转人工（不调模型）" if handoff else "未命中"],
+                           label="安全闸门")
             progress.mark(job_id, "安全检查", "handoff" if handoff else "passed")
             attachments = json.loads(trigger.attachments_json or "[]")
         if remaining <= 0:
@@ -390,6 +403,7 @@ def process_job(runtime: Any, job_id: str) -> None:
                     assistant.reply_suggestions[0],
                 )
                 body = reply.body
+                reply_style = reply.style
                 if assistant.verification_status != "verified":
                     raise ModelOutputInvalid("回复未经独立事实核验")
                 validate_auto_reply(body, context, claims=reply.claims,
@@ -486,6 +500,16 @@ def process_job(runtime: Any, job_id: str) -> None:
             # The reply itself closes a local response-wait signal in this transaction.
             evaluate_risks(session)
             job.status, job.reply_message_id, job.updated_at = "sent", reply.message_id, utcnow()
+            trace = tracer.current()
+            if trace is not None and trace.job_id == job_id:
+                from app.audit.trace_models import ReplyCitationRow
+
+                trace.decision("send_gate", ["模式、版本、时限均满足，自动发送"], label="发送闸门")
+                trace.finish("sent", outcome_message_id=reply.message_id)
+                trace.flush(session)
+                session.execute(update(ReplyCitationRow).where(
+                    ReplyCitationRow.trace_id == trace.trace_id, ReplyCitationRow.reply_style == reply_style,
+                ).values(message_id=reply.message_id))
             AuditRecorder(session).record(
                 AuditContext.new_turn(actor_type="agent", conversation_id=job.conversation_id),
                 event_type="auto_reply_sent",

@@ -101,7 +101,7 @@ def usage_summary(session: Session, prices: dict[str, ModelPrice], *, start: dat
     from app.domain.consumer_service.models import AssistantRunRow
 
     query = select(AuditEventRow).where(AuditEventRow.event_type == "model_call")
-    runs = select(AssistantRunRow).where(AssistantRunRow.status.in_(("verified", "partial")))
+    runs = select(AssistantRunRow).where(AssistantRunRow.status.in_(("verified", "partial", "needs_review")))
     if (lower := _bound(start, end=False)) is not None:
         query = query.where(AuditEventRow.created_at >= lower)
         runs = runs.where(AssistantRunRow.created_at >= lower)

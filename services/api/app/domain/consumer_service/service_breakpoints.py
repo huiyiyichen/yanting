@@ -246,7 +246,7 @@ def analyze_service_breakpoints(
     if not latest:
         raise NotFoundError("当前会话没有消费者文字消息")
 
-    source_catalog = [source.dump() for source in [*sources, *statements]]
+    source_catalog = [source.prompt_dump() for source in [*sources, *statements]]
     input_hash = assistant_input_hash(session, conversation_id, sources=sources)
     service_rules = {"repeatWindowHours": runtime.settings.risk_repeat_contact_hours}
     calls: list[dict[str, Any]] = []
@@ -281,7 +281,7 @@ def analyze_service_breakpoints(
             "conversationId": conversation_id,
             "latestCustomerMessage": latest,
             "sourceCatalog": source_catalog,
-            "serviceStatements": [source.dump() for source in statements],
+            "serviceStatements": [source.prompt_dump() for source in statements],
             "recentConversation": [
                 {"role": message.sender_role.value, "body": message.body}
                 for message in messages[-48:]
@@ -328,7 +328,7 @@ def analyze_service_breakpoints(
 
         verify_payload = {
             "sourceCatalog": source_catalog,
-            "serviceStatements": [source.dump() for source in statements],
+            "serviceStatements": [source.prompt_dump() for source in statements],
             "latestCustomerMessage": latest,
             "draft": {"service_breakpoints": [
                 finding.dump() for finding in findings or []

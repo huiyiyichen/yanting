@@ -270,3 +270,4 @@ class AuditEventRow(Base):
 # `no such table: prompt_template`（与缺陷第 39 项同源）。
 # 放在文件末尾导入：此时 `Base` 与全部实体已定义，不会形成循环依赖。
 from app.domain.platform import models as _platform_models  # noqa: E402,F401
+from app.audit import trace_models as _trace_models  # noqa: E402,F401

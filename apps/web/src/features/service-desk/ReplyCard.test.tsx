@@ -10,6 +10,7 @@
  * R8 看不到这条建议依据了哪些工单/订单/会话；同一来源重复出现。
  * R9 风格切换不是可读的 tab（无 aria-selected），读屏无法知道当前风格。
  * R11 X-4：未核验也盖“已核验”章；核验通过后引用片段没有依次画线的序号。
+ * R12 草稿模式核验未通过：仍盖“已核验”章；或看不到原因；或被禁止采用（用户反馈 8：不因核验整体拦截）。
  * R10 依据标签外露内部编号（conv-…、loreal-products@…#…），客服读不懂（全景方案 5.1）。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -112,6 +113,13 @@ describe('ReplyCard', () => {
     unmount()
     mount({ adoptable: false })
     expect(screen.queryByText('已核验')).toBeNull()
+  })
+  it('R12 review notes show a 待确认 stamp, keep adopt enabled and hide 已核验', () => {
+    const flagged = [{ ...suggestions[0], reviewNotes: ['订单状态缺少依据'] }]
+    mount({ suggestions: flagged as typeof suggestions })
+    expect(screen.getByLabelText('待确认：订单状态缺少依据')).toBeInTheDocument()
+    expect(screen.queryByText('已核验')).toBeNull()
+    expect(screen.getByRole('button', { name: /采用/ })).toBeEnabled()
   })
 })
 

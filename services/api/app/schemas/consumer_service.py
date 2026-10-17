@@ -164,6 +164,8 @@ class AssistantReplySuggestionView(ApiModel):
     body: str
     claims: list[GroundingClaim] = Field(default_factory=list)
     empathy_dimensions: list[ReplyEmpathyDimension] = Field(default_factory=list)
+    #: 草稿模式下核验或程序校验未通过的原因；非空时界面标“待确认”，仍可采用到回复框
+    review_notes: list[str] = Field(default_factory=list)
 
 
 class PersonalizedAdviceEvidence(ApiModel):

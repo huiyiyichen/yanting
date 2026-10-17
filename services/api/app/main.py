@@ -32,6 +32,7 @@ from app.routes import (
     reception,
     service_desk,
     support,
+    traces,
 )
 from app.runtime import APP_VERSION, RuntimeContext, build_runtime
 
@@ -113,6 +114,7 @@ def create_app() -> FastAPI:
     app.include_router(reception.router)
     app.include_router(service_desk.router)
     app.include_router(knowledge_management.router)
+    app.include_router(traces.router)
 
     @app.get("/", include_in_schema=False)
     async def _root() -> dict[str, Any]:

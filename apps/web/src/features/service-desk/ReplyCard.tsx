@@ -71,8 +71,10 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
   const body = edits[current.style] ?? original
   const edited = body !== original
   const blocked = !adoptable || automatic || generating
+  // 草稿模式核验未通过：仍可采用，盖“待确认”章并在悬停时给出原因
+  const notes = current.reviewNotes ?? []
   // X-4：核验通过（可采用且不在生成中）才盖“已核验”章、画金色下划线
-  const verified = adoptable && !generating
+  const verified = adoptable && !generating && notes.length === 0
   const reason = automatic ? 'AI 接待中' : generating ? '生成中' : !adoptable ? '待核验' : undefined
 
   const rewrite = async (instruction: Instruction) => {
@@ -86,6 +88,8 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
 
   return <article className={`yt-reply${generating ? ' is-refreshing' : ''}${verified ? ' is-verified' : ''}`} aria-label="回复建议">
     {verified && <span className="yt-reply-stamp">已核验</span>}
+    {notes.length > 0 && !generating && <Tooltip title={<ul className="yt-reply-notes">{notes.map((note) => <li key={note}>{note}</li>)}</ul>}>
+      <span className="yt-reply-stamp is-review" aria-label={`待确认：${notes.join('；')}`}>待确认</span></Tooltip>}
     {holder}
     <div className="yt-reply-head">
       <h3><BulbOutlined />回复建议</h3>

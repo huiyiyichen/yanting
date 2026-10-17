@@ -27,8 +27,9 @@ def make_provider(provider, draft_builder, verifier=None):
     provider.complete = complete
 
 
-@pytest.mark.parametrize("category,status", [("fact", 502), ("style", 200)])
+@pytest.mark.parametrize("category,status", [("fact", 200), ("style", 200)])
 def test_verifier_reply_wording_does_not_hide_fact_errors(workspace, category, status):
+    """2026-10-17 用户决定：草稿模式不因核验问题整体失败，事实问题以“待确认”原因随建议返回。"""
     client, _, provider = workspace
     cid = fixtures._create(client)
     fixtures._send(client, cid, "帮我看看订单")
@@ -37,12 +38,12 @@ def test_verifier_reply_wording_does_not_hide_fact_errors(workspace, category, s
                       {"category": category, "detail": "回复建议里的订单状态错误"},
                   ]})
     response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
-    if status == 200:
-        assert response.status_code == 200, response.text
+    assert response.status_code == 200, response.text
+    if category == "style":
         assert response.json()["modelUsage"]["styleIssues"]
     else:
-        assert response.status_code >= 400
-        assert "回复建议里的订单状态错误" in response.text
+        assert response.json()["verificationStatus"] == "needs_review"
+        assert "回复建议里的订单状态错误" in response.json()["replySuggestions"][0]["reviewNotes"]
 
 
 @pytest.mark.on_demand_verification
@@ -73,7 +74,10 @@ def test_reply_without_hard_facts_skips_model_verification_but_keeps_program_che
                                        "reply_suggestions": [{"style": "recommended",
                                                               "body": "亲，订单9999999999999999999这边看到了。"}]})
     response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
-    assert response.status_code >= 400
+    # 程序校验仍执行：草稿模式下以待确认原因返回，不再整体报错（2026-10-17 用户决定）
+    assert response.status_code == 200, response.text
+    assert response.json()["verificationStatus"] == "needs_review"
+    assert response.json()["replySuggestions"][0]["reviewNotes"]
 
     cid = fixtures._create(client)  # 同会话输入未变会复用缓存，换新会话验证
     fixtures._send(client, cid, "你好，在吗")
@@ -382,7 +386,8 @@ def test_compact_memory_index_retains_every_original_source_body(workspace):
     text = "我已经试过一次，仍担心后续处理。" * 50
     fixtures._send(client, cid, text)
     with factory() as session:
-        expected = {source.source_id: source.dump() for source in collect_sources(session, cid)}
+        # 给模型的来源目录不含官方记录号（追溯专用，见 test_trace_foundation F4）
+        expected = {source.source_id: source.prompt_dump() for source in collect_sources(session, cid)}
 
     def draft(payload):
         factual = {source["sourceId"]: source for source in payload["sourceCatalog"]
@@ -769,13 +774,15 @@ def test_fabricated_memory_is_never_saved_and_failure_is_audited(workspace):
 
     make_provider(provider, draft)
     response = client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT)
-    assert response.status_code == 400
+    # 草稿模式保留回复并标待确认；无法归属的程序校验问题会撤下记忆等附属字段，绝不保存伪造记忆
+    assert response.status_code == 200, response.text
+    assert response.json()["verificationStatus"] == "needs_review"
     assert not client.get(f"/api/support/reception/{cid}/memory", headers=SUPPORT).json()["items"]
     with factory() as session:
         run = session.scalar(select(AssistantRunRow).where(AssistantRunRow.conversation_id == cid))
-        assert run.status == "failed"
+        assert run.status == "needs_review"
         assert json.loads(run.usage_json)["calls"] == 2
-        assert json.loads(run.trace_json)[-1]["issues"]
+        assert json.loads(run.usage_json)["reviewFlags"]
 
 
 def test_memory_sources_follow_explicit_customer_scope_not_another_customers_messages(workspace):

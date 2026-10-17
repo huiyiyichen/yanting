@@ -13,6 +13,8 @@ class VerificationIssue(BaseModel):
     reply_index: int | None = Field(default=None, alias="replyIndex", ge=0)
     segment_index: int | None = Field(default=None, alias="segmentIndex", ge=0)
     source_id: str | None = Field(default=None, alias="sourceId")
+    #: 问题所在字段；reply 以外的字段（摘要、记忆等）出错只撤下该字段，不影响回复建议
+    field: Literal["reply", "service_summary", "memory", "next_steps", "advice", "breakpoints"] | None = None
     detail: str = Field(min_length=1, max_length=500)
     format_error: bool = Field(default=False, exclude=True)
 
@@ -21,6 +23,10 @@ class VerificationIssue(BaseModel):
     def normalize_issue(cls, value):
         if isinstance(value, str):
             return {"category": "fact", "detail": value, "format_error": True}
+        if isinstance(value, dict) and value.get("field") not in {
+            None, "reply", "service_summary", "memory", "next_steps", "advice", "breakpoints",
+        }:
+            value = {**value, "field": None}
         if isinstance(value, dict) and value.get("category") not in {"fact", "citation", "safety", "style"}:
             return {**value, "category": "fact", "format_error": True}
         return value
@@ -47,6 +53,12 @@ class GroundingSource(ApiModel):
     text: str
     occurred_at: str | None = None
     fields: dict[str, Any] = Field(default_factory=dict)
+    #: 官方 Excel 行（service_source_record.record_id）；订单、源工单、导入聊天才有（追溯 T5）
+    source_record_id: str | None = None
+
+    def prompt_dump(self) -> dict[str, Any]:
+        """Catalog entry for model prompts: the official row id is for tracing, not citing."""
+        return self.model_dump(by_alias=True, mode="json", exclude={"source_record_id"})
 
 
 class MemoryItem(ApiModel):

@@ -220,7 +220,7 @@ def rewrite_suggestion(
     if payload.instruction not in INSTRUCTIONS:
         raise ValidationRejected("不支持的改写方式")
     view = read_assistant(session, conversation_id)
-    if view is None or view.stale or view.verification_status not in {"verified", "partial"}:
+    if view is None or view.stale or view.verification_status not in {"verified", "partial", "needs_review"}:
         raise ConflictError("建议已过期或未完成核验，请重新生成")
     text, model = rewrite_reply(context.model_provider, payload.text, payload.instruction)
     issues = rewrite_issues(payload.text, text)

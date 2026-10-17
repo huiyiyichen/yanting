@@ -43,6 +43,18 @@ const assistant = {
   verificationStatus: 'verified', memoryItems: [], workflowSteps: [], modelUsage: { calls: 2 },
 }
 
+function withCustomerMessage() {
+  const original = fetchMock.getMockImplementation() as
+    (input: RequestInfo | URL, options?: RequestInit) => Promise<Response>
+  fetchMock.mockImplementation(async (input: RequestInfo | URL, options?: RequestInit) => {
+    if (String(input).endsWith('/messages') && options?.method !== 'POST') return json([{
+      messageId: 'customer-1', conversationId: 'live-1', senderRole: 'customer',
+      body: '帮我看看换货', messageRevision: 1, createdAt: '2026-10-03T09:00:00+08:00',
+    }])
+    return original(input, options)
+  })
+}
+
 let fetchMock: ReturnType<typeof vi.fn>
 let generated = false
 function json(payload: unknown, status = 200) {
@@ -254,13 +266,12 @@ describe('颜听工作台', () => {
     expect(fetchMock.mock.calls.some(([path, options]) =>
       String(path).endsWith('/assistant') && options?.method === 'POST')).toBe(false)
   }, 15000)
-  it('生成建议是独立操作，采用只写草稿', async () => {
+  it('打开有客户消息的会话自动生成建议，采用只写草稿', async () => {
     const user = userEvent.setup()
+    withCustomerMessage()
     renderApp()
     await screen.findByRole('button', { name: '消费者甲 live-1' })
-    await waitFor(() => expect(screen.getByRole('button', { name: /生成建议/ })).toBeEnabled())
-    await user.click(screen.getByRole('button', { name: /生成建议/ }))
-    // P1-3：生成改为阶段流式接口（/assistant/stream），仍是客服显式操作
+    // 用户反馈 6（2026-10-17）：无缓存时自动走流式生成，不再依赖客服点刷新
     await waitFor(() => expect(fetchMock.mock.calls.some(([path]) =>
       String(path).includes('/assistant/stream'))).toBe(true))
     await screen.findByText('我来核对这笔订单的换货记录。')
@@ -298,9 +309,10 @@ describe('颜听工作台', () => {
   }, 15000)
   it('回复建议显示可解释的共情维度标签', async () => {
     const user = userEvent.setup()
+    withCustomerMessage()
     renderApp()
-    await user.click(await screen.findByRole('button', { name: /生成建议/ }))
-    expect(await screen.findByText('情绪回应')).toBeInTheDocument()
+    void user
+    expect(await screen.findByText('情绪回应', {}, { timeout: 5000 })).toBeInTheDocument()
     expect(screen.getByText('业务处理')).toBeInTheDocument()
     expect(screen.getByText('个性化')).toBeInTheDocument()
   })

@@ -1,6 +1,6 @@
 /**
  * 本文件由 scripts/generateContracts.mjs 自动生成，请勿手工修改。
- * 来源：http://127.0.0.1:8000/openapi.json
+ * 来源：data/runtime/contracts-export/openapi.json
  * 字段命名为 camelCase，与后端 Pydantic 序列化别名一致。
  */
 
@@ -1573,6 +1573,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/traces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Traces */
+        get: operations["list_traces_api_platform_traces_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/traces/{trace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trace Detail */
+        get: operations["trace_detail_api_platform_traces__trace_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/traces/{trace_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Trace
+         * @description 追踪、跨度、引用、版本与全部制品打成一个 JSON 包（评测与答辩证据）。
+         */
+        get: operations["export_trace_api_platform_traces__trace_id__export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/trace-artifacts/{sha256}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trace Artifact */
+        get: operations["trace_artifact_api_platform_trace_artifacts__sha256__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/source-records/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Source Record
+         * @description 官方 Excel 原始行：工作表名、行号、行哈希与原始字段（证明内容未被改写）。
+         */
+        get: operations["source_record_api_platform_source_records__record_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1628,6 +1719,17 @@ export interface components {
             /** Promptversion */
             promptVersion?: string | null;
         };
+        /** ArtifactView */
+        ArtifactView: {
+            /** Sha256 */
+            sha256: string;
+            /** Kind */
+            kind: string;
+            /** Bytes */
+            bytes: number;
+            /** Content */
+            content?: unknown;
+        };
         /** AssistantActionRequest */
         AssistantActionRequest: {
             /** Inputhash */
@@ -1649,6 +1751,8 @@ export interface components {
             claims?: components["schemas"]["GroundingClaim"][];
             /** Empathydimensions */
             empathyDimensions?: components["schemas"]["ReplyEmpathyDimension"][];
+            /** Reviewnotes */
+            reviewNotes?: string[];
         };
         /** AttachmentView */
         AttachmentView: {
@@ -2286,6 +2390,8 @@ export interface components {
             fields?: {
                 [key: string]: unknown;
             };
+            /** Sourcerecordid */
+            sourceRecordId?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4351,6 +4457,21 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** SourceRecordView */
+        SourceRecordView: {
+            /** Recordid */
+            recordId: string;
+            /** Sheetname */
+            sheetName: string;
+            /** Rownumber */
+            rowNumber: number;
+            /** Rowsha256 */
+            rowSha256: string;
+            /** Values */
+            values: {
+                [key: string]: unknown;
+            };
+        };
         /** StageUsage */
         StageUsage: {
             /** Stage */
@@ -4544,6 +4665,167 @@ export interface components {
             localDetail?: (components["schemas"]["ReshipTicketDetail"] | components["schemas"]["PaymentTicketDetail-Output"] | components["schemas"]["LogisticsTicketDetail"] | components["schemas"]["ReactionTicketDetail"] | components["schemas"]["ReturnTicketDetail"]) | null;
             /** Events */
             events?: components["schemas"]["TicketEventView"][];
+        };
+        /** TraceCitationView */
+        TraceCitationView: {
+            /** Messageid */
+            messageId?: string | null;
+            /** Replystyle */
+            replyStyle: string;
+            /** Segmentindex */
+            segmentIndex: number;
+            /** Segmenttext */
+            segmentText: string;
+            /** Sourceid */
+            sourceId: string;
+            /** Sourcerecordid */
+            sourceRecordId?: string | null;
+            /** Sheetname */
+            sheetName?: string | null;
+            /** Rownumber */
+            rowNumber?: number | null;
+            /** Verdict */
+            verdict: string;
+        };
+        /** TraceDetailView */
+        TraceDetailView: {
+            /** Traceid */
+            traceId: string;
+            /** Graph */
+            graph: string;
+            /** Triggertype */
+            triggerType: string;
+            /** Conversationid */
+            conversationId?: string | null;
+            /** Buyeralias */
+            buyerAlias?: string | null;
+            /** Status */
+            status: string;
+            /** Orchestration */
+            orchestration: string;
+            /** Startedat */
+            startedAt: string;
+            /** Endedat */
+            endedAt?: string | null;
+            /** Totals */
+            totals: {
+                [key: string]: unknown;
+            };
+            /** Lanes */
+            lanes: {
+                [key: string]: unknown;
+            }[];
+            /** Triggermessageid */
+            triggerMessageId?: string | null;
+            /** Jobid */
+            jobId?: string | null;
+            /** Outcomemessageid */
+            outcomeMessageId?: string | null;
+            /** Versions */
+            versions: {
+                [key: string]: unknown;
+            };
+            /** Spans */
+            spans: components["schemas"]["TraceSpanView"][];
+            /** Citations */
+            citations: components["schemas"]["TraceCitationView"][];
+        };
+        /** TraceListView */
+        TraceListView: {
+            /** Items */
+            items: components["schemas"]["TraceSummaryView"][];
+            /** Total */
+            total: number;
+        };
+        /** TraceSpanView */
+        TraceSpanView: {
+            /** Spanid */
+            spanId: string;
+            /** Parentspanid */
+            parentSpanId?: string | null;
+            /** Seq */
+            seq: number;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Label */
+            label: string;
+            /** Attempt */
+            attempt: number;
+            /** Parallelgroup */
+            parallelGroup?: string | null;
+            /** Status */
+            status: string;
+            /** Startedat */
+            startedAt: string;
+            /** Endedat */
+            endedAt?: string | null;
+            /** Durationms */
+            durationMs?: number | null;
+            /** Tier */
+            tier?: string | null;
+            /** Modelrequested */
+            modelRequested?: string | null;
+            /** Modelreturned */
+            modelReturned?: string | null;
+            /** Ismock */
+            isMock?: boolean | null;
+            /** Promptcode */
+            promptCode?: string | null;
+            /** Promptrevision */
+            promptRevision?: string | null;
+            /** Promptsha256 */
+            promptSha256?: string | null;
+            /** Contractversion */
+            contractVersion?: string | null;
+            /** Prompttokens */
+            promptTokens?: number | null;
+            /** Completiontokens */
+            completionTokens?: number | null;
+            /** Cachedtokens */
+            cachedTokens?: number | null;
+            /** Finishreason */
+            finishReason?: string | null;
+            /** Inputartifact */
+            inputArtifact?: string | null;
+            /** Outputartifact */
+            outputArtifact?: string | null;
+            /** Reasons */
+            reasons: unknown[];
+            /** Errorcode */
+            errorCode?: string | null;
+            /** Errordetail */
+            errorDetail?: string | null;
+        };
+        /** TraceSummaryView */
+        TraceSummaryView: {
+            /** Traceid */
+            traceId: string;
+            /** Graph */
+            graph: string;
+            /** Triggertype */
+            triggerType: string;
+            /** Conversationid */
+            conversationId?: string | null;
+            /** Buyeralias */
+            buyerAlias?: string | null;
+            /** Status */
+            status: string;
+            /** Orchestration */
+            orchestration: string;
+            /** Startedat */
+            startedAt: string;
+            /** Endedat */
+            endedAt?: string | null;
+            /** Totals */
+            totals: {
+                [key: string]: unknown;
+            };
+            /** Lanes */
+            lanes: {
+                [key: string]: unknown;
+            }[];
         };
         /** UpdatePromptRequest */
         UpdatePromptRequest: {
@@ -7817,6 +8099,176 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KnowledgeSearchView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_traces_api_platform_traces_get: {
+        parameters: {
+            query?: {
+                conversationId?: string | null;
+                status?: string | null;
+                graph?: string | null;
+                hasRepair?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceListView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trace_detail_api_platform_traces__trace_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                trace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceDetailView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_trace_api_platform_traces__trace_id__export_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                trace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trace_artifact_api_platform_trace_artifacts__sha256__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                sha256: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    source_record_api_platform_source_records__record_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceRecordView"];
                 };
             };
             /** @description Validation Error */
