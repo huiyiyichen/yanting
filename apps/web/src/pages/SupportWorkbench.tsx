@@ -5,7 +5,7 @@ import { Sender } from '@ant-design/x'
 import { Alert, Button, Tooltip, Drawer, Spin, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
+import { deskApi, supportApi, type ConsumerServiceAssistantView, type ConsumerServiceContextView, type MessageView, type ReceptionSnapshot, type TicketView, type ServiceMemoryView, type HandoffSummaryView, type ConsumerProfileView, type ReceptionStatsView } from '../api/client'
 import { MessageList } from '../components/MessageList'
 import { ChatImageButton, ChatImagePreview, useChatImage } from '../components/ChatImageUpload'
 import { PageHeader } from '../components/PageHeader'
@@ -101,19 +101,21 @@ export function SupportWorkbench() {
   const acknowledgedDraft = useRef<string | null>(null)
   const sendRef = useRef<() => void>(() => undefined)
   const handoffGenerated = useRef(new Set<string>())
+  const [handoff, setHandoff] = useState<HandoffSummaryView | null>(null)
+  const [summarizing, setSummarizing] = useState(false)
   sendRef.current = () => { void send() }
 
   const loadDetail = useCallback(async (target: string) => {
     const request = ++detailRequest.current
     const analysisVersion = assistantRequest.current
     try {
-      const [rows, facts, cached, work, remembered, persona] = await Promise.all([
+      const [rows, facts, cached, work, remembered, persona, handoff] = await Promise.all([
         supportApi.receptionMessages(target), supportApi.serviceContext(target),
         supportApi.assistant(target), deskApi.tickets(target), supportApi.memory(target),
-        supportApi.profile(target).catch(() => null),
+        supportApi.profile(target).catch(() => null), supportApi.handoffSummary(target).catch(() => null),
       ])
       if (active.current !== target || request !== detailRequest.current) return
-      setMessages(rows); setContext(facts); setTickets(work); setMemory(remembered); setProfile(persona); setError('')
+      setMessages(rows); setContext(facts); setTickets(work); setMemory(remembered); setProfile(persona); setHandoff(handoff); setError('')
       if (analysisVersion === assistantRequest.current) setAssistant(cached)
       await supportApi.markSeen(target, rows.at(-1)?.messageRevision ?? 0)
     } catch (err) {
@@ -124,17 +126,22 @@ export function SupportWorkbench() {
   }, [])
 
   useEffect(() => {
-    setMessages([]); setContext(null); setAssistant(null); setTickets([]); setMemory(null); setProfile(null); setAiError('')
+    setMessages([]); setContext(null); setAssistant(null); setTickets([]); setMemory(null); setProfile(null); setHandoff(null); setAiError('')
     if (id) { setLoading(true); void loadDetail(id) }
   }, [id, loadDetail])
 
-  // 转人工（系统判定或客户要求）后自动生成一次交接摘要；同一次转人工只生成一次
+  // 转人工（系统判定或客户要求）后由交接摘要 Agent 单独生成一次（不再跑整条起草流程）；同一次转人工只生成一次
   const handoffKey = current?.serviceMode === 'operator_assisted' && current.handoffReason ? `${current.conversationId}:${current.modeRevision}` : ''
   useEffect(() => {
-    if (!id || !handoffKey || loading || context?.conversationId !== id || generating || handoffGenerated.current.has(handoffKey)) return
+    if (!id || !handoffKey || loading || context?.conversationId !== id || handoffGenerated.current.has(handoffKey)) return
     handoffGenerated.current.add(handoffKey)
-    if (assistant && !assistant.stale && assistant.serviceSummary?.trim()) return
-    void generate(id)
+    if (handoff && !handoff.stale && handoff.source === 'model') return
+    const target = id
+    setSummarizing(true)
+    supportApi.generateHandoffSummary(target)
+      .then((view) => { if (active.current === target) setHandoff(view) })
+      .catch(() => undefined)
+      .finally(() => { if (active.current === target) setSummarizing(false) })
   }, [id, handoffKey, loading, context])
 
   // 用户反馈 6：打开会话或客户来新消息时自动生成回复建议与交接摘要（输入未变时后端直接复用缓存，不重复调用模型）
@@ -314,8 +321,8 @@ export function SupportWorkbench() {
             {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
           </ol>}
         </section>}
-        <HandoffSummary summary={assistant && !assistant.stale ? assistant.serviceSummary : null}
-          state={generating ? '生成中' : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
+        <HandoffSummary summary={handoff && !handoff.stale ? handoff.summary : assistant && !assistant.stale ? assistant.serviceSummary : null}
+          state={summarizing || (generating && !handoff) ? '生成中' : handoff && !handoff.stale ? null : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
         {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
           items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
           missing={assistant.missingInformation} /> : null}

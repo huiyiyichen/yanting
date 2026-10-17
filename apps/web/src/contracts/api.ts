@@ -891,6 +891,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/reception/{conversation_id}/handoff-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Handoff Summary
+         * @description A7 交接摘要（只读）；没有生成过时返回 null。
+         */
+        get: operations["handoff_summary_api_support_reception__conversation_id__handoff_summary_get"];
+        put?: never;
+        /**
+         * Generate Handoff Summary Route
+         * @description 转人工后生成交接摘要：同一次转人工只生成一次；失败时给出转人工原因与触发原话。
+         */
+        post: operations["generate_handoff_summary_route_api_support_reception__conversation_id__handoff_summary_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/reception/panorama": {
         parameters: {
             query?: never;
@@ -2408,6 +2432,26 @@ export interface components {
             safety: number;
             /** Modelfailure */
             modelFailure: number;
+        };
+        /** HandoffSummaryView */
+        HandoffSummaryView: {
+            /** Conversationid */
+            conversationId: string;
+            /** Moderevision */
+            modeRevision: number;
+            /** Summary */
+            summary: string;
+            /** Source */
+            source: string;
+            /** Reasonlabel */
+            reasonLabel: string;
+            /** Traceid */
+            traceId?: string | null;
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -6593,6 +6637,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReceptionSnapshotView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    handoff_summary_api_support_reception__conversation_id__handoff_summary_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffSummaryView"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_handoff_summary_route_api_support_reception__conversation_id__handoff_summary_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoffSummaryView"];
                 };
             };
             /** @description Validation Error */

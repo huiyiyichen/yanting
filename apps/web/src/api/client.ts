@@ -80,6 +80,7 @@ export type KnowledgeSearchView = components['schemas']['KnowledgeSearchView']
 export type PromptRevisionView = components['schemas']['PromptRevisionView']
 export type ReceptionStatsView = components['schemas']['ReceptionStatsView']
 export type ServiceMemoryView = components['schemas']['ServiceMemoryView']
+export type HandoffSummaryView = components['schemas']['HandoffSummaryView']
 export type ServiceBreakpointAssessmentView = components['schemas']['ServiceBreakpointAssessmentView']
 
 export type ViewRoleHeader = 'customer' | 'support'
@@ -348,6 +349,10 @@ export const supportApi = {
     ),
   memory: (conversationId: string) =>
     request<ServiceMemoryView>(`/api/support/reception/${conversationId}/memory`, { role: 'support' }),
+  handoffSummary: (conversationId: string) =>
+    request<HandoffSummaryView | null>(`/api/support/reception/${conversationId}/handoff-summary`, { role: 'support' }),
+  generateHandoffSummary: (conversationId: string) =>
+    request<HandoffSummaryView>(`/api/support/reception/${conversationId}/handoff-summary`, { method: 'POST', role: 'support' }),
   draftReview: (conversationId: string, body: string) =>
     request<{ findings: DraftFinding[] }>(`/api/support/reception/${conversationId}/draft-review`, {
       role: 'support', method: 'POST', body: { body },

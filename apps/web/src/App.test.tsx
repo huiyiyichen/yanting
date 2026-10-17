@@ -353,20 +353,27 @@ describe('颜听工作台', () => {
   /**
    * 转人工自动生成交接摘要：
    * H3 系统/客户转人工后（handoffReason 有值）没有自动生成；H4 同一次转人工因轮询重复生成。
+   * H5 多 Agent 阶段 1：交接摘要改由交接摘要 Agent 单独生成，不再为摘要跑整条起草流程。
    */
   it('转人工后自动生成一次交接摘要，轮询不重复生成', async () => {
     const original = fetchMock.getMockImplementation() as
       (input: RequestInfo | URL, options?: RequestInit) => Promise<Response>
     fetchMock.mockImplementation(async (input: RequestInfo | URL, options?: RequestInit) => {
       if (String(input).endsWith('/reception/queue')) return json({ items: [{ ...item, modeRevision: 2, handoffReason: 'customer_requested' }], unreadTotal: 1 })
+      if (String(input).endsWith('/handoff-summary')) return json(options?.method === 'POST' ? {
+        conversationId: 'live-1', modeRevision: 2, summary: '客户反馈换货未到，要求人工跟进。', source: 'model',
+        reasonLabel: '客户要求人工', traceId: 'trc-1', stale: false,
+      } : null)
       return original(input, options)
     })
     renderApp()
-    await waitFor(() => expect(fetchMock.mock.calls.filter(([path]) =>
-      String(path).includes('/assistant/stream')).length).toBe(1), { timeout: 8000 })
-    expect(await screen.findByRole('region', { name: '交接摘要' })).not.toHaveTextContent('待生成')
+    await waitFor(() => expect(fetchMock.mock.calls.filter(([path, options]) =>
+      String(path).endsWith('/handoff-summary') && options?.method === 'POST').length).toBe(1), { timeout: 8000 })
+    expect(await screen.findByText('客户反馈换货未到，要求人工跟进。')).toBeInTheDocument()
     await new Promise((resolve) => setTimeout(resolve, 600))
-    expect(fetchMock.mock.calls.filter(([path]) => String(path).includes('/assistant/stream')).length).toBe(1)
+    expect(fetchMock.mock.calls.filter(([path, options]) =>
+      String(path).endsWith('/handoff-summary') && options?.method === 'POST').length).toBe(1)
+    expect(fetchMock.mock.calls.filter(([path]) => String(path).includes('/assistant/stream')).length).toBe(0)
   }, 15000)
   it('图片可见信息有原图入口，不与商品知识或业务执行结果混在一起', async () => {
     const user = userEvent.setup()

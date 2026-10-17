@@ -534,3 +534,6 @@ for _model in IMMUTABLE_MODELS:
                 "BEGIN SELECT RAISE(ABORT, 'imported source facts are immutable'); END"
             ).execute_if(dialect="sqlite"),
         )
+from app.domain.consumer_service import (
+    post_reply as _post_reply,  # noqa: F401  (registers service_handoff_summary)
+)
