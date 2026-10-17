@@ -306,7 +306,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist svg { width: 100%; }
 .yt-risk-page .yt-dist-markers { position: absolute; top: 0; left: 0; right: 0; width: auto !important; height: 10px; }
 .yt-risk-page .yt-dist-marker { position: absolute; transform: translateX(-50%) rotate(45deg); width: 7px; height: 7px; padding: 0; border: 0; background: var(--m-fury); cursor: pointer; }
-.yt-risk-page .yt-dist-peak { position: absolute; top: 12px; transform: translateX(6px); font-size: 12px; color: var(--m-ink); white-space: nowrap; pointer-events: none; }
 .yt-risk-page .yt-dist-mid, .yt-risk-page .yt-dist-day { stroke: var(--m-line-2); }
 .yt-risk-page .yt-dist-calm { fill: var(--m-calm); }
 .yt-risk-page .yt-monitor-grid { grid-template-columns: 0.8fr 1fr 1.5fr; }
@@ -428,7 +427,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-risk-page .yt-dist-fury { fill: #dd4a5f; }
 .yt-risk-page .yt-dist-calm { fill: #34a07f; fill-opacity: 0.5; opacity: 1; }
 .yt-risk-page .yt-dist-hover { fill: rgba(255, 255, 255, 0.05); }
-.yt-risk-page .yt-dist-peak { fill: var(--m-ink-2); font-size: 15px; position: static; transform: none; }
 .yt-dist-bar { transform-box: fill-box; transform-origin: 50% 100%; animation: yt-rise 0.9s cubic-bezier(.2, .8, .2, 1) both; }
 .yt-dist-bar.is-down { transform-origin: 50% 0%; }
 @keyframes yt-rise { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }

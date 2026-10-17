@@ -7,6 +7,7 @@
  * V5 点击高风险会话标记不打开对应会话筛选（onFilterConversation 未带会话号）。
  * V7 大声纹柱子过多挤成一团（1 小时一根 × 7 天 = 112 根）：总数应控制在约 60 根内；
  *    范围切换压住图例；标题日期范围与图上显示的天数不一致。
+ * V8 声纹图上常驻峰值文字（“05/07 16时起 负面 10”）压在柱子中间：不应常驻，只在悬停提示里出现。
  * V6 商品线索不能展开到订单与会话（反馈 ⑤）；展开后不按批次分组。
  */
 import { fireEvent, render, screen, within } from '@testing-library/react'
@@ -52,6 +53,10 @@ describe('RiskOverviewPanel', () => {
   it('V2 distribution has a text summary with counts', () => {
     mount()
     expect(screen.getByRole('img', { name: /消费者消息 16 条.*负面 10 条/ })).toBeInTheDocument()
+  })
+  it('V8 声纹上没有常驻的峰值文字', () => {
+    const { container } = render(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={overview} clues={clues} onFilterType={vi.fn()} onFilterConversation={vi.fn()} /></ConfigProvider></MemoryRouter>)
+    expect(container.querySelector('.yt-dist svg')?.textContent).not.toMatch(/负面/)
   })
   it('V3 product clue has counts only', () => {
     mount()

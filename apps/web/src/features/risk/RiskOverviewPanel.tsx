@@ -49,8 +49,6 @@ function DistributionVoiceprint({ overview, days, onMarker }: {
   const r = (h: number) => Math.min(2, h / 2)
   const negative = buckets.reduce((sum, b) => sum + b.dissatisfied + b.angry, 0)
   const summary = `情绪声纹：消费者消息 ${overview.customerMessages} 条，负面 ${negative} 条，高风险会话 ${overview.highRiskMarkers.length} 个`
-  const peakIndex = slots.reduce((best, b, i) => (b.dissatisfied + b.angry > slots[best].dissatisfied + slots[best].angry ? i : best), 0)
-  const peak = slots[peakIndex]
   const xOf = (i: number) => i * slot + (slot - bw) / 2
   const indexOf = (date: string, hour: number) => days.indexOf(date) * perDay + Math.floor((hour - h0) / step)
   const hovered = hover === null ? null : slots[hover]
@@ -79,10 +77,6 @@ function DistributionVoiceprint({ overview, days, onMarker }: {
             className="yt-dist-fury yt-dist-bar" style={delay} />}
         </g>
       })}
-      {peak && peak.dissatisfied + peak.angry > 0 && <text x={xOf(peakIndex) + bw + 6}
-        y={mid - 2 - (peak.dissatisfied + peak.angry) * u - (peak.angry && peak.dissatisfied ? STACK_GAP : 0) + 4} className="yt-dist-peak">
-        {peak.date.slice(5).replace('-', '/')} {peak.hour}时{step > 1 ? '起' : ''} 负面 {peak.dissatisfied + peak.angry}
-      </text>}
     </svg>
     <div className="yt-dist-markers">
       {overview.highRiskMarkers.map((m) => {
