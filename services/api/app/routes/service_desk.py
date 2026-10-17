@@ -182,9 +182,12 @@ def breakpoint_analyze(
     from app.errors import YantingError
 
     try:
-        service_breakpoints.analyze_service_breakpoints(
-            session, runtime.model_provider, runtime, conversation_id,
-        )
+        from app.audit.tracer import traced
+
+        with traced(session, "on_demand", "manual_breakpoint", conversation_id=conversation_id):
+            service_breakpoints.analyze_service_breakpoints(
+                session, runtime.model_provider, runtime, conversation_id,
+            )
         AuditRecorder(session).record(
             AuditContext.new_turn(actor_type="operator", conversation_id=conversation_id),
             event_type="service_breakpoint_analysis_requested", detail={"operator": actor},

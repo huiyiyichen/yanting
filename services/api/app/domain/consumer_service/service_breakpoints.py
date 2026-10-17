@@ -257,11 +257,15 @@ def analyze_service_breakpoints(
 
     def complete(stage: str, prompt: str, payload: dict[str, Any], max_tokens: int):
         started = time.perf_counter()
-        result = provider.complete(
+        from app.audit.tracer import traced_complete
+
+        result = traced_complete(
+            provider,
             [
                 ChatMessage(role="system", content=prompt),
                 ChatMessage(role="user", content=json.dumps(payload, ensure_ascii=False)),
             ],
+            stage=f"breakpoint_{stage}", prompt_code="BREAKPOINT",
             temperature=0, max_tokens=max_tokens, json_mode=True,
             timeout_seconds=runtime.settings.auto_reply_timeout_seconds,
         )

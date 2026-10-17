@@ -32,6 +32,8 @@ class PanoramaStep(ApiModel):
 class PanoramaRun(ApiModel):
     outcome: str | None = None
     steps: list[PanoramaStep] = Field(default_factory=list)
+    #: 对应的 Agent 追踪，全景卡片可跳到模型配置页「Agent 追踪」
+    trace_id: str | None = None
 
 
 class PanoramaItem(ApiModel):
@@ -90,10 +92,41 @@ def handoff_label(reason: str, quote: str | None) -> str:
     return HANDOFF_REASONS.get(reason, "待人工跟进")
 
 
+SPAN_TO_STEP = {
+    "safety_gate": "安全检查", "trajectory": "读取轨迹", "vision": "读取轨迹", "knowledge": "知识检索",
+    "composer": "起草", "program_check": "核验", "verifier": "核验", "output_gate": "核验", "send_gate": "发送",
+}
+
+
+def _last_run_from_trace(session: Session, conversation_id: str) -> dict | None:
+    """上一轮 AI 处理从落库的追踪读取，进程重启后仍在（追溯 T8）。"""
+    from app.audit.trace_models import AgentSpanRow, AgentTraceRow
+
+    trace = session.scalar(select(AgentTraceRow).where(
+        AgentTraceRow.conversation_id == conversation_id, AgentTraceRow.graph == "reception",
+        AgentTraceRow.status != "running",
+    ).order_by(AgentTraceRow.started_at.desc()).limit(1))
+    if trace is None:
+        return None
+    steps: dict[str, dict] = {name: {"name": name, "status": "pending", "durationMs": 0}
+                              for name in job_progress.DISPLAY_STEPS}
+    for span in session.scalars(select(AgentSpanRow).where(
+            AgentSpanRow.trace_id == trace.trace_id, AgentSpanRow.parent_span_id.is_(None))):
+        name = SPAN_TO_STEP.get(span.name)
+        if name is None:
+            continue
+        step = steps[name]
+        step["durationMs"] += span.duration_ms or 0
+        failed = span.status not in {"ok", "skipped"} or (
+            span.kind == "decision" and "转人工" in (span.reasons_json or ""))
+        step["status"] = "fail" if failed or step["status"] == "fail" else "done"
+    return {"outcome": trace.status, "steps": list(steps.values()), "traceId": trace.trace_id}
+
+
 def _run(raw: dict | None) -> PanoramaRun | None:
     if not raw:
         return None
-    return PanoramaRun(outcome=raw.get("outcome"), steps=[
+    return PanoramaRun(outcome=raw.get("outcome"), trace_id=raw.get("traceId"), steps=[
         PanoramaStep(name=s["name"], status=s["status"], duration_ms=s["durationMs"]) for s in raw["steps"]])
 
 
@@ -149,7 +182,7 @@ def panorama(session: Session, *, window_minutes: int, now: datetime | None = No
             waiting_since=base.waiting_since,
             handoff_reason=handoff_label(handoff.reason, quote) if lane == "wait" and handoff else None,
             handoff_quote=quote if lane == "wait" else None,
-            ai_job=ai_job, current_run=_run(current), last_run=_run(job_progress.last_for(cid)),
+            ai_job=ai_job, current_run=_run(current), last_run=_run(_last_run_from_trace(session, cid) or job_progress.last_for(cid)),
             last_activity_at=_iso(last_at), lane_entered_at=_iso(lane_entered),
         ))
     return PanoramaView(items=items, running=sum(i.ai_job == "running" for i in items),

@@ -2951,6 +2951,8 @@ export interface components {
             outcome?: string | null;
             /** Steps */
             steps?: components["schemas"]["PanoramaStep"][];
+            /** Traceid */
+            traceId?: string | null;
         };
         /** PanoramaStep */
         PanoramaStep: {

@@ -39,7 +39,8 @@ def check(session: Session) -> dict[str, Any]:
     model_spans = [s for s in spans if s.kind == "model_call"]
     job_traces = [t for t in traces if t.job_id and t.job_id in jobs]
     consistent = [t for t in job_traces if t.status == jobs[t.job_id].status
-                  or (t.status == "running" and jobs[t.job_id].status in {"queued", "running"})]
+                  or (t.status == "running" and jobs[t.job_id].status in {"queued", "running"})
+                  or (t.status == "interrupted" and jobs[t.job_id].status in {"handoff", "superseded"})]
     results = [
         item("消息有来源", sum(m.message_id in outcomes for m in auto_messages), len(auto_messages),
              [m.message_id for m in auto_messages if m.message_id not in outcomes]),

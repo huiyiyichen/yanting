@@ -152,3 +152,71 @@ def test_adopted_suggestion_links_citations_to_operator_message(workspace):
         cites = session.scalars(select(ReplyCitationRow).where(
             ReplyCitationRow.trace_id == trace.trace_id, ReplyCitationRow.reply_style == style)).all()
         assert all(c.message_id == sent["messageId"] for c in cites)
+
+
+def test_rewrite_is_traced_with_its_model_call(workspace):
+    """F9 改写调用没有追踪或模型调用跨度（T2）。"""
+    client, factory, provider = workspace
+    cid, view = _generate(client)
+    original = provider.complete
+
+    def rewrite_or_original(messages, **kwargs):
+        if kwargs.get("model_tier") == "fast":
+            from app.integrations.model_provider import ChatResult
+            return ChatResult(text='{{"text": "{}"}}'.format(view["replySuggestions"][0]["body"]),
+                              model="rewrite-fixture", latency_seconds=0, is_mock=True)
+        return original(messages, **kwargs)
+
+    provider.complete = rewrite_or_original
+    response = client.post(f"/api/support/reception/{cid}/assistant/rewrite", headers=SUPPORT, json={
+        "style": "recommended", "text": view["replySuggestions"][0]["body"], "instruction": "gentler"})
+    assert response.status_code < 500, response.text
+    with factory() as session:
+        trace = session.scalar(select(AgentTraceRow).where(
+            AgentTraceRow.conversation_id == cid, AgentTraceRow.trigger_type == "rewrite"))
+        assert trace is not None
+        spans = session.scalars(select(AgentSpanRow).where(AgentSpanRow.trace_id == trace.trace_id)).all()
+        assert any(s.kind == "model_call" and s.name == "rewriter" for s in spans)
+
+
+def test_dangling_running_trace_is_marked_interrupted(workspace):
+    """F10 进程重启后运行中的追踪状态悬空。"""
+    from datetime import timedelta
+
+    from app.domain.consumer_service.auto_reception import expire_jobs, utcnow
+    from app.domain.consumer_service.models import AutoReplyJobRow
+
+    client, factory, _ = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "咨询物流")
+    job_id = jobs(factory, cid)[0].job_id
+    with factory() as session:
+        trace = tracer.start_trace("reception", "customer_message", conversation_id=cid, job_id=job_id)
+        trace.flush(session)
+        job = session.get(AutoReplyJobRow, job_id)
+        job.status, job.created_at = "running", utcnow() - timedelta(hours=1)
+        session.commit()
+    expire_jobs(client.app.state.runtime)
+    with factory() as session:
+        assert session.get(AgentTraceRow, trace.trace_id).status == "interrupted"
+
+
+def test_concurrent_jobs_keep_spans_in_their_own_trace(workspace):
+    """F11 并发的 4 个任务跨度串到别的追踪。"""
+    from concurrent.futures import ThreadPoolExecutor
+
+    client, factory, _ = workspace
+    ids = []
+    for index in range(4):
+        cid = fixtures._create(client)
+        fixtures._send(client, cid, f"咨询物流{index}")
+        ids.append((cid, jobs(factory, cid)[0].job_id))
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        list(pool.map(lambda pair: process_job(client.app.state.runtime, pair[1]), ids))
+    with factory() as session:
+        for cid, job_id in ids:
+            trace = session.scalar(select(AgentTraceRow).where(AgentTraceRow.job_id == job_id))
+            assert trace is not None and trace.conversation_id == cid
+            spans = session.scalars(select(AgentSpanRow).where(AgentSpanRow.trace_id == trace.trace_id)).all()
+            assert sum(s.name == "safety_gate" for s in spans) == 1
+            assert sum(s.name == "send_gate" for s in spans) == 1

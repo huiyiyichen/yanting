@@ -7,6 +7,7 @@ F5 官方历史会话混入全景。
 F7 任务结束后步骤登记未清理，进度停在中间；上一轮耗时丢失。
 F8 转人工原因不按方案取值（客户要求人工 / 就医 · 安全转人工 / 投诉风险 …），或缺少触发原话。
 F9 活动窗口外的会话仍出现在全景。
+F10 进程重启（内存登记表清空）后上一轮记录丢失；上一轮没有可跳转的追踪号（多 Agent T8）。
 """
 
 from tests.integration import test_reception_workspace as fixtures
@@ -81,3 +82,16 @@ def test_active_window(workspace, monkeypatch):
         unlimited = module.panorama(session, window_minutes=0, now=datetime.now(UTC) + timedelta(hours=3))
     assert cid not in {i.conversation_id for i in later.items}
     assert cid in {i.conversation_id for i in unlimited.items}
+
+
+def test_last_run_survives_restart_from_trace(workspace):
+    client, factory, _ = workspace
+    ai = fixtures._create(client)
+    fixtures._send(client, ai, "包裹到哪了")
+    process_job(client.app.state.runtime, jobs(factory, ai)[0].job_id)
+    job_progress.reset()
+    items, _ = view(client)
+    run = items[ai]["lastRun"]
+    assert run and run["outcome"] == "sent" and run["traceId"].startswith("trc-")
+    assert [s["name"] for s in run["steps"]] == list(job_progress.DISPLAY_STEPS)
+    assert all(s["status"] == "done" for s in run["steps"])

@@ -74,11 +74,14 @@ def rewrite_reply(provider, original: str, instruction: str) -> tuple[str, str]:
     from app.errors import ModelOutputInvalid
     from app.integrations.model_provider import ChatMessage
 
-    result = provider.complete([
+    from app.audit.tracer import traced_complete
+
+    result = traced_complete(provider, [
         ChatMessage(role="system", content=REWRITE_PROMPT),
         ChatMessage(role="user", content=json.dumps(
             {"instruction": INSTRUCTIONS[instruction], "text": original}, ensure_ascii=False)),
-    ], temperature=0.3, max_tokens=600, json_mode=True, model_tier="fast")
+    ], stage="rewriter", prompt_code="REWRITE", temperature=0.3, max_tokens=600, json_mode=True,
+        model_tier="fast")
     try:
         text = str(json.loads(result.text)["text"]).strip()
     except (ValueError, KeyError, TypeError) as exc:

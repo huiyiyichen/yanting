@@ -608,4 +608,12 @@ def expire_jobs(runtime: Any) -> None:
                 job.status, job.error_code, job.updated_at = "handoff", "reply_timeout", utcnow()
             except ConflictError:
                 job.status, job.updated_at = "superseded", utcnow()
+        if rows:
+            # A trace left running by a crashed or restarted worker must not hang forever.
+            from app.audit.trace_models import AgentTraceRow
+
+            session.execute(update(AgentTraceRow).where(
+                AgentTraceRow.job_id.in_([job.job_id for job in rows]),
+                AgentTraceRow.status == "running",
+            ).values(status="interrupted", ended_at=utcnow()))
         session.commit()

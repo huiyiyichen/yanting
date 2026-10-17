@@ -262,6 +262,11 @@ class Trace:
 
 
 def start_trace(graph: str, trigger_type: str, **values: Any) -> Trace:
+    if "orchestration" not in values:
+        with contextlib.suppress(Exception):
+            from app.config import get_settings
+
+            values["orchestration"] = get_settings().orchestration
     trace = Trace(trace_id=f"trc-{uuid.uuid4().hex[:16]}", graph=graph, trigger_type=trigger_type, **values)
     _current.set(trace)
     return trace
@@ -276,5 +281,42 @@ def use(trace: Trace | None) -> Iterator[Trace | None]:
     token = _current.set(trace)
     try:
         yield trace
+    finally:
+        _current.reset(token)
+
+
+def traced_complete(provider: Any, messages: list[Any], *, stage: str, prompt_code: str | None = None,
+                    **kwargs: Any) -> Any:
+    """provider.complete that also records a model_call span on the current trace (T2/T3)."""
+    trace = current()
+    started = time.perf_counter()
+    try:
+        result = provider.complete(messages, **kwargs)
+    except Exception as exc:
+        if trace is not None:
+            trace.model_call(stage=stage, started=started, messages=messages, error=exc,
+                             tier=kwargs.get("model_tier"), prompt_code=prompt_code)
+        raise
+    if trace is not None:
+        trace.model_call(stage=stage, started=started, messages=messages, result=result,
+                         tier=kwargs.get("model_tier"), prompt_code=prompt_code)
+    return result
+
+
+@contextlib.contextmanager
+def traced(session: Any, graph: str, trigger_type: str, *, conversation_id: str | None,
+           ok_status: str = "draft") -> Iterator[Trace]:
+    """A whole on-demand run (rewrite, breakpoint analysis) as one trace, flushed into ``session``."""
+    trace = start_trace(graph, trigger_type, conversation_id=conversation_id)
+    token = _current.set(trace)
+    try:
+        yield trace
+    except Exception as exc:
+        trace.finish("superseded" if "Conflict" in type(exc).__name__ else "failed")
+        exc.trace_buffer = trace  # record_failure flushes after the business rollback
+        raise
+    else:
+        trace.finish(ok_status)
+        trace.flush(session)
     finally:
         _current.reset(token)

@@ -222,8 +222,13 @@ def rewrite_suggestion(
     view = read_assistant(session, conversation_id)
     if view is None or view.stale or view.verification_status not in {"verified", "partial", "needs_review"}:
         raise ConflictError("建议已过期或未完成核验，请重新生成")
-    text, model = rewrite_reply(context.model_provider, payload.text, payload.instruction)
-    issues = rewrite_issues(payload.text, text)
+    from app.audit.tracer import traced
+
+    with traced(session, "on_demand", "rewrite", conversation_id=conversation_id) as trace:
+        text, model = rewrite_reply(context.model_provider, payload.text, payload.instruction)
+        issues = rewrite_issues(payload.text, text)
+        trace.decision("rewrite_check", issues or ["事实保真校验通过"], label="改写校验",
+                       status="failed" if issues else "ok")
     AuditRecorder(session).record(
         AuditContext.new_turn(actor_type="operator", conversation_id=conversation_id),
         event_type="consumer_suggestion_rewrite", input_text=payload.text,
