@@ -456,25 +456,6 @@ export const supportApi = {
       role: 'support',
     }),
 
-  pendingRequests: () =>
-    request<RequestView[]>('/api/support/requests/pending', { role: 'support' }),
-
-  reviewRequest: (
-    requestId: string,
-    payload: {
-      action: 'approve' | 'reject' | 'request_information'
-      reason?: string
-      reasonText?: string
-      expectedRevision?: number
-      expectedPayloadHash?: string
-    },
-  ) =>
-    request<RequestView>(`/api/support/requests/${requestId}/review`, {
-      method: 'POST',
-      body: payload,
-      role: 'support',
-    }),
-
   auditTrail: (conversationId: string) =>
     request<Record<string, unknown>[]>(`/api/support/audit/${conversationId}`, {
       role: 'support',

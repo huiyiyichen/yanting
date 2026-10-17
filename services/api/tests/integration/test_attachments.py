@@ -107,7 +107,6 @@ def client(tmp_path: Path) -> Iterator[TestClient]:
 
     from app.main import create_app
     from app.runtime import RuntimeContext
-    from app.tools.registry import build_default_registry
 
     engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'a.sqlite3'}", future=True)
     CaseBase.metadata.create_all(engine)
@@ -133,7 +132,6 @@ def client(tmp_path: Path) -> Iterator[TestClient]:
             * 5
         ),
         embedding_provider=_StubEmbedding(),
-        tool_registry=build_default_registry(),
     )
 
     app = create_app()

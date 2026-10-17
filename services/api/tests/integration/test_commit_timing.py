@@ -91,7 +91,6 @@ def observed(tmp_path: Path) -> Iterator[Observed]:
     from app.integrations.model_provider import MockModelProvider
     from app.main import create_app
     from app.runtime import RuntimeContext
-    from app.tools.registry import build_default_registry
 
     db_path = tmp_path / "commit.sqlite3"
     engine = create_engine(f"sqlite+pysqlite:///{db_path}", future=True)
@@ -105,7 +104,6 @@ def observed(tmp_path: Path) -> Iterator[Observed]:
         session_factory=factory,
         model_provider=MockModelProvider(responses=[]),
         embedding_provider=MockEmbeddingProvider(reason="提交时序测试"),
-        tool_registry=build_default_registry(),
     )
 
     app = create_app()

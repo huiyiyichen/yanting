@@ -102,7 +102,6 @@ def _make_client(tmp_path: Path, provider: _ReplyProvider) -> Iterator[TestClien
 
     from app.main import create_app
     from app.runtime import RuntimeContext
-    from app.tools.registry import build_default_registry
 
     engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'r.sqlite3'}", future=True)
     from app.domain.platform import models as _platform_models  # noqa: F401
@@ -117,7 +116,6 @@ def _make_client(tmp_path: Path, provider: _ReplyProvider) -> Iterator[TestClien
         session_factory=factory,
         model_provider=provider,
         embedding_provider=_StubEmbedding(),
-        tool_registry=build_default_registry(),
     )
 
     app = create_app()

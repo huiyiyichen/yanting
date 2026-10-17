@@ -40,8 +40,6 @@ from app.schemas.conversation import (
     CaseView,
     MessageView,
     QueueItem,
-    RequestView,
-    ReviewRequest,
     SendMessageRequest,
     ServiceModeRequest,
     ServiceModeView,
@@ -250,75 +248,6 @@ async def set_service_mode(
     return change_mode(session, conversation_id, payload.mode, actor="operator")
 
 
-@router.post("/requests/{request_id}/review", response_model=RequestView)
-async def review_request(
-    request_id: str,
-    payload: ReviewRequest,
-    session: Session = Depends(get_session),
-    _role: ViewRole = Depends(require_support),
-) -> RequestView:
-    """批准 / 拒绝 / 退回补充。
-
-    批准只表示 Demo 内的人工确认，**不代表**真实退款或换货已完成。
-    拒绝与退回必须给出原因；旧版本的确认会被拒绝。
-    """
-
-    from app.audit.recorder import AuditContext, AuditRecorder
-    from app.domain.after_sales.requests import RequestRepository
-    from app.repositories.conversation_service import request_view
-
-    repo = RequestRepository(session)
-    before = repo.get(request_id)
-    repo.review(
-        request_id,
-        action=payload.action,
-        reviewer_role=ViewRole.SUPPORT.value,
-        reason=payload.reason,
-        reason_text=payload.reason_text,
-        expected_revision=payload.expected_revision,
-        expected_payload_hash=payload.expected_payload_hash,
-    )
-    row = repo.get(request_id)
-
-    # 人工确认必须留痕：谁、何时、对哪个版本的申请、做了什么、为什么
-    AuditRecorder(session).record(
-        AuditContext.new_turn(
-            actor_type="operator",
-            conversation_id=row.conversation_id,
-            case_id=row.case_id,
-        ),
-        event_type="human_review",
-        risk_level="request_creation",
-        human_confirmation_status=row.request_status,
-        detail={
-            "requestId": row.request_id,
-            "action": payload.action,
-            "fromStatus": before.request_status,
-            "toStatus": row.request_status,
-            "requestRevision": row.request_revision,
-            "payloadHash": row.payload_hash,
-            "approvedRevision": row.approved_revision,
-            "reviewerRole": row.reviewer_role,
-            "reason": row.review_reason,
-            "reasonText": row.review_reason_text,
-        },
-    )
-    return request_view(row)
-
-
-@router.get("/requests/pending", response_model=list[RequestView])
-async def pending_requests(
-    session: Session = Depends(get_session),
-    _role: ViewRole = Depends(require_support),
-) -> list[RequestView]:
-    """待人工确认队列。未操作时一直在这里，无超时、无自动升级。"""
-
-    from app.domain.after_sales.requests import RequestRepository
-    from app.repositories.conversation_service import request_view
-
-    return [request_view(row) for row in RequestRepository(session).list_pending()]
-
-
 @router.get("/audit/{conversation_id}")
 async def audit_trail(
     conversation_id: str,
@@ -327,7 +256,6 @@ async def audit_trail(
 ) -> list[dict[str, object]]:
     """案件相关审计轨迹（仅客服）。不返回完整 prompt/output。"""
 
-    from sqlalchemy import select
 
     from app.domain.case_state.models import AuditEventRow
 
@@ -413,7 +341,6 @@ async def close_conversation(
     conversation_id: str,
     payload: CloseConversationRequest | None = None,
     session: Session = Depends(get_session),
-    context: RuntimeContext = Depends(get_context),
     _role: ViewRole = Depends(require_support),
 ) -> CloseConversationView:
     """结束服务并开放评价入口。
@@ -471,18 +398,14 @@ async def close_conversation(
     )
 
     # 请求评价：是否允许由状态机判定（有待确认申请或草稿时不允许）
-    gateway = context.build_gateway(session)
-    rating = gateway.invoke(
-        "record_rating",
-        {"caseId": case_row.case_id, "action": "request"},
-        as_agent=False,
-    )
-    rating_status = rating.data.get("ratingStatus") if rating.ok else case_row.rating_status
-    message = (
-        "服务已结束，客户侧可以评价"
-        if rating.ok
-        else f"服务已结束，但评价入口未开放：{rating.message}"
-    )
+    from app.domain.consumer_service.rating import record_rating
+
+    try:
+        rating_status = record_rating(session, case_row.case_id, "request")["ratingStatus"]
+        message = "服务已结束，客户侧可以评价"
+    except ValidationRejected as exc:
+        rating_status = case_row.rating_status
+        message = f"服务已结束，但评价入口未开放：{exc}"
     session.flush()
     return CloseConversationView(
         conversation_id=conversation_id,

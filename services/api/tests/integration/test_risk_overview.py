@@ -100,7 +100,7 @@ def test_overview_and_clues_filtered_by_date_range(workspace):
                                                   if m["conversationId"] in view["rangeConversationIds"])
     assert full["rangeConversationIds"] is None
     clues_all = client.get("/api/support/desk/risks/product-clues", headers=SUPPORT).json()
-    late = client.get(f"/api/support/desk/risks/product-clues?from=2099-01-01&to=2099-01-02", headers=SUPPORT)
+    late = client.get("/api/support/desk/risks/product-clues?from=2099-01-01&to=2099-01-02", headers=SUPPORT)
     assert late.status_code == 200 and late.json() == [] and clues_all
     bad = client.get(f"/api/support/desk/risks/overview?scope=official&from={days[-1]}&to={first}", headers=SUPPORT)
     assert bad.status_code == 422

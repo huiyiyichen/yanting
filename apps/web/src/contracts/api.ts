@@ -477,49 +477,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/support/requests/{request_id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Review Request
-         * @description 批准 / 拒绝 / 退回补充。
-         *
-         *     批准只表示 Demo 内的人工确认，**不代表**真实退款或换货已完成。
-         *     拒绝与退回必须给出原因；旧版本的确认会被拒绝。
-         */
-        post: operations["review_request_api_support_requests__request_id__review_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/support/requests/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Pending Requests
-         * @description 待人工确认队列。未操作时一直在这里，无超时、无自动升级。
-         */
-        get: operations["pending_requests_api_support_requests_pending_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/support/audit/{conversation_id}": {
         parameters: {
             query?: never;
@@ -3550,22 +3507,6 @@ export interface components {
              */
             parcelType: "original" | "reship" | "unknown";
         };
-        /**
-         * ReviewRequest
-         * @description 人工确认。批准绑定申请内容版本；拒绝/退回必须给原因。
-         */
-        ReviewRequest: {
-            /** Action */
-            action: string;
-            /** Reason */
-            reason?: string | null;
-            /** Reasontext */
-            reasonText?: string | null;
-            /** Expectedrevision */
-            expectedRevision?: number | null;
-            /** Expectedpayloadhash */
-            expectedPayloadHash?: string | null;
-        };
         /** RewriteRequest */
         RewriteRequest: {
             /** Style */
@@ -5658,74 +5599,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceModeView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    review_request_api_support_requests__request_id__review_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path: {
-                request_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequestView"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    pending_requests_api_support_requests_pending_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-Demo-View-Role"?: string | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RequestView"][];
                 };
             };
             /** @description Validation Error */

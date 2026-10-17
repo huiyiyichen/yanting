@@ -16,8 +16,8 @@ from sqlalchemy.orm import Session
 
 from app.audit.recorder import AuditContext, AuditRecorder
 from app.domain.case_state.models import ConversationRow, MessageRow, new_id
-from app.domain.consumer_service.models import AutoReplyJobRow, ReceptionHandoffRow
 from app.domain.consumer_service import job_progress as progress
+from app.domain.consumer_service.models import AutoReplyJobRow, ReceptionHandoffRow
 from app.domain.enums import SenderRole, ServiceMode
 from app.errors import ConflictError, ModelOutputInvalid, ProviderTimeout
 from app.repositories.conversation_repository import ConversationRepository

@@ -66,7 +66,6 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
     from app.integrations.model_provider import MockModelProvider
     from app.main import create_app
     from app.runtime import RuntimeContext
-    from app.tools.registry import build_default_registry
 
     db_path = tmp_path / "api.sqlite3"
     engine = create_engine(f"sqlite+pysqlite:///{db_path}", future=True)
@@ -81,7 +80,6 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
         session_factory=factory,
         model_provider=MockModelProvider(responses=[_understanding_json()] * 20),
         embedding_provider=MockEmbeddingProvider(reason="接口测试"),
-        tool_registry=build_default_registry(),
     )
 
     app = create_app()
@@ -219,14 +217,6 @@ class TestPermissionBoundary:
         ).json()["conversationId"]
         response = client.get(
             f"/api/support/conversations/{conversation_id}/case",
-            headers=_customer_headers(),
-        )
-        assert response.status_code == 403
-
-    def test_customer_cannot_review_request(self, client: TestClient) -> None:
-        response = client.post(
-            "/api/support/requests/req-whatever/review",
-            json={"action": "approve"},
             headers=_customer_headers(),
         )
         assert response.status_code == 403
@@ -441,7 +431,7 @@ class TestOpenApiContract:
         paths = schema["paths"]
         assert "/api/customer/conversations" in paths
         assert "/api/support/queue" in paths
-        assert "/api/support/requests/{request_id}/review" in paths
+        assert "/api/support/requests/{request_id}/review" not in paths  # P2-1 已移除
 
     def test_api_json_uses_camel_case(self, client: TestClient) -> None:
         conversation_id = client.post(

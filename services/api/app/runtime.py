@@ -51,30 +51,12 @@ class RuntimeContext:
     session_factory: sessionmaker[Session]
     model_provider: ModelProvider
     embedding_provider: EmbeddingProvider
-    tool_registry: Any = None
     #: 可选精排：未配置时为 None，检索链路按"没有重排序"处理
     rerank_provider: Any = None
     startup_notes: list[str] = field(default_factory=list)
 
     def new_session(self) -> Session:
         return self.session_factory()
-
-    def build_gateway(self, session: Session) -> Any:
-        """为一次请求构建 ToolGateway。
-
-        Gateway 持有幂等缓存与调用轨迹，因此**按请求创建**，
-        不跨请求复用（否则幂等键会在无关请求之间串用）。
-        """
-
-        from app.tool_gateway.gateway import ToolGateway
-
-        return ToolGateway(
-            self.tool_registry,
-            session=session,
-            settings=self.settings,
-            embedding_provider=self.embedding_provider,
-            rerank_provider=self.rerank_provider,
-        )
 
     def apply_runtime_settings(self) -> None:
         """启动时套用页面保存的模型配置（地址 / 密钥 / 文本模型 / 多模态模型）。
@@ -405,7 +387,6 @@ def build_runtime(settings: Settings | None = None) -> RuntimeContext:
     _apply_saved_rerank_settings(resolved, factory)
 
     model_provider: Any = OpenAICompatibleModelProvider.from_settings(resolved)
-    from app.tools.registry import build_default_registry
 
     notes: list[str] = []
     try:
@@ -435,7 +416,6 @@ def build_runtime(settings: Settings | None = None) -> RuntimeContext:
         session_factory=factory,
         model_provider=model_provider,
         embedding_provider=embedding_provider,
-        tool_registry=build_default_registry(),
         rerank_provider=rerank_provider,
         startup_notes=notes,
     )

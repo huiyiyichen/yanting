@@ -11,7 +11,12 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.domain.case_state.models import MessageRow
-from app.domain.consumer_service.emotion import emotion_sequence, emotion_trend, has_complaint_signal, score_message
+from app.domain.consumer_service.emotion import (
+    emotion_sequence,
+    emotion_trend,
+    has_complaint_signal,
+    score_message,
+)
 from app.domain.consumer_service.models import (
     DatasetRow,
     RiskEpisodeRow,

@@ -279,7 +279,6 @@ async def submit_rating(
     conversation_id: str,
     payload: RatingRequest,
     session: Session = Depends(get_session),
-    context: RuntimeContext = Depends(get_context),
     _role: ViewRole = Depends(require_customer),
 ) -> RatingView:
     """服务结束时的 1—5 分评价，可跳过。未评价保持空值，不填默认分。"""
@@ -291,21 +290,13 @@ async def submit_rating(
 
         raise NotFoundError("该会话尚未创建案件，无法评价")
 
-    gateway = context.build_gateway(session)
-    result = gateway.invoke(
-        "record_rating",
-        {"caseId": case.case_id, "action": payload.action, "rating": payload.rating},
-        as_agent=False,
-    )
-    if not result.ok:
-        from app.errors import ValidationRejected
+    from app.domain.consumer_service.rating import record_rating
 
-        raise ValidationRejected(result.message)
-
+    result = record_rating(session, case.case_id, payload.action, payload.rating)
     return RatingView(
         case_id=case.case_id,
-        rating_status=result.data["ratingStatus"],
-        user_rating=result.data.get("userRating"),
+        rating_status=result["ratingStatus"],
+        user_rating=result.get("userRating"),
     )
 
 

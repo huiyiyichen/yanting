@@ -10,9 +10,10 @@ import json
 from datetime import UTC
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.domain.case_state.models import CaseRow
+from app.domain.case_state.models import AfterSalesRequestRow, CaseRow
 from app.domain.enums import (
     CaseStatus,
     ComplaintRisk,
@@ -200,11 +201,9 @@ class ConversationService:
     def support_queue(self) -> list[QueueItem]:
         """客服会话队列。只做展示排序，**不含**任何超时或升级语义。"""
 
-        from app.domain.after_sales.requests import RequestRepository
-
-        requests = RequestRepository(self._session)
         pending_by_case: dict[str, int] = {}
-        for row in requests.list_pending():
+        for row in self._session.scalars(select(AfterSalesRequestRow).where(
+                AfterSalesRequestRow.request_status == RequestStatus.PENDING_CONFIRMATION.value)):
             pending_by_case[row.case_id] = pending_by_case.get(row.case_id, 0) + 1
 
         items: list[QueueItem] = []
@@ -243,9 +242,6 @@ class ConversationService:
         if case is None:
             return None
 
-        from app.domain.after_sales.requests import RequestRepository
-
-        requests = RequestRepository(self._session)
         evidence: list[EvidenceView] = []
         if include_evidence:
             evidence = self._evidence_for(case)
@@ -281,7 +277,8 @@ class ConversationService:
                 _parse_json_dict(case.case_facts_json).get("observedFromImage")
             ),
             evidence=evidence,
-            requests=[request_view(row) for row in requests.list_for_case(case.case_id)],
+            requests=[request_view(row) for row in self._session.scalars(select(AfterSalesRequestRow).where(
+                AfterSalesRequestRow.case_id == case.case_id).order_by(AfterSalesRequestRow.created_at.asc()))],
             allowed_actions=self._allowed_actions(case),
             forbidden_actions=FORBIDDEN_ACTIONS,
             service_started_at=case.service_started_at.isoformat(),

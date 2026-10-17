@@ -19,7 +19,6 @@ from app.integrations.model_provider import MockModelProvider
 from app.knowledge.models import Base as KnowledgeBase
 from app.main import create_app
 from app.runtime import RuntimeContext
-from app.tools.registry import build_default_registry
 
 OFFICIAL_SOURCE = official_source_path()
 
@@ -50,7 +49,6 @@ def _build_client(tmp_path: Path) -> tuple[TestClient, Any]:
         session_factory=factory,
         model_provider=MockModelProvider(),
         embedding_provider=MockEmbeddingProvider(reason="服务轨迹测试"),
-        tool_registry=build_default_registry(),
     )
     app = create_app()
 

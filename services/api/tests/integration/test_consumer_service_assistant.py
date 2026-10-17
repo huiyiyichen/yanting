@@ -21,7 +21,6 @@ from app.integrations.model_provider import (
 from app.knowledge.models import Base as KnowledgeBase
 from app.main import create_app
 from app.runtime import RuntimeContext
-from app.tools.registry import build_default_registry
 
 OFFICIAL_SOURCE = official_source_path()
 SUPPORT = {"X-Demo-View-Role": "support"}
@@ -68,7 +67,6 @@ def _client(tmp_path: Path, provider: ModelProvider) -> TestClient:
         session_factory=factory,
         model_provider=provider,
         embedding_provider=MockEmbeddingProvider(reason="客服辅助测试"),
-        tool_registry=build_default_registry(),
     )
     app = create_app()
 
