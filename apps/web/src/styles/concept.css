@@ -639,23 +639,6 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .yt-rm.is-flash .bb { background: rgba(217, 180, 124, 0.28); }
 .yt-rm mark { background: none; color: inherit; padding: 0; border-bottom: 1.5px solid #f07a8b; }
 
-.yt-lanes { display: grid; gap: 4px; font-size: 12px; }
-.yt-lanes-axis, .yt-lanes-row { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; align-items: center; }
-.yt-lanes-name { color: var(--m-ink-3); }
-.yt-lanes-track { position: relative; height: 28px; border-bottom: 1px dashed var(--m-line); }
-.yt-lanes-axis .yt-lanes-track { height: 18px; border-bottom: 1px solid var(--m-line-2); }
-.yt-lanes-day { position: absolute; top: 0; font: 10px var(--yt-num); color: var(--m-ink-3); white-space: nowrap; overflow: hidden; }
-.yt-lanes-gap { font-style: normal; margin-right: 2px; color: var(--m-ink-2); }
-.yt-lanes-contact { position: absolute; top: 3px; transform: translateX(-50%); border: 0; background: none; padding: 0; cursor: pointer; }
-.yt-lanes-contact .yt-swatch-body { background: var(--m-raised); }
-.yt-lanes-dot { position: absolute; top: 4px; transform: translateX(-4px); display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; color: var(--m-ink-2); }
-.yt-lanes-dot i { width: 8px; height: 8px; border-radius: 50%; background: #d9b47c; }
-.yt-lanes-dot em, .yt-lanes-bar em { font-style: normal; font-size: 11px; }
-.yt-lanes-bar { position: absolute; top: 6px; height: 16px; border-radius: 4px; background: rgba(217, 180, 124, 0.22); border-left: 2px solid #d9b47c; color: var(--m-ink); overflow: hidden; white-space: nowrap; padding-left: 4px; min-width: 6px; }
-.yt-lanes-bar.is-open { background: repeating-linear-gradient(90deg, rgba(217, 180, 124, 0.22) 0 6px, transparent 6px 9px); }
-.yt-lanes-bar.is-done { border-left-color: var(--m-calm); }
-.yt-lanes-bar.is-risk, .yt-lanes-dot.is-risk { color: #f07a8b; border-left-color: var(--m-fury); }
-.yt-lanes-dot.is-risk i { background: var(--m-fury); }
 
 /* 风险页浅色（全局明暗，全景方案 1.4）：只换 --m-* 令牌 */
 html[data-theme='light'] .yt-risk-page, html[data-theme='light'] .yt-risk-page .yt-monitor { --m-bg: #f2f1f4; --m-panel: #ffffff; --m-raised: #f6f3f8; --m-hi: #ece6f3; --m-line: #ece7f0;
@@ -773,3 +756,32 @@ html[data-theme='light'] .yt-risk-page .yt-dist-calm { fill: #14a577; fill-opaci
 .yt-rc-ev.is-handoff circle { fill: var(--m-low, #8d93c9); } .yt-rc-ev.is-handoff text { fill: var(--m-low, #8d93c9); font-weight: 600; }
 .yt-rc-ev.is-action text { fill: var(--m-ink, var(--yt-ink)); font-weight: 600; }
 .yt-rc-time { font: 10px var(--yt-num); fill: var(--m-ink-3, var(--yt-ink-3)); }
+
+/* 服务轨迹（风险页反馈 5）：订单主干 + 里程碑卡片 */
+.yt-track { display: grid; gap: 14px; }
+.yt-track-spine { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; list-style: none; }
+.yt-track-spine li { position: relative; display: grid; justify-items: center; gap: 3px; padding-top: 2px; color: var(--m-ink-3, var(--yt-ink-3)); font-size: 12px; }
+.yt-track-spine li::before { content: ''; position: absolute; top: 7px; left: -50%; right: 50%; height: 3px; border-radius: 2px; background: var(--m-line-2, #e3dce9); }
+.yt-track-spine li:first-child::before { display: none; }
+.yt-track-spine li.is-done::before { background: var(--m-calm, #23c48a); }
+.yt-track-spine i { position: relative; z-index: 1; width: 12px; height: 12px; border-radius: 50%; background: var(--m-panel, var(--yt-card)); border: 2px solid var(--m-line-2, #e3dce9); }
+.yt-track-spine li.is-done i { border-color: var(--m-calm, #23c48a); background: var(--m-calm, #23c48a); }
+.yt-track-spine li.is-now i { box-shadow: 0 0 0 4px rgba(35, 196, 138, 0.22); }
+.yt-track-spine li.is-done b { color: var(--m-ink, var(--yt-ink)); }
+.yt-track-spine span { font-size: 10px; }
+.yt-track-cards { position: relative; display: grid; gap: 8px; margin: 0; padding: 0 0 0 16px; list-style: none; }
+.yt-track-cards::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; border-radius: 1px; background: var(--m-line-2, #e3dce9); }
+.yt-track-card { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 8px 10px; border-radius: 10px; background: var(--m-line, rgba(255,255,255,0.04)); font-size: 12px; }
+.yt-track-card::before { content: ''; position: absolute; left: -15px; top: 13px; width: 8px; height: 8px; border-radius: 50%; background: var(--m-ink-3, var(--yt-ink-3)); }
+.yt-track-card.is-contact::before { background: var(--m-low, #8d93c9); }
+.yt-track-card.is-promise::before { background: var(--m-upset, #c98216); }
+.yt-track-card.is-ticket::before { background: #d9b47c; }
+.yt-track-card .t { color: var(--m-ink-3, var(--yt-ink-3)); font-size: 11px; min-width: 72px; }
+.yt-track-card b { color: var(--m-ink, var(--yt-ink)); }
+.yt-track-card p { flex-basis: 100%; margin: 0; color: var(--m-ink-2, var(--yt-ink-2)); }
+.yt-track-card button { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.yt-track-card em { margin-left: auto; padding: 1px 8px; border-radius: 999px; font-style: normal; font-size: 11px; }
+.yt-track-card em.is-overdue { color: var(--m-fury, #dd4a5f); background: rgba(221, 74, 95, 0.14); }
+.yt-track-card em.is-pending { color: var(--m-upset, #c98216); background: rgba(201, 130, 22, 0.14); }
+.yt-track-card em.is-fulfilled { color: var(--m-calm, #23c48a); background: rgba(35, 196, 138, 0.14); }
+.yt-track-prev { white-space: pre-line; }

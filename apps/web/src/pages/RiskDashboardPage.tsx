@@ -11,7 +11,7 @@ import { RiskSpark } from '../features/risk/RiskSpark'
 import { RiskOverviewPanel } from '../features/risk/RiskOverviewPanel'
 import { RiskConclusion } from '../features/risk/RiskConclusion'
 import { ConversationReplay, type ReplayHandle } from '../features/risk/ConversationReplay'
-import { ServiceLanes } from '../features/risk/ServiceLanes'
+import { ServiceTrack } from '../features/risk/ServiceTrack'
 import { NextSteps } from '../features/service-desk/AssistBlocks'
 import { EvidenceQuote, RiskHandling, RiskTicketList, type EvidenceItem } from '../features/risk/RiskDetailMore'
 import { visibleInterval } from '../hooks/visibleInterval'
@@ -420,7 +420,7 @@ export function RiskDashboardPage() {
           { key: 'replay', label: '对话回放', children: <ConversationReplay ref={replayRef} key={incident.incidentId}
             conversationIds={incident.conversationIds} primaryId={primaryId ?? null} alias={incident.buyerAlias} /> },
           { key: 'lanes', label: '服务轨迹', children: <>
-            <ServiceLanes detail={selected} profile={detailProfile?.conversationId === primaryId ? detailProfile : null}
+            <ServiceTrack detail={selected} profile={detailProfile?.conversationId === primaryId ? detailProfile : null}
               onContact={(cid) => { setDetailTab('replay'); window.setTimeout(() => replayRef.current?.focus(cid, ''), 0) }} />
             {selected.tickets.length > 0 && <section className="yt-d-sec" aria-label="关联工单"><h3>关联工单 {selected.tickets.length}</h3>
               <RiskTicketList tickets={selected.tickets} primaryId={primaryId} onNavigate={navigate} /></section>}
