@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { RiskIncidentDetailView } from '../../api/client'
-import { buildLanes, dayOf, daySegments, xPercent } from './serviceLanes'
+import { buildLanes, dayOf, daySegments, xPercent } from './laneLayout'
 
 const ctx = (id: string, at: string, workOrders: object[] = []) => ({ conversationId: id, firstAt: at, orders: [], workOrders,
   timeline: [{ entityType: 'message', occurredAt: at }] })
@@ -17,7 +17,7 @@ const detail = {
   tickets: [], handlingHistory: [], emotionHistory: [],
 } as unknown as RiskIncidentDetailView
 
-describe('serviceLanes', () => {
+describe('laneLayout', () => {
   it('F7/L1 只取关联会话的数据，空泳道不出现', () => {
     const lanes = buildLanes(detail, null, Date.parse('2026-05-11T00:00:00+08:00'))
     expect(lanes.map((lane) => lane.key)).toEqual(['contacts', 'tickets'])

@@ -1,7 +1,7 @@
 import { Tooltip } from 'antd'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
 import { EmotionSwatch } from '../voiceprint/EmotionSwatch'
-import { buildLanes, daySegments, xPercent } from './serviceLanes'
+import { buildLanes, daySegments, xPercent } from './laneLayout'
 
 const DAY = 86400000
 const md = (day: number) => {
