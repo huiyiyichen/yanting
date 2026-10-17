@@ -150,8 +150,7 @@ yanting/
 ├─ services/api/          业务 API、Agent、规则与后端测试
 ├─ data/
 │  ├─ knowledge/          知识资料与商品来源
-│  ├─ demo-images/        公开商品图片
-│  └─ fixtures/           开发用例
+│  └─ demo-images/        公开商品图片
 ├─ docs/
 │  ├─ images/             README 精选截图
 │  ├─ runbook/            配置、依赖与运行手册
