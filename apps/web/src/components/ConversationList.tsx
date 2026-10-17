@@ -152,18 +152,16 @@ function ConversationRow({
                 {item.badge}
               </Tag>
             ) : null}
-            {item.meta ? <span className="yt-conv-time">{item.meta}</span> : null}
           </span>
-          <span
-            className="yt-conv-preview yt-wrap"
-            style={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {item.preview || '暂无消息'}
+          {/* 时间放到预览行右侧：标题独占一行宽度，不再被时间挤成三四个字 */}
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+            <span
+              className="yt-conv-preview yt-wrap"
+              style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {item.preview || '暂无消息'}
+            </span>
+            {item.meta ? <span className="yt-conv-time">{item.meta}</span> : null}
           </span>
         </span>
       </button>

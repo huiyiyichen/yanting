@@ -756,3 +756,6 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-fly-ghost { position: fixed; z-index: 2000; overflow: hidden; padding: 8px 10px; border-radius: 10px; background: var(--yt-panel, #fff);
   box-shadow: 0 8px 24px rgba(40, 20, 60, 0.18); font-size: 13px; line-height: 1.6; pointer-events: none; transform-origin: top left; }
 .ant-sender.yt-composer-flash { box-shadow: 0 0 0 2px #c99a5b; transition: box-shadow 200ms; }
+
+/* 工单类型图标与标题留空 */
+.yt-ticket-ic { display: inline-flex; margin-right: 6px; color: var(--yt-ink-2); }

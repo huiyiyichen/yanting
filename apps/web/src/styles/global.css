@@ -402,3 +402,7 @@ body {
 /* 全景方案 5.2：删除入口悬停/聚焦才出现 */
 .yt-conv-del { opacity: 0; transition: opacity 0.15s; }
 .yt-conv-item:hover .yt-conv-del, .yt-conv-item:focus-within .yt-conv-del, .yt-conv-del.ant-popover-open { opacity: 1; }
+
+/* 会话列表标题：按钮内默认不换行，标题需要两行展示 */
+.yt-conv-name { white-space: normal; }
+.ant-conversations .ant-conversations-item { height: auto; min-height: 40px; align-items: stretch; }
