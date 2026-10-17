@@ -334,8 +334,10 @@ def send_operator(
             input_text=body,
             detail={"messageId": row.message_id},
         )
+        from app.audit.citations import link_adopted_citations
         from app.domain.consumer_service.risk_rules import evaluate_risks
 
+        link_adopted_citations(session, conversation_id, row.message_id, body)
         evaluate_risks(session)
     return message_view(row)
 

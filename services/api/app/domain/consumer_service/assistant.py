@@ -499,6 +499,7 @@ def record_suggestion_action(
         AuditContext.new_turn(actor_type="operator", conversation_id=conversation_id),
         event_type="consumer_suggestion_action",
         detail={"style": payload.style, "action": payload.action, "inputHash": view.input_hash,
+                "traceId": (view.model_usage or {}).get("traceId"),
                 **({"editDistance": edit_distance(
                     next(item.body for item in view.reply_suggestions if item.style == payload.style),
                     payload.edited_text or "")} if payload.action == "adopt_edited" else {})},

@@ -129,3 +129,26 @@ def test_integrity_check_passes_after_draft_and_auto_reply(workspace):
         report = check(session)
     assert report["allPassed"], report
     assert next(r for r in report["checks"] if r["check"] == "消息有来源")["total"] >= 1
+
+
+def test_adopted_suggestion_links_citations_to_operator_message(workspace):
+    """F8 客服采用建议后发送，引用仍未关联到发出的消息。"""
+    client, factory, _ = workspace
+    cid, view = _generate(client)
+    style = view["replySuggestions"][0]["style"]
+    body = view["replySuggestions"][0]["body"]
+    adopted = client.post(f"/api/support/reception/{cid}/suggestion-action", headers=SUPPORT,
+                          json={"inputHash": view["inputHash"], "style": style, "action": "adopt"})
+    assert adopted.status_code < 400, adopted.text
+    client.post(f"/api/support/reception/{cid}/service-mode", headers=SUPPORT,
+                json={"mode": "operator_assisted"})
+    response = client.post(f"/api/support/reception/{cid}/messages", headers=SUPPORT,
+                           json={"body": body, "clientMessageKey": "k-adopt-1"})
+    assert response.status_code < 400, response.text
+    sent = response.json().get("message", response.json())
+    with factory() as session:
+        trace = session.get(AgentTraceRow, view["modelUsage"]["traceId"])
+        assert trace.outcome_message_id == sent["messageId"]
+        cites = session.scalars(select(ReplyCitationRow).where(
+            ReplyCitationRow.trace_id == trace.trace_id, ReplyCitationRow.reply_style == style)).all()
+        assert all(c.message_id == sent["messageId"] for c in cites)
