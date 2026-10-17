@@ -9,6 +9,7 @@
  * R7 正文中有依据的片段与普通文字无区分（概念稿：金色虚线引用）。
  * R8 看不到这条建议依据了哪些工单/订单/会话；同一来源重复出现。
  * R9 风格切换不是可读的 tab（无 aria-selected），读屏无法知道当前风格。
+ * R11 X-4：未核验也盖“已核验”章；核验通过后引用片段没有依次画线的序号。
  * R10 依据标签外露内部编号（conv-…、loreal-products@…#…），客服读不懂（全景方案 5.1）。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -100,4 +101,17 @@ describe('ReplyCard', () => {
     expect(basis.textContent).not.toMatch(/conv-|loreal-products|#0015/)
     expect(screen.getByText('本次会话')).toHaveAttribute('title', 'conversation:conv-29bc32c12839')
   })
+  it('R11 只有核验通过才盖已核验章，引用片段带依次序号', () => {
+    const withClaims = [{ ...suggestions[0], body: '亲，订单已签收，退款三天到账。', claims: [
+      { text: '订单已签收', sourceRefs: ['order:123456'] }, { text: '退款三天到账', sourceRefs: ['work_order:W1'] }] }]
+    const { unmount } = render(<ConfigProvider><ReplyCard suggestions={withClaims as typeof suggestions} adoptable automatic={false}
+      generating={false} onAdopt={vi.fn()} onIgnore={vi.fn()} onRegenerate={vi.fn()} onRewrite={vi.fn()} /></ConfigProvider>)
+    expect(screen.getByText('已核验')).toBeInTheDocument()
+    expect(screen.getByText('订单已签收').style.getPropertyValue('--i')).toBe('0')
+    expect(screen.getByText('退款三天到账').style.getPropertyValue('--i')).toBe('1')
+    unmount()
+    mount({ adoptable: false })
+    expect(screen.queryByText('已核验')).toBeNull()
+  })
 })
+

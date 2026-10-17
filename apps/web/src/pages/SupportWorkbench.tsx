@@ -275,7 +275,7 @@ export function SupportWorkbench() {
   const plugin = (visible: boolean) => <div className="desk-plugin-inner">
     <Tabs size="small" className="yt-ptabs" activeKey={pluginTab} onChange={setPluginTab}
       tabBarExtraContent={{
-        left: <span className="yt-pbrand"><span className="yt-wave" aria-hidden="true"><i /><i /><i /><i /><i /></span>颜听</span>,
+        left: <span className="yt-pbrand"><span className={`yt-wave${generating ? ' is-busy' : ''}`} aria-hidden="true"><i /><i /><i /><i /><i /></span>颜听</span>,
         right: <Tooltip title={assistant ? '重新生成' : '生成建议'}><Button type="text" className="yt-pbar-btn"
           aria-label={assistant ? '重新生成' : '生成建议'} icon={<ReloadOutlined />} loading={generating} disabled={!id}
           onClick={() => void generate()} /></Tooltip>,

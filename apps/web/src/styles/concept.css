@@ -728,3 +728,31 @@ html[data-theme='light'] .yt-risk-page .ant-tag.ant-tag-processing, html[data-th
 .yt-risk-page .yt-dist-overview button { flex: 1; display: flex; align-items: flex-end; padding: 0 1px; border: 0; border-radius: 4px; background: transparent; cursor: pointer; opacity: 0.45; }
 .yt-risk-page .yt-dist-overview button[aria-pressed='true'] { opacity: 1; background: var(--m-panel); }
 .yt-risk-page .yt-dist-overview i { display: block; width: 100%; border-radius: 2px; background: var(--m-upset); }
+
+/* X-1 框选与联动 */
+.yt-risk-page .yt-dist svg { cursor: crosshair; user-select: none; }
+.yt-risk-page .yt-dist-brush { fill: var(--m-upset); opacity: 0.14; }
+.yt-risk-page .yt-dist.is-focus .yt-dist-bar { opacity: 0.4; }
+.yt-risk-page .yt-dist.is-focus .is-hot .yt-dist-bar { opacity: 1; }
+.yt-risk-page .yt-dist-marker.is-hot { transform: translateX(-50%) rotate(45deg) scale(1.6); z-index: 1; }
+.yt-risk-page .yt-dist-clear { margin-left: auto; padding: 2px 8px; border: 1px solid var(--m-line); border-radius: 999px; background: var(--m-panel); color: var(--m-ink); font-size: 12px; cursor: pointer; }
+.yt-risk-page .yt-dist-clear + .yt-dist-range { margin-left: 8px; }
+.yt-risk-page .yt-clues-empty { margin: auto 0; text-align: center; color: var(--m-ink-3, var(--m-ink-2)); font-size: 13px; }
+
+/* X-4 AI 状态即品牌：生成中标题栏五根竖条律动 */
+.yt-wave.is-busy i { animation: yt-wave-beat 900ms ease-in-out infinite; transform-origin: center; }
+.yt-wave.is-busy i:nth-child(2) { animation-delay: 120ms; } .yt-wave.is-busy i:nth-child(3) { animation-delay: 240ms; }
+.yt-wave.is-busy i:nth-child(4) { animation-delay: 360ms; } .yt-wave.is-busy i:nth-child(5) { animation-delay: 480ms; }
+@keyframes yt-wave-beat { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.35); } }
+/* X-4 核验盖章：引用片段金色下划线依次画出（每段 180ms，间隔 80ms），右上角淡入“已核验” */
+.reception-plugin .yt-reply { position: relative; }
+.reception-plugin .yt-reply.is-verified .yt-reply-ref { border-bottom-color: transparent; background: linear-gradient(#c99a5b, #c99a5b) left bottom / 0 1.5px no-repeat;
+  animation: yt-ref-draw 180ms ease-out forwards; animation-delay: calc(var(--i, 0) * 260ms); }
+@keyframes yt-ref-draw { to { background-size: 100% 1.5px; } }
+.reception-plugin .yt-reply-stamp { position: absolute; top: 10px; right: 44px; padding: 1px 6px; border: 1px solid #c99a5b; border-radius: 4px;
+  color: #a8793f; font-size: 11px; transform: rotate(-6deg); animation: yt-stamp-in 200ms ease-out both; pointer-events: none; }
+@keyframes yt-stamp-in { from { opacity: 0; transform: rotate(-6deg) scale(1.3); } to { opacity: 1; transform: rotate(-6deg) scale(1); } }
+/* X-5 采用飞入输入框 */
+.yt-fly-ghost { position: fixed; z-index: 2000; overflow: hidden; padding: 8px 10px; border-radius: 10px; background: var(--yt-panel, #fff);
+  box-shadow: 0 8px 24px rgba(40, 20, 60, 0.18); font-size: 13px; line-height: 1.6; pointer-events: none; transform-origin: top left; }
+.ant-sender.yt-composer-flash { box-shadow: 0 0 0 2px #c99a5b; transition: box-shadow 200ms; }

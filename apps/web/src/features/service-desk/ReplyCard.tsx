@@ -1,7 +1,8 @@
 import { BulbOutlined, CheckCircleFilled, CheckOutlined, CloseOutlined, DownOutlined, EditOutlined, MinusCircleOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Dropdown, Input, Tooltip, message } from 'antd'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { ConsumerServiceAssistantView } from '../../api/client'
+import { flyToComposer } from './flyToComposer'
 
 type Suggestion = ConsumerServiceAssistantView['replySuggestions'][number]
 type Instruction = 'gentler' | 'concise' | 'professional'
@@ -36,7 +37,8 @@ function marked(body: string, claims: Suggestion['claims'], sources: Source[]): 
   for (const span of spans) {
     if (span.start < at) continue
     if (span.start > at) out.push(body.slice(at, span.start))
-    out.push(<span key={span.start} className="yt-reply-ref" title={span.title}>{span.text}</span>)
+    out.push(<span key={span.start} className="yt-reply-ref" title={span.title}
+      style={{ '--i': out.filter((node) => typeof node !== 'string').length } as CSSProperties}>{span.text}</span>)
     at = span.start + span.text.length
   }
   if (at < body.length) out.push(body.slice(at))
@@ -60,6 +62,7 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
   const [editing, setEditing] = useState(false)
   const [rewriting, setRewriting] = useState(false)
   const [toast, holder] = message.useMessage()
+  const bodyRef = useRef<HTMLParagraphElement>(null)
   const current = suggestions.find((item) => item.style === style) ?? suggestions[0]
   if (!current) return null
   const original = current.body
@@ -68,6 +71,8 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
   const body = edits[current.style] ?? original
   const edited = body !== original
   const blocked = !adoptable || automatic || generating
+  // X-4：核验通过（可采用且不在生成中）才盖“已核验”章、画金色下划线
+  const verified = adoptable && !generating
   const reason = automatic ? 'AI 接待中' : generating ? '生成中' : !adoptable ? '待核验' : undefined
 
   const rewrite = async (instruction: Instruction) => {
@@ -79,7 +84,8 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
     finally { setRewriting(false) }
   }
 
-  return <article className={`yt-reply${generating ? ' is-refreshing' : ''}`} aria-label="回复建议">
+  return <article className={`yt-reply${generating ? ' is-refreshing' : ''}${verified ? ' is-verified' : ''}`} aria-label="回复建议">
+    {verified && <span className="yt-reply-stamp">已核验</span>}
     {holder}
     <div className="yt-reply-head">
       <h3><BulbOutlined />回复建议</h3>
@@ -94,7 +100,7 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
     {editing
       ? <Input.TextArea aria-label="编辑回复建议" autoSize={{ minRows: 3, maxRows: 8 }} maxLength={800} value={body}
         onChange={(event) => setEdits((old) => ({ ...old, [current.style]: event.target.value }))} />
-      : <p className="yt-reply-body">{edited ? body : marked(body, current.claims, sources)}</p>}
+      : <p className="yt-reply-body" ref={bodyRef}>{edited ? body : marked(body, current.claims, sources)}</p>}
     {(current.empathyDimensions?.length ?? 0) > 0 && <div className="yt-reply-empathy">
       {current.empathyDimensions!.map((item) =>
         <span key={item.key} title={item.reason} className={item.status === 'present' ? 'is-present' : 'is-missing'}>
@@ -105,7 +111,7 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
     <div className="yt-reply-actions">
       <Tooltip title={reason}><span>
         <Button type="primary" size="small" icon={<CheckOutlined />} disabled={blocked}
-          onClick={() => onAdopt(current.style, body, edited)}>采用</Button>
+          onClick={() => { void flyToComposer(bodyRef.current, body); onAdopt(current.style, body, edited) }}>采用</Button>
       </span></Tooltip>
       <Button size="small" icon={<EditOutlined />} onClick={() => setEditing((value) => !value)}>{editing ? '完成' : '编辑'}</Button>
       <Dropdown disabled={generating || rewriting} trigger={['click']}
