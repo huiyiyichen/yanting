@@ -363,6 +363,7 @@ def process_job(runtime: Any, job_id: str) -> None:
                 "reception", "customer_message", conversation_id=conversation_id, job_id=job_id,
                 trigger_message_id=job.trigger_message_id, mode=conversation.service_mode,
                 mode_revision=job.mode_revision, message_revision=job.message_revision,
+                orchestration=runtime.settings.orchestration,
             )
             progress.begin(job_id, conversation_id)
             progress.mark(job_id, "安全检查", "running")

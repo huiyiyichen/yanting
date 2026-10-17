@@ -71,10 +71,9 @@ def rewrite_issues(original: str, rewritten: str) -> list[str]:
 
 
 def rewrite_reply(provider, original: str, instruction: str) -> tuple[str, str]:
+    from app.audit.tracer import traced_complete
     from app.errors import ModelOutputInvalid
     from app.integrations.model_provider import ChatMessage
-
-    from app.audit.tracer import traced_complete
 
     result = traced_complete(provider, [
         ChatMessage(role="system", content=REWRITE_PROMPT),

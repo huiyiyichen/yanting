@@ -90,6 +90,22 @@ OUTPUT_CONTRACT = "\n\nOUTPUT_CONTRACT_V1\n" + json.dumps({
 }, ensure_ascii=False, sort_keys=True)
 
 
+#: 多 Agent 编排下起草 Agent 的范围（阶段 1）：记忆、交接摘要、服务断点由回复后 Agent 负责。
+MOVED_FIELDS = ("memory", "service_summary", "service_breakpoints")
+COMPOSER_SCOPE = (
+    "\n\nCOMPOSER_SCOPE_V1\n本轮只写回复建议、个性化建议、next_steps、missing_information、handoff_required、"
+    "current_question、intent、emotion_level。不输出memory、service_summary、service_breakpoints：这些由其他环节负责。"
+)
+
+
+def moved_field_issues(raw: Any) -> list[str]:
+    """起草输出了已移出的字段：报契约错误进修复轮，而不是静默丢弃。"""
+    if not isinstance(raw, dict):
+        return []
+    present = [key for key in MOVED_FIELDS if raw.get(key) not in (None, "", [])]
+    return [f"输出必须符合指定JSON契约：起草不再输出{key}，删除该字段" for key in present]
+
+
 class GroundedReply(BaseModel):
     model_config = ConfigDict(extra="forbid")
     style: ReplyStyle
@@ -314,6 +330,7 @@ serviceStatements只可支持服务沟通过程和说过的承诺，不作为回
 
 
 class FlowState(TypedDict, total=False):
+    multi: bool
     context: Any
     sources: list[GroundingSource]
     input_hash: str
@@ -366,9 +383,14 @@ def run_grounded_workflow(
     on_step: Callable[[str, str], None] | None = None,
 ) -> FlowState:
     from app.audit import tracer
+    from app.config import get_settings as _settings
     from app.domain.consumer_service.assistant import AUTO_RECEPTION_PROMPT, SYSTEM_PROMPT
     from app.domain.consumer_service.workspace import assistant_input_hash, conversation_messages
     from app.domain.platform.settings import get_enabled_template
+
+    multi = (settings or _settings()).orchestration == "multi"
+    if multi:
+        require_breakpoints = False  # A8 风险哨兵负责服务断点
 
     calls_log: list[dict] = []
     deadline = monotonic() + timeout_seconds if timeout_seconds is not None else None
@@ -377,7 +399,7 @@ def run_grounded_workflow(
         trace = tracer.start_trace(
             "reception" if automatic else "on_demand",
             "customer_message" if automatic else "operator_generate",
-            conversation_id=conversation_id,
+            conversation_id=conversation_id, orchestration="multi" if multi else "single",
         )
 
     def remaining_seconds():
@@ -456,7 +478,8 @@ def run_grounded_workflow(
                   + ("\n安全补充：\n" + safety.content if safety else "")
                   + ("\n" + AUTO_RECEPTION_PROMPT if automatic else "")
                   + "\n" + GROUNDING_INSTRUCTIONS)
-        system += "\n" + BREAKPOINT_INSTRUCTIONS + "\n" + PERSONALIZATION_INSTRUCTIONS
+        system += ("\n" + PERSONALIZATION_INSTRUCTIONS if multi
+                   else "\n" + BREAKPOINT_INSTRUCTIONS + "\n" + PERSONALIZATION_INSTRUCTIONS)
         system += "\n" + CUSTOMER_REPLY_INSTRUCTIONS
         if images:
             system += "\n" + IMAGE_REPLY_RULES
@@ -466,7 +489,7 @@ def run_grounded_workflow(
             "latest_message": customer[-1].body or "消费者发送了图片，未附文字问题",
             "memory": memory_view(session, conversation_id, sources), "images": images,
             "prompt_version": prompt_version, "system_prompt": system, "calls": [], "attempt": 0,
-            "service_statements": statements,
+            "service_statements": statements, "multi": multi,
             "service_rules": {"repeatWindowHours": get_settings().risk_repeat_contact_hours},
             "risk_level": _active_risk_level(session, conversation_id),
         }
@@ -711,7 +734,7 @@ def run_grounded_workflow(
                     "也不对客户提“检索”。",
                 ],
             }
-        result, calls = complete(state, "draft", state["system_prompt"] + OUTPUT_CONTRACT, {
+        payload = {
             "conversationId": conversation_id,
             "currentServiceContext": current_context(state),
             "latestCustomerMessage": state["latest_message"],
@@ -732,15 +755,26 @@ def run_grounded_workflow(
             "repairIssues": state.get("issues", []),
             "previousDraft": state["draft"].model_dump(mode="json") if state.get("draft")
             else state.get("raw_draft"),
-        }, 3000, repair_request=repair_request)
+        }
+        if multi:
+            payload.pop("memorySourceCatalog")
+            if repair_request:
+                repair_request.pop("memorySourceIds")
+                repair_request["rules"] = [r for r in repair_request["rules"] if not r.startswith("memory")]
+        contract = OUTPUT_CONTRACT + (COMPOSER_SCOPE if multi else "")
+        result, calls = complete(state, "draft", state["system_prompt"] + contract, payload, 3000,
+                                 repair_request=repair_request)
         raw_draft = None
         try:
             raw_draft = json.loads(result.text)
             if not isinstance(raw_draft, dict):
                 raw_draft = None
+            moved = moved_field_issues(raw_draft) if multi else []
             draft = GroundedDraft.model_validate(raw_draft)
             draft = normalize_draft_customer_language(draft)
             issues = []
+            if moved:
+                draft, issues = None, moved
         except ValidationError as exc:
             # Retain field paths and error types, never raw model values/prompts.
             errors = []

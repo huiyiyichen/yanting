@@ -315,7 +315,8 @@ class ConsumerServiceAssistant:
                         )
             if not automatic:
                 trace.finish("needs_review" if review_flags else "partial" if dropped else "draft")
-        save_memory(self._session, conversation_id, state["sources"], parsed.memory, result.model)
+        if not state.get("multi"):
+            save_memory(self._session, conversation_id, state["sources"], parsed.memory, result.model)
         self._session.add(AssistantRunRow(
             run_id=observation_id, conversation_id=conversation_id, input_hash=input_hash,
             model_id=result.model, is_mock=any(c["isMock"] for c in state["calls"]),
@@ -324,6 +325,11 @@ class ConsumerServiceAssistant:
         ))
         if trace is not None:
             trace.flush(self._session)
+        if state.get("multi"):
+            # A6 记忆 Agent：回复之后单独更新服务记忆；失败保留旧记忆，不影响这条建议
+            from app.domain.consumer_service.post_reply import update_memory
+
+            update_memory(self._session, self._provider, conversation_id, state["sources"])
         from app.domain.consumer_service.service_breakpoints import save_assessment
 
         save_assessment(

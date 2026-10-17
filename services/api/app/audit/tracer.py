@@ -305,9 +305,9 @@ def traced_complete(provider: Any, messages: list[Any], *, stage: str, prompt_co
 
 @contextlib.contextmanager
 def traced(session: Any, graph: str, trigger_type: str, *, conversation_id: str | None,
-           ok_status: str = "draft") -> Iterator[Trace]:
+           ok_status: str = "draft", **values: Any) -> Iterator[Trace]:
     """A whole on-demand run (rewrite, breakpoint analysis) as one trace, flushed into ``session``."""
-    trace = start_trace(graph, trigger_type, conversation_id=conversation_id)
+    trace = start_trace(graph, trigger_type, conversation_id=conversation_id, **values)
     token = _current.set(trace)
     try:
         yield trace

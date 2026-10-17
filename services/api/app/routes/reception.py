@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import Field
 from sqlalchemy.orm import Session
@@ -64,12 +64,18 @@ def handoff_summary(conversation_id: str, session: Session = Depends(get_session
 
 @router.post("/{conversation_id}/handoff-summary", response_model=HandoffSummaryView)
 def generate_handoff_summary_route(
-    conversation_id: str, session: Session = Depends(get_session), context: RuntimeContext = Depends(get_context),
+    conversation_id: str, background: BackgroundTasks,
+    session: Session = Depends(get_session), context: RuntimeContext = Depends(get_context),
 ):
-    """转人工后生成交接摘要：同一次转人工只生成一次；失败时给出转人工原因与触发原话。"""
-    from app.domain.consumer_service.post_reply import generate_handoff_summary
+    """转人工后生成交接摘要：同一次转人工只生成一次；失败时给出转人工原因与触发原话。
 
-    return generate_handoff_summary(session, context.model_provider, conversation_id)
+    多 Agent 编排下，转人工同时在响应之后触发 A8 风险哨兵（10 分钟内合并）。"""
+    from app.domain.consumer_service.post_reply import generate_handoff_summary, run_sentinel
+
+    view = generate_handoff_summary(session, context.model_provider, conversation_id)
+    if context.settings.orchestration == "multi":
+        background.add_task(run_sentinel, context, conversation_id, "handoff")
+    return view
 
 
 @router.get("/panorama", response_model=PanoramaView)
