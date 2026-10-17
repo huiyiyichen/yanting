@@ -114,3 +114,18 @@ def test_recorder_failure_does_not_break_generation(workspace, monkeypatch):
     assert view["replySuggestions"]
     assert tracer.recorder_errors > before
     json.dumps(view)
+
+
+def test_integrity_check_passes_after_draft_and_auto_reply(workspace):
+    """F7 完整性检查（设计 7.6）任一项低于 100%。"""
+    from app.audit.trace_integrity import check
+
+    client, factory, _ = workspace
+    _generate(client)
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "咨询物流")
+    process_job(client.app.state.runtime, jobs(factory, cid)[0].job_id)
+    with factory() as session:
+        report = check(session)
+    assert report["allPassed"], report
+    assert next(r for r in report["checks"] if r["check"] == "消息有来源")["total"] >= 1
