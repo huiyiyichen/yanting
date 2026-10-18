@@ -580,6 +580,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/models/gateway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gateway Models
+         * @description 打开配置抽屉时才去网关取真实模型列表（页面加载不发远程请求）。
+         */
+        get: operations["gateway_models_api_platform_models_gateway_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/platform/models/test": {
         parameters: {
             query?: never;
@@ -2405,6 +2425,15 @@ export interface components {
             /** Rrfscore */
             rrfScore: number;
         };
+        /** GatewayModelsView */
+        GatewayModelsView: {
+            /** Models */
+            models: string[];
+            /** Configured */
+            configured: string[];
+            /** Reachable */
+            reachable: boolean;
+        };
         /** GroundingClaim */
         GroundingClaim: {
             /** Text */
@@ -2613,6 +2642,18 @@ export interface components {
             /** Chunks */
             chunks: components["schemas"]["KnowledgeChunkView"][];
             metadata?: components["schemas"]["DocumentMetadata"];
+            /**
+             * Indexstatus
+             * @default pending
+             */
+            indexStatus: string;
+            /**
+             * Chunkcount
+             * @default 0
+             */
+            chunkCount: number;
+            /** Indexedat */
+            indexedAt?: string | null;
         };
         /** KnowledgeOverviewWithBasesView */
         KnowledgeOverviewWithBasesView: {
@@ -6141,6 +6182,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModelConfigView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gateway_models_api_platform_models_gateway_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GatewayModelsView"];
                 };
             };
             /** @description Validation Error */

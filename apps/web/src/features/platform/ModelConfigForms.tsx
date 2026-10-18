@@ -1,6 +1,6 @@
 /** 模型配置抽屉里的各能力表单（文本 / 视觉 / 向量 / 重排序 / 只读说明），从 ModelConfigPage 拆出（P2-2）。 */
 import { ApiOutlined, CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons'
-import { Alert, Button, Descriptions, Form, Input, InputNumber, Select, Space, Tag, Typography, type FormInstance } from 'antd'
+import { Alert, Button, Form, Input, InputNumber, Select, Space, Tag, Tooltip, Typography, type FormInstance } from 'antd'
 
 import type { ModelConfigView, ModelProviderView } from '../../api/client'
 
@@ -58,10 +58,12 @@ export function ModelSelect({
   )
 }
 
-export function ModelConfigForms({ editing, form, config, modelOptions, embeddingOptions, rerankOptions, testingRerank, handleTestRerank }: {
+export function ModelConfigForms({ editing, form, config, gateway, modelOptions, embeddingOptions, rerankOptions, testingRerank, handleTestRerank }: {
   editing: ModelProviderView | null
   form: FormInstance<ConfigForm>
   config: ModelConfigView | null
+  /** null=正在向网关取列表 */
+  gateway: { models: string[]; configured: string[]; reachable: boolean } | null
   modelOptions: string[]
   embeddingOptions: string[]
   rerankOptions: string[]
@@ -93,18 +95,19 @@ export function ModelConfigForms({ editing, form, config, modelOptions, embeddin
         <Form.Item name="fastModel" label="快速模型"><ModelSelect options={modelOptions} /></Form.Item>
         {/* 网关可用模型放在这里才有用：选模型的人就在这个抽屉里 */}
         <Form.Item label="网关可用模型">
-          {(config?.availableModels?.length ?? 0) > 0 ? (
+          {gateway == null ? <Text type="secondary">正在读取网关…</Text> : gateway.reachable ? (
             <Space size={6} wrap>
-              {(config?.availableModels ?? []).map((item) => (
-                <Tag key={item} icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}>
-                  {item}
-                </Tag>
+              {gateway.models.map((item) => (
+                <Tag key={item} icon={<CheckCircleTwoTone twoToneColor="#52c41a" />}>{item}</Tag>
+              ))}
+              {gateway.configured.filter((m) => !gateway.models.includes(m)).map((item) => (
+                <Tooltip key={item} title="当前配置的模型不在网关列表里，网关可能把它当作别名转到其他模型">
+                  <Tag color="warning">{item} · 不在列表</Tag></Tooltip>
               ))}
             </Space>
           ) : (
             <Text type="secondary">
-              <CloseCircleTwoTone twoToneColor="#bfbfbf" />{' '}
-              {config?.gatewayNote ?? '网关未返回模型列表'}
+              <CloseCircleTwoTone twoToneColor="#bfbfbf" /> 网关未返回模型列表，请检查地址与密钥
             </Text>
           )}
         </Form.Item>
@@ -224,19 +227,5 @@ export function ModelConfigForms({ editing, form, config, modelOptions, embeddin
       </Form>
     ) : null}
 
-    {editing?.key === 'knowledge_index' ? (
-      <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-        <Descriptions column={1} size="small" bordered>
-          <Descriptions.Item label="存储">Qdrant 本地目录（向量 + payload）</Descriptions.Item>
-          <Descriptions.Item label="元数据">库里的 knowledge_snapshot / document / chunk 表</Descriptions.Item>
-          <Descriptions.Item label="重建命令">
-            python scripts/ingest_knowledge.py
-          </Descriptions.Item>
-          <Descriptions.Item label="隔离环境注意">
-            两处都要准备（只复制 Qdrant 目录会导致检索恒为 not_found，见缺陷第 39 项）
-          </Descriptions.Item>
-        </Descriptions>
-      </Space>
-    ) : null}
   </>
 }

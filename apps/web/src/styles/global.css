@@ -406,3 +406,7 @@ body {
 /* 会话列表标题：按钮内默认不换行，标题需要两行展示 */
 .yt-conv-name { white-space: normal; }
 .ant-conversations .ant-conversations-item { height: auto; min-height: 40px; align-items: stretch; }
+.kb-index { font-size: 12px; color: var(--yt-ink-3); white-space: nowrap; }
+.kb-index::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; background: currentColor; vertical-align: middle; }
+.kb-index.is-ok { color: #22906f; }
+.kb-index.is-fail { color: #cc3550; }

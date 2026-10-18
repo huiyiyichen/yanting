@@ -12,7 +12,7 @@
   --yt-hair: #e8e3ed;
   --yt-ink: #231a2b;
   --yt-ink-2: #5e5468;
-  --yt-ink-3: #958ba1;
+  --yt-ink-3: #7f748b;
   --yt-gold: #d9b47c;
   --yt-gold-ink: #8a6532;
   --yt-gold-wash: #f7efe1;
@@ -262,7 +262,7 @@ html[data-theme='dark'] {
   color-scheme: dark;
   --yt-porcelain: #1f1726; --yt-desk: #1a1320; --yt-card: #251b2e; --yt-wash: #2d2238;
   --yt-hair: rgba(236, 224, 245, 0.10); --yt-hair-2: rgba(236, 224, 245, 0.06);
-  --yt-ink: #f3eef6; --yt-ink-2: #c3b8cc; --yt-ink-3: #8f839b;
+  --yt-ink: #f3eef6; --yt-ink-2: #c3b8cc; --yt-ink-3: #a397ae;
   --yt-plum: #4c3a5c; --yt-plum-2: #5c4870;
   --yt-gold-ink: #d9b47c; --yt-gold-wash: rgba(217, 180, 124, 0.14); --yt-gold-line: rgba(217, 180, 124, 0.35);
   --yt-fury-wash: rgba(221, 74, 95, 0.16); --yt-upset-wash: rgba(201, 130, 22, 0.16);

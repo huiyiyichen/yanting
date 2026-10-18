@@ -237,20 +237,21 @@ body { font-family: var(--yt-sans); color: var(--yt-ink); -webkit-font-smoothing
 .reception-plugin .yt-reply-empty { border-color: var(--yt-gold-line); }
 /* 风险关注 */
 .reception-plugin .yt-risks { display: grid; gap: 8px; margin-top: 10px; }
-.reception-plugin .yt-rk { display: grid; grid-template-columns: 3px 1fr auto; gap: 10px; align-items: center; }
+.reception-plugin .yt-rk { display: grid; grid-template-columns: 3px 1fr; gap: 10px; align-items: stretch; }
+.reception-plugin .yt-rk-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; margin-bottom: 2px; }
 .reception-plugin .yt-rk .bar { align-self: stretch; border-radius: 2px; background: #958ba1; }
 .reception-plugin .yt-rk.is-high .bar { background: #cc3550; }
 .reception-plugin .yt-rk.is-medium .bar { background: #d98a0f; }
 .reception-plugin .yt-rk.is-review .bar { background: #8a7fb0; }
 .reception-plugin .yt-rk-main { min-width: 0; }
-.reception-plugin .yt-rk b { font-size: 13px; color: #231a2b; }
-.reception-plugin .yt-rk-quote { font-size: 12px; color: #5e5468; display: block; line-height: 1.45; }
-.reception-plugin .yt-rk-meta { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 11px; color: #958ba1; line-height: 1.6; }
-.reception-plugin .yt-rk-meta .next-action { color: #5e5468; margin: 0; }
+.reception-plugin .yt-rk b { font-size: 13px; color: var(--yt-ink); }
+.reception-plugin .yt-rk-quote { font-size: 12px; color: var(--yt-ink-2); display: block; line-height: 1.45; }
+.reception-plugin .yt-rk-meta { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 11px; color: var(--yt-ink-2); line-height: 1.6; }
+.reception-plugin .yt-rk-meta .next-action { color: var(--yt-ink); margin: 0; }
 .reception-plugin .yt-rk-meta a { color: #8a6532; }
-.reception-plugin .yt-rk .ant-btn { height: 26px; font-size: 12px; padding: 0 10px; border-radius: 8px; }
+.reception-plugin .yt-rk .ant-btn { height: 24px; font-size: 12px; padding: 0 10px; border-radius: 999px; flex: none; }
 .reception-plugin .yt-rk .ant-btn-primary { background: #2a1f33; border-color: #2a1f33; }
-.reception-plugin .yt-rk-link { height: 26px; line-height: 24px; padding: 0 10px; border-radius: 8px; border: 1px solid #e8e3ed; font-size: 12px; color: #5e5468; }
+html[data-theme='dark'] .reception-plugin .yt-rk .ant-btn-primary { background: linear-gradient(180deg, #4a3a26, #3b2e1f); color: #f0c98a; border-color: #6b5233; }
 /* 下一步 */
 .reception-plugin .yt-todo { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
 .reception-plugin .yt-todo label { display: grid; grid-template-columns: 16px 1fr; gap: 8px; font-size: 13px; color: var(--yt-ink-2); line-height: 1.5; cursor: pointer; }

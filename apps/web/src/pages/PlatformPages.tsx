@@ -1,5 +1,5 @@
 import { EditOutlined, PlusOutlined, ReloadOutlined, RocketOutlined, SaveOutlined, SearchOutlined, UploadOutlined } from '@ant-design/icons'
-import { Alert, Button, Drawer, Empty, Form, Image, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tabs, Tag, message } from 'antd'
+import { Alert, Button, Drawer, Empty, Form, Image, Input, Modal, Popconfirm, Segmented, Select, Space, Switch, Table, Tabs, Tag, Tooltip, message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { knowledgeApi, platformApi, type KnowledgeEditRequest, type KnowledgeEditorView, type KnowledgeOverviewView, type KnowledgeProductView, type KnowledgeSearchView } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
@@ -154,7 +154,10 @@ export function KnowledgePage() {
           columns={[
             { title: '文档名称', dataIndex: 'title' },
             { title: '关联商品', width: 150, render: (_, r) => r.metadata?.productSku ?? '通用' },
-            { title: '草稿版本', width: 90, render: (_, r) => r.revision ? `v${r.revision}` : '源版本' },
+            { title: '切片 / 向量', width: 150, render: (_, r) => r.indexStatus === 'succeeded'
+              ? <Tooltip title={r.indexedAt ? `向量化于 ${new Date(r.indexedAt).toLocaleString('zh-CN', { hour12: false })}` : undefined}>
+                <span className="kb-index is-ok">{r.chunkCount} 片段 · 已向量化</span></Tooltip>
+              : <span className={`kb-index${r.indexStatus === 'failed' ? ' is-fail' : ''}`}>{r.indexStatus === 'failed' ? '向量化失败' : '未切片'}</span> },
             { title: '发布状态', width: 115, render: (_, r) => <Tag color={r.status === 'published' ? 'success' : r.status === 'failed' ? 'error' : 'warning'}>{statuses[r.status] ?? r.status}</Tag> },
             { title: '检索启用', width: 100, render: (_, r) => <Switch size="small" aria-label={`启用 ${r.title}`} checked={r.enabled} disabled={!overview?.documents?.some((d) => d.documentId === r.documentId)}
               onChange={(enabled) => { void knowledgeApi.toggle(r.documentId, enabled).then(load).catch((err: Error) => toast.error(err.message)) }} /> },

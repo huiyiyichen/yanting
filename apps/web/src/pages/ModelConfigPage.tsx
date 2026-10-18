@@ -63,6 +63,7 @@ export function ModelConfigPage() {
   const [testing, setTesting] = useState<string | null>(null)
   const [testingRerank, setTestingRerank] = useState(false)
   const [editing, setEditing] = useState<ModelProviderView | null>(null)
+  const [gateway, setGateway] = useState<{ models: string[]; configured: string[]; reachable: boolean } | null>(null)
   const [savingConfig, setSavingConfig] = useState(false)
   const [form] = Form.useForm<ConfigForm>()
   const [messageApi, contextHolder] = message.useMessage()
@@ -89,6 +90,10 @@ export function ModelConfigPage() {
   /** 打开某一行能力的二级配置：把该能力**当前真实值**填进表单。 */
   const openConfig = (row: ModelProviderView) => {
     setEditing(row)
+    if (row.key === 'llm' || row.key === 'vision') {
+      setGateway(null)
+      platformApi.gatewayModels().then(setGateway).catch(() => setGateway({ models: [], configured: [], reachable: false }))
+    }
     form.setFieldsValue({
       baseUrl: config?.baseUrl ?? '',
       // 密钥永远留空：接口只回掩码，回填掩码会被当成新密钥写进去
@@ -205,7 +210,7 @@ export function ModelConfigPage() {
    * 下拉框里没有当前模型，用户切走之后无法切回来。
    */
   const modelOptions = Array.from(
-    new Set([...(config?.availableModels ?? []), currentTextModel].filter(Boolean) as string[]),
+    new Set([...(gateway?.models ?? []), ...(config?.availableModels ?? []), currentTextModel].filter(Boolean) as string[]),
   )
   const embeddingOptions = Array.from(
     new Set(
@@ -355,7 +360,7 @@ export function ModelConfigPage() {
           ) : null
         }
       >
-        <ModelConfigForms editing={editing} form={form} config={config} modelOptions={modelOptions}
+        <ModelConfigForms editing={editing} form={form} config={config} gateway={gateway} modelOptions={modelOptions}
           embeddingOptions={embeddingOptions} rerankOptions={rerankOptions} testingRerank={testingRerank}
           handleTestRerank={handleTestRerank} />
       </Drawer>

@@ -508,6 +508,8 @@ export const platformApi = {
   traceArtifact: (sha: string) => request<Schemas['ArtifactView']>(`/api/platform/trace-artifacts/${sha}`, { role: 'support' }),
   sourceRecord: (id: string) => request<Schemas['SourceRecordView']>(`/api/platform/source-records/${encodeURIComponent(id)}`, { role: 'support' }),
   models: () => request<ModelConfigView>('/api/platform/models', { role: 'support' }),
+  /** 网关真实模型列表（打开配置抽屉时取） */
+  gatewayModels: () => request<{ models: string[]; configured: string[]; reachable: boolean }>('/api/platform/models/gateway', { role: 'support' }),
   usage: () => request<UsageView>('/api/platform/usage', { role: 'support' }),
   knowledge: () => request<KnowledgeOverviewView>('/api/platform/knowledge', { role: 'support' }),
   knowledgeBases: () =>

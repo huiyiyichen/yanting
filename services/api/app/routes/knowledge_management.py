@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from threading import Lock
 from uuid import uuid4
@@ -71,6 +71,10 @@ class KnowledgeEditorView(ApiModel):
     error: str | None = None
     chunks: list[KnowledgeChunkView]
     metadata: DocumentMetadata = Field(default_factory=DocumentMetadata)
+    # 当前生效版本的切片/向量化状态（草稿未发布前检索用的仍是这一版）
+    index_status: str = "pending"
+    chunk_count: int = 0
+    indexed_at: datetime | None = None
 
 
 class KnowledgeProductView(ApiModel):
@@ -173,6 +177,8 @@ def documents(session: Session = Depends(get_session), context: RuntimeContext =
             revision=draft.revision if draft else 0, status=draft.status if draft else "published",
             enabled=row.enabled if row else True, error=draft.error if draft else None, chunks=[],
             metadata=read_metadata(session, document_id, "draft" if draft else row.document_version),
+            index_status=row.index_status if row else "pending",
+            chunk_count=row.chunk_count if row else 0, indexed_at=row.indexed_at if row else None,
         ))
     return result
 

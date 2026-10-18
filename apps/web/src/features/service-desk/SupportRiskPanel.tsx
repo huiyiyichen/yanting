@@ -141,18 +141,21 @@ export function SupportRiskPanel({ conversationId, enabled, refreshKey, serviceM
     <div className="yt-risks">
       {rows.map((incident) => incident.signals.map((signal, index) => {
         const needsReview = signalAttention(signal) === 'review'
-        const query = new URLSearchParams({ incident: incident.incidentId, conversation: conversationId, type: signal.riskType })
         const primary = index === 0 && canTakeOver(incident)
         return <div className={`yt-rk is-${signal.riskLevel}${needsReview ? ' is-review' : ''}`} key={signal.alertId}>
           <i className="bar" aria-hidden />
           <div className="yt-rk-main">
-            <b>{serviceRiskTypeLabels[signal.riskType]}</b>
+            <div className="yt-rk-head"><b>{serviceRiskTypeLabels[signal.riskType]}</b>
+              {primary && <Button size="small" type="primary" icon={<CustomerServiceOutlined />}
+                loading={takingOver === incident.incidentId}
+                disabled={Boolean(error) || loading || Boolean(takingOver && takingOver !== incident.incidentId)}
+                aria-label={serviceMode === 'operator_assisted' ? '开始处理' : '接管会话'}
+                onClick={() => void takeOver(incident)}>{serviceMode === 'operator_assisted' ? '开始处理' : '接管处理'}</Button>}</div>
             <span className="yt-rk-quote">{signal.triggerSummary}</span>
             <small className="yt-rk-meta">
               <span>{riskLevelLabels[signal.riskLevel]}</span>
               <span>{signalState(signal)}</span>
               <span className="next-action">{nextAction(signal)}</span>
-              {primary && <Link to={`/risk?${query}`} aria-label={`查看${serviceRiskTypeLabels[signal.riskType]}处置详情`}>详情</Link>}
             </small>
             {signal.riskType === 'followup_due_soon' ? followupDeadlines(signal.conditions).map((deadline) => (
               <small className="yt-rk-meta" key={`${deadline.ticketId}-${deadline.dueAt}`}>
@@ -161,13 +164,6 @@ export function SupportRiskPanel({ conversationId, enabled, refreshKey, serviceM
               </small>
             )) : null}
           </div>
-          {primary ? <Button size="small" type="primary" icon={<CustomerServiceOutlined />}
-            loading={takingOver === incident.incidentId}
-            disabled={Boolean(error) || loading || Boolean(takingOver && takingOver !== incident.incidentId)}
-            aria-label={serviceMode === 'operator_assisted' ? '开始处理' : '接管会话'}
-            onClick={() => void takeOver(incident)}>{serviceMode === 'operator_assisted' ? '开始处理' : '接管处理'}</Button>
-            : <Link className="yt-rk-link" to={`/risk?${query}`}
-              aria-label={`查看${serviceRiskTypeLabels[signal.riskType]}处置详情`}>详情</Link>}
         </div>
       }))}
       {!error && !loading && !rows.length ? <p className="yt-empty">暂无待处理风险</p> : null}

@@ -12,11 +12,17 @@ import { ModelConfigForms, type ConfigForm } from './ModelConfigForms'
 function Harness({ editing, values }: { editing: Partial<ModelProviderView>; values?: Partial<ConfigForm> }) {
   const [form] = Form.useForm<ConfigForm>()
   return <ConfigProvider><Form form={form} initialValues={values} component={false}>
-    <ModelConfigForms editing={editing as ModelProviderView} form={form} config={null} modelOptions={['m1']}
+    <ModelConfigForms editing={editing as ModelProviderView} form={form} config={null} gateway={{ models: ['deepseek-flash', 'deepseek-v4-pro'], configured: ['deepseek-chat'], reachable: true }} modelOptions={['m1']}
       embeddingOptions={[]} rerankOptions={[]} testingRerank={false} handleTestRerank={vi.fn()} /></Form></ConfigProvider>
 }
 
 describe('ModelConfigForms', () => {
+  /** 用户反馈 10-18 #6：网关可用模型来自网关真实列表；配置了但不在列表里的要标出来。 */
+  it('M3 网关列表与不在列表的配置', () => {
+    render(<Harness editing={{ key: 'llm', label: '文本模型' }} />)
+    expect(screen.getByText('deepseek-v4-pro')).toBeInTheDocument()
+    expect(screen.getByText('deepseek-chat · 不在列表')).toBeInTheDocument()
+  })
   it('M1 文本模型表单有接口地址与模型', () => {
     render(<Harness editing={{ key: 'llm', label: '文本模型' }} />)
     expect(screen.getByLabelText('接口地址（Base URL）')).toBeInTheDocument()

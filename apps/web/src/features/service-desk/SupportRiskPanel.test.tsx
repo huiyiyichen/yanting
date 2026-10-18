@@ -53,9 +53,8 @@ describe('客服当前风险建议', () => {
     expect(screen.queryByText(/等待起点/)).not.toBeInTheDocument()
     expect(screen.queryByText('已关闭的旧原因')).not.toBeInTheDocument()
     expect(api.read).toHaveBeenCalledWith('c1')
-    expect(screen.getByRole('link', { name: '查看未回复预警处置详情' })).toHaveAttribute(
-      'href', '/risk?incident=incident-1&conversation=c1&type=response_wait',
-    )
+    // 用户反馈 10-18 #2：插件里不再放跳风险页的“详情”
+    expect(screen.queryByRole('link', { name: '查看未回复预警处置详情' })).not.toBeInTheDocument()
   })
 
   it('失焦返回时更新复核/关闭结果，不再提示旧介入动作', async () => {

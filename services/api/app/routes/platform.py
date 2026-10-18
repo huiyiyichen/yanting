@@ -223,17 +223,29 @@ async def model_config(
                 wired=health.rerank.state == "ready",
                 note="精排：对召回候选按相关性重排；未启用时按召回顺序返回",
             ),
-            ModelProviderView(
-                key="knowledge_index",
-                label="知识索引（Qdrant 本地）",
-                provider="qdrant-local",
-                model=health.knowledge_index.state,
-                state=health.knowledge_index.state,
-                detail=health.knowledge_index.detail,
-                note="向量与元数据分两处存储，隔离环境需同时准备",
-            ),
         ],
     )
+
+
+class GatewayModelsView(ApiModel):
+    models: list[str]
+    configured: list[str]
+    reachable: bool
+
+
+@router.get("/models/gateway", response_model=GatewayModelsView)
+def gateway_models(
+    context: RuntimeContext = Depends(get_context),
+    _role: ViewRole = Depends(require_support),
+) -> GatewayModelsView:
+    """打开配置抽屉时才去网关取真实模型列表（页面加载不发远程请求）。"""
+
+    provider = context.model_provider
+    configured = [m for m in dict.fromkeys([
+        provider.model_id, getattr(provider, "fast_model_id", ""), getattr(provider, "vision_model_id", ""),
+    ]) if m]
+    models = provider.list_models()
+    return GatewayModelsView(models=models, configured=configured, reachable=bool(models))
 
 
 @router.post("/models/test", response_model=TestModelView)
