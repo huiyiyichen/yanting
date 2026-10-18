@@ -2,7 +2,7 @@ import { Tooltip } from 'antd'
 import { Link } from 'react-router-dom'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
 import { EmotionSwatch } from '../voiceprint/EmotionSwatch'
-import { buildMilestones, orderStages } from './serviceTrack'
+import { buildMilestones, orderStages } from './serviceTrackModel'
 
 const fmt = (ms: number) => {
   const d = new Date(ms + 8 * 3600000)

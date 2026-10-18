@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
-import { buildMilestones, orderStages } from './serviceTrack'
+import { buildMilestones, orderStages } from './serviceTrackModel'
 
 const msg = (role: string, body: string, at: string) => ({ entityType: 'message', occurredAt: at, message: { senderRole: role, body } })
 const detail = {
