@@ -13,7 +13,7 @@ vi.mock('../../api/client', async (original) => {
 
 const detail: RiskIncidentDetailView = {
   incident: {
-    incidentId: 'incident-1', buyerAlias: '消费者甲', conversationIds: ['conv-1'], orderIds: [],
+    incidentId: 'incident-1', buyerAlias: '消费者甲', conversationIds: ['conv-1'], orderIds: [], followUpDue: false,
     workOrderIds: [], riskLevel: 'high', riskStatus: 'pending', latestMessage: '我要投诉',
     updatedAt: '2026-10-02T08:00:00Z', recommendedAction: '核对诉求', openTicketCount: 0,
     needsReview: false, recurrenceCount: 0, signalActive: true, version: 'version-1', judgments: [],

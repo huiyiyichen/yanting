@@ -13,7 +13,7 @@ vi.mock('../../api/client', async (original) => {
 })
 
 const incident: RiskIncidentView = {
-  incidentId: 'incident-1', buyerAlias: '消费者甲', conversationIds: ['c1'], orderIds: [],
+  incidentId: 'incident-1', buyerAlias: '消费者甲', conversationIds: ['c1'], orderIds: [], followUpDue: false,
   workOrderIds: [], riskLevel: 'medium', riskStatus: 'pending', latestMessage: '请查物流',
   updatedAt: '2026-10-03T01:00:00Z', recommendedAction: '优先回应消费者',
   openTicketCount: 0, needsReview: false, version: 'v1', triageScore: 51, historicalSensitivity: 0,

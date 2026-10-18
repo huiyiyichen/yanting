@@ -25,7 +25,7 @@ import { RiskOverviewPanel, mergeStep } from './RiskOverviewPanel'
 
 const overview: RiskOverviewView = {
   scope: 'official',
-  counts: { events: 72, signals: 92, pending: 56, high: 18, emotionEscalation: 13, adverseReaction: 10 },
+  counts: { events: 72, signals: 92, pending: 56, pendingHigh: 12, high: 18, emotionEscalation: 13, adverseReaction: 10 },
   levels: { high: 25, medium: 59, low: 8 },
   types: { repeated_contact: 50, emotion_escalation: 13, adverse_reaction: 10 },
   hourly: [

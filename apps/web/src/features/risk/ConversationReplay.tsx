@@ -74,7 +74,7 @@ export const ConversationReplay = forwardRef<ReplayHandle, {
             <div className="who"><span className="t">{shHourMinute(note.at)}</span>
               {customer ? alias : ROLE[note.role as keyof typeof ROLE]}
               {customer && note.level && <span className={`e is-${note.level}`}><i />{SWATCH_LABEL[note.level]}</span>}
-              {note.signals.map((signal) => <span key={signal} className="yt-rm-sig">{serviceRiskTypeLabels[signal]}</span>)}
+              {(note.signals ?? []).map((signal) => <span key={signal} className="yt-rm-sig">{serviceRiskTypeLabels[signal]}</span>)}
             </div>
             <div className="bb">{customer ? <HighlightedText text={note.body} highlights={note.highlights} /> : note.body}</div>
           </li>

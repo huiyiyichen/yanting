@@ -13,12 +13,13 @@ export const PanoramaTile = memo(function PanoramaTile({ item, now, selected, di
   onSelect: (id: string) => void
 }) {
   const wait = waitSeconds(item, now)
-  const seq = item.emotionBands.map((level) => SWATCH_LABEL[level]).join('、')
+  const bands = item.emotionBands ?? []
+  const seq = bands.map((level) => SWATCH_LABEL[level]).join('、')
   const label = [item.buyerAlias, LANE_LABEL[item.lane], seq, item.highRisk ? '高风险' : ''].filter(Boolean).join('，')
   return <button type="button" data-id={item.conversationId} aria-label={label} aria-pressed={selected}
     className={`yt-ptile${selected ? ' is-selected' : ''}${dimmed ? ' is-dim' : ''}`} onClick={() => onSelect(item.conversationId)}>
     <span className={`yt-wave yt-ptile-wave${item.aiJob === 'running' ? ' is-on' : ''}`} aria-hidden="true"><i /><i /><i /><i /><i /></span>
-    <EmotionSwatch bands={item.emotionBands} highRisk={item.highRisk} />
+    <EmotionSwatch bands={bands} highRisk={item.highRisk} />
     <span className="yt-ptile-name">{item.buyerAlias}</span>
     {wait != null
       ? <span className={`yt-ptile-meta is-wait${wait >= 120 ? ' is-over' : wait >= 60 ? ' is-warn' : ''}`}>{clock(wait)}</span>

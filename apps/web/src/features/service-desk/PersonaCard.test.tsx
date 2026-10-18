@@ -24,7 +24,7 @@ const base: ConsumerProfileView = {
   skin: null,
   memory: { concerns: [{ text: '退款到账时效', sourceRef: 'message:S00005:1' }],
     rejected: [{ text: '不想再叠面霜', sourceRef: 'message:S00059:2' }], tried: [], pending: [] },
-  promises: [{ text: '若3个工作日内仍未到账，我们走线下打款直接补给您', madeAt: '2026-05-05T04:08:07Z',
+  promises: [{ text: '若3个工作日内仍未到账，我们走线下打款直接补给您', deadline: '3个工作日', fullText: '若3个工作日内仍未到账，我们走线下打款直接补给您', madeAt: '2026-05-05T04:08:07Z',
     dueAt: '2026-05-08T15:59:59Z', status: 'pending', sourceRef: 'message:S00005:5', evidenceRef: null }],
   purchases: [],
   currentEmotion: 'angry', escalatedAt: '2026-05-07T09:34:34Z',

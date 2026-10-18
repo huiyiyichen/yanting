@@ -12,12 +12,13 @@ const DONE = new Set(['done', 'skipped'])
 
 /** AI 处理：按追踪里实际运行的 Agent 列出，并行组缩进，逐项耗时（多 Agent 8.2）。 */
 function Steps({ run, title }: { run: Run; title: string }) {
-  const total = run.outcome === 'sent' ? `${(run.steps.reduce((sum, step) => sum + step.durationMs, 0) / 1000).toFixed(1)} 秒` : ''
+  const steps = run.steps ?? []
+  const total = run.outcome === 'sent' ? `${(steps.reduce((sum, step) => sum + step.durationMs, 0) / 1000).toFixed(1)} 秒` : ''
   return <section className="yt-pcard" aria-label={title}>
     <h3>{title}<span className="r">{total}</span></h3>
-    <ol className="yt-psteps">{run.steps.map((step, i) => {
+    <ol className="yt-psteps">{steps.map((step, i) => {
       const par = Boolean(step.group)
-      const first = par && run.steps[i - 1]?.group !== step.group
+      const first = par && steps[i - 1]?.group !== step.group
       return <li key={`${step.name}-${i}`} className={`is-${step.status}${par ? ' is-par' : ''}${first ? ' is-par-first' : ''}`}>
         <span>{step.name}{(step.attempts ?? 1) > 1 && <em className="x">×{step.attempts}</em>}</span>
         <span className="d">{step.status === 'fail' ? '转人工' : step.status === 'skipped' ? '跳过'
@@ -40,15 +41,16 @@ export function PanoramaPreview({ item, messages, now, busy, onTakeover, onOpen 
 }) {
   if (!item) return <aside className="yt-ppreview" aria-label="会话预览"><section className="yt-pcard"><h3>未选择会话</h3></section></aside>
   const wait = waitSeconds(item, now)
-  const current = item.emotionBands.at(-1) as SwatchLevel | undefined
+  const bands = item.emotionBands ?? []
+  const current = bands.at(-1) as SwatchLevel | undefined
   const customers = messages.filter((message) => message.senderRole === 'customer').map((message) => message.messageId)
   /** 消费者消息与 emotionBands（最近 6 条）从末尾对齐。 */
   const levelOf = (id: string): SwatchLevel | undefined =>
-    item.emotionBands[item.emotionBands.length - (customers.length - customers.indexOf(id))] as SwatchLevel | undefined
+    bands[bands.length - (customers.length - customers.indexOf(id))] as SwatchLevel | undefined
   return <aside className="yt-ppreview" aria-label="会话预览">
     <section className="yt-pcard">
       <div className="yt-phead">
-        <EmotionSwatch bands={item.emotionBands} highRisk={item.highRisk} size="lg" />
+        <EmotionSwatch bands={bands} highRisk={item.highRisk} size="lg" />
         <div>
           <b>{item.buyerAlias}<span className={`yt-lane-chip is-${item.lane}`}>{item.lane === 'human' ? `人工 · ${item.handler ?? '客服'}` : LANE_LABEL[item.lane]}</span></b>
           {item.scene && <div className="sub">{item.scene}{item.productName ? ` · ${item.productName}` : ''}</div>}

@@ -23,7 +23,7 @@ const item = (id: string, patch: Partial<PanoramaItem>): PanoramaItem => ({
   conversationId: id, buyerAlias: id, scene: '物流咨询', lane: 'ai', emotionBands: ['calm'], highRisk: false,
   lastActivityAt: at, laneEnteredAt: at, ...patch,
 } as PanoramaItem)
-const steps = ['安全检查', '读取轨迹', '知识检索', '起草', '核验', '发送'].map((name, i) => ({ name, status: i === 0 ? 'fail' : 'pending', durationMs: i ? 0 : 20 }))
+const steps = ['安全检查', '读取轨迹', '知识检索', '起草', '核验', '发送'].map((name, i) => ({ name, status: i === 0 ? 'fail' : 'pending', durationMs: i ? 0 : 20, attempts: 1 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -31,8 +31,8 @@ beforeEach(() => {
     item('甲', { aiJob: 'running', currentRun: { steps: steps.map((s) => ({ ...s, status: s.name === '起草' ? 'active' : 'pending' })) } }),
     item('乙', { lane: 'wait', highRisk: true, emotionBands: ['dissatisfied', 'angry'], waitingSince: at,
       handoffReason: '投诉风险', handoffQuote: '不然我直接投诉到平台', lastRun: { outcome: 'handoff', traceId: 'trc-1', steps: [
-      { name: '安全闸门', status: 'done', durationMs: 5 }, { name: '轨迹查询', status: 'done', durationMs: 300, group: 'fanout' },
-      { name: '知识', status: 'done', durationMs: 800, group: 'fanout' }, { name: '共情起草', status: 'fail', durationMs: 1200, attempts: 2 }] } }),
+      { name: '安全闸门', status: 'done', durationMs: 5, attempts: 1 }, { name: '轨迹查询', status: 'done', durationMs: 300, group: 'fanout', attempts: 1 },
+      { name: '知识', status: 'done', durationMs: 800, group: 'fanout', attempts: 1 }, { name: '共情起草', status: 'fail', durationMs: 1200, attempts: 2 }] } }),
     item('丙', { lane: 'human', handler: '客服' }),
   ] })
   api.receptionMessages.mockResolvedValue([])
