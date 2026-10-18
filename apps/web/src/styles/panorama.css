@@ -128,3 +128,5 @@
 @media (prefers-reduced-motion: reduce) {
   .yt-ptile-wave.is-on i, .yt-psteps li.is-active::before { animation: none; }
 }
+.yt-pano-demo { border: 1px solid var(--yt-line, rgba(127,116,139,.3)); background: none; border-radius: 999px; height: 24px; padding: 0 12px; font-size: 12px; color: var(--yt-ink-2); cursor: pointer; font-family: inherit; }
+.yt-pano-demo.is-on { border-color: #d9b47c; color: #b8893f; background: rgba(217, 180, 124, 0.12); }

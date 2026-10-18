@@ -35,7 +35,8 @@ export function PanoramaPreview({ item, messages, now, busy, onTakeover, onOpen 
   now: number
   busy: boolean
   onTakeover: (id: string) => void
-  onOpen: (id: string) => void
+  /** 演示模式没有真实会话可打开 */
+  onOpen?: (id: string) => void
 }) {
   if (!item) return <aside className="yt-ppreview" aria-label="会话预览"><section className="yt-pcard"><h3>未选择会话</h3></section></aside>
   const wait = waitSeconds(item, now)
@@ -57,7 +58,7 @@ export function PanoramaPreview({ item, messages, now, busy, onTakeover, onOpen 
       </div>
       <div className="yt-pacts">
         {item.lane !== 'human' && <Button type="primary" icon={<UserOutlined />} loading={busy} onClick={() => onTakeover(item.conversationId)}>接管</Button>}
-        <Button onClick={() => onOpen(item.conversationId)}>打开会话</Button>
+        {onOpen && <Button onClick={() => onOpen(item.conversationId)}>打开会话</Button>}
       </div>
     </section>
     {item.lane === 'wait' && item.handoffReason && <section className="yt-pcard" aria-label="转人工原因">
