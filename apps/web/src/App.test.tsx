@@ -423,11 +423,11 @@ describe('颜听工作台', () => {
     expect(screen.getByText('SKU01')).toBeInTheDocument()
     expect(screen.getByText('¥259.00')).toBeInTheDocument()
   }, 15000)
-  it('服务轨迹展示业务节点而非聊天原文', async () => {
+  it('服务轨迹并入档案页，展示业务节点而非聊天原文', async () => {
     const user = userEvent.setup()
     renderApp()
     await screen.findByRole('button', { name: '消费者甲 live-1' })
-    await user.click(screen.getByRole('tab', { name: '轨迹' }))
+    await user.click(screen.getByRole('tab', { name: '档案' }))
     expect(await screen.findByText('工单创建', {}, { timeout: 8000 })).toBeInTheDocument()
     expect(screen.getAllByText('BH001').length).toBeGreaterThan(0)
     expect(screen.getByRole('region', { name: '业务节点' })).toBeInTheDocument()

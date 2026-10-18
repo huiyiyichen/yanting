@@ -28,6 +28,7 @@ import { ReplyCard } from '../features/service-desk/ReplyCard'
 import { EvidenceFolds, HandoffSummary, IntentRow, NextSteps } from '../features/service-desk/AssistBlocks'
 import { useIsNarrow } from '../hooks/useMediaQuery'
 import { ServiceJourney } from '../features/service-desk/ServiceJourney'
+import { ConversationTrace } from '../features/trace/ConversationTrace'
 import { visibleInterval } from '../hooks/visibleInterval'
 
 const ComposerInput = makeSenderInput('客服回复输入框')
@@ -367,9 +368,13 @@ export function SupportWorkbench() {
             </article>) },
         ]} />
       </> },
-      { key: 'profile', label: '档案', children: <ArchivePanel context={context} memory={memory} tickets={tickets}
-        onOpenTicket={(ticketId) => navigate(`/platform/work-orders?ticket=${ticketId}`)} onNewTicket={() => setTicketDrawer(true)} /> },
-      { key: 'history', label: '轨迹', children: <ServiceJourney context={context} profile={profile} /> },
+      { key: 'profile', label: '档案', children: <>
+        <ArchivePanel context={context} memory={memory} tickets={tickets}
+          onOpenTicket={(ticketId) => navigate(`/platform/work-orders?ticket=${ticketId}`)} onNewTicket={() => setTicketDrawer(true)} />
+        {context && <section className="yt-arc-journey" aria-label="服务轨迹"><ServiceJourney context={context} profile={profile} /></section>}
+      </> },
+      { key: 'history', label: '轨迹', children: <ConversationTrace conversationId={id ?? null}
+        refreshKey={`${current?.messageRevision ?? ''}:${assistant?.modelUsage?.traceId ?? ''}`} /> },
     ]} />
   </div>
   return <div className="desk-workbench">

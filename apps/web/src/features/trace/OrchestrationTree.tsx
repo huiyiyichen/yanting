@@ -18,7 +18,7 @@ function Card({ card, total, selected, lit, compact, onSelect }: {
     disabled={!card.spanId} onClick={() => card.spanId && onSelect(card.spanId)} aria-label={card.label}>
     <span className="yt-oc-head">
       <span className="ic"><Icon /></span>
-      <span className="nm"><b>{card.label}</b><small>{card.role.split(' · ')[0]} · <StateIcon className="st" /> {cardStateText(card)}</small></span>
+      <span className="nm"><b>{card.label}</b><small><span className="rl">{card.role.split(' · ')[0]} · </span><StateIcon className="st" /> {cardStateText(card)}</small></span>
       {card.durationMs != null && <span className="dur yt-num">{fmtMs(card.durationMs)}</span>}
     </span>
     <span className="yt-oc-sum" title={card.summary}>{card.summary}</span>
