@@ -1,7 +1,6 @@
 import { Tooltip } from 'antd'
 import { Link } from 'react-router-dom'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
-import { EmotionSwatch } from '../voiceprint/EmotionSwatch'
 import { buildMilestones, orderStages } from './serviceTrackModel'
 
 const fmt = (ms: number) => {
@@ -30,7 +29,7 @@ export function ServiceTrack({ detail, profile, onContact }: {
         <span className="t yt-num">{fmt(m.at)}</span>
         {m.kind === 'contact' && <Tooltip title={m.previous ? <span className="yt-track-prev">{m.previous}</span> : undefined}>
           <button type="button" onClick={() => onContact(m.conversationId)} aria-label={`第${m.nth}次进线 ${m.conversationId}`}>
-            <b>第 {m.nth} 次进线</b><EmotionSwatch size="sm" bands={m.levels} /></button></Tooltip>}
+            <b>第 {m.nth} 次进线</b></button></Tooltip>}
         {m.kind === 'promise' && <><b>承诺</b><p>{m.text}</p><em className={`is-${m.status}`}>{PROMISE[m.status]}</em></>}
         {m.kind === 'ticket' && <><b>生成工单</b>
           <Link to={`/platform/work-orders?q=${encodeURIComponent(m.id)}`}>#{m.id}</Link>

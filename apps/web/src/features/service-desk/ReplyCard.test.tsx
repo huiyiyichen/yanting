@@ -11,6 +11,7 @@
  * R9 风格切换不是可读的 tab（无 aria-selected），读屏无法知道当前风格。
  * R11 X-4：未核验也盖“已核验”章；核验通过后引用片段没有依次画线的序号。
  * R12 草稿模式核验未通过：仍盖“已核验”章；或看不到原因；或被禁止采用（用户反馈 8：不因核验整体拦截）。
+ * R13 “已核验”章绝对定位压在风格切换上（用户反馈 10-18 #2）：章应在标题行内、风格切换之前。
  * R10 依据标签外露内部编号（conv-…、loreal-products@…#…），客服读不懂（全景方案 5.1）。
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
@@ -121,5 +122,11 @@ describe('ReplyCard', () => {
     expect(screen.queryByText('已核验')).toBeNull()
     expect(screen.getByRole('button', { name: /采用/ })).toBeEnabled()
   })
+  it('R13 verified stamp sits in the header flow before the style tabs', () => {
+    mount()
+    const stamp = screen.getByText('已核验')
+    const tabs = screen.getByRole('tablist', { name: '回复风格' })
+    expect(stamp.parentElement).toBe(tabs.parentElement)
+    expect(stamp.compareDocumentPosition(tabs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
 })
-

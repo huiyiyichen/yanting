@@ -13,7 +13,8 @@
  * V9 X-1 框选：在主图拖动选时间段不回调 onRange；双击不清除；缩略条点某天不把 7 天写成区间；
  *    方向键不平移；有区间时没有清除入口；悬停列表行时对应菱形不放大。
  * V6 商品线索不能展开到订单与会话（反馈 ⑤）；展开后不按批次分组。
- * R1 风险页反馈 1：仍画 ≈ 断轴；R3 反馈 3：没有 近7天/全部/自选，自选时缩略条不能拖选。
+ * R1 风险页反馈 1：仍画 ≈ 断轴；R3 反馈 3：没有 近7天/全部/自选。
+ * R4 用户反馈 10-18 #4：自选仍是抽象的缩略条，应改为日期区间选择（显示所选起止日期）。
  */
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -111,18 +112,12 @@ describe('RiskOverviewPanel', () => {
     expect(screen.queryByRole('group', { name: '声纹缩略条' })).toBeNull()  // R3 近 7 天不显示缩略条
     expect(screen.queryByLabelText('断档')).toBeNull()  // R1 不画断轴
     fireEvent.click(screen.getByRole('button', { name: '自选' }))
-    fireEvent.click(screen.getByRole('button', { name: /^05\/09/ }))
-    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-06', to: '2026-05-12' })
-    fireEvent.mouseDown(screen.getByRole('button', { name: /^05\/02/ }))
-    fireEvent.mouseEnter(screen.getByRole('button', { name: /^05\/04/ }))
-    fireEvent.mouseUp(screen.getByRole('group', { name: '声纹缩略条' }))
-    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-02', to: '2026-05-04' })
+    expect(screen.queryByRole('group', { name: '声纹缩略条' })).toBeNull()
+    expect(container.querySelector('.yt-dist-picker')).not.toBeNull()
     rerender(<MemoryRouter><ConfigProvider><RiskOverviewPanel overview={many} clues={[]} onFilterType={vi.fn()}
       onFilterConversation={vi.fn()} onRange={onRange} range={{ from: '2026-05-03', to: '2026-05-09' }} /></ConfigProvider></MemoryRouter>)
-    fireEvent.keyDown(screen.getByRole('group', { name: '声纹缩略条' }), { key: 'ArrowRight' })
-    expect(onRange).toHaveBeenLastCalledWith({ from: '2026-05-04', to: '2026-05-10' })
-    fireEvent.click(screen.getByRole('button', { name: '清除时间段' }))
-    expect(onRange).toHaveBeenLastCalledWith(null)
+    const inputs = container.querySelectorAll<HTMLInputElement>('.yt-dist-picker input')
+    expect([...inputs].map((input) => input.value)).toEqual(['05/03', '05/09'])
   })
 })
 

@@ -14,6 +14,9 @@ const SIGNED = /签收|已收货|交易成功|已完成/
 const STAFF = new Set(['operator', 'assistant', 'staff', 'agent', 'seller'])
 
 /** 订单主干：付款→发货→签收→售后中；有未完结工单或风险事件即视为售后中。签收只认订单状态里的明确字样。 */
+/** 工单类型机器值 → 中文（不在卡片上外露 return_refund 等字段）。 */
+export const WORK_TYPE: Record<string, string> = { adverse_reaction: '不良反应', return_refund: '售后退货', reship_exchange: '补发换货', offline_payment: '线下打款', logistics: '物流' }
+
 export function orderStages(detail: RiskIncidentDetailView): Stage[] {
   const ids = new Set(detail.incident.conversationIds)
   const contexts = detail.contexts.filter((c) => ids.has(c.conversationId))
@@ -64,7 +67,7 @@ export function buildMilestones(detail: RiskIncidentDetailView, profile: Consume
   for (const { c } of contexts) for (const w of c.workOrders) {
     if (seen.has(w.workOrderId)) continue
     seen.add(w.workOrderId)
-    out.push({ kind: 'ticket', key: `w-${w.workOrderId}`, at: shTimestamp(w.createdAt), id: w.workOrderId, type: w.workOrderType,
+    out.push({ kind: 'ticket', key: `w-${w.workOrderId}`, at: shTimestamp(w.createdAt), id: w.workOrderId, type: WORK_TYPE[w.workOrderType] ?? w.workOrderType,
       status: w.sourceStatus, done: Boolean(w.completedAt) })
   }
   for (const t of detail.tickets) {

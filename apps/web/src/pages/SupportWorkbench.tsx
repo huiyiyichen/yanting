@@ -201,6 +201,17 @@ export function SupportWorkbench() {
     return () => { disposed = true; stop(); window.removeEventListener('focus', sync) }
   }, [loadDetail, setParams, toast])
 
+  /** 只生成交接摘要，不跑回复起草（用户反馈 10-18 #1）。 */
+  const summarize = () => {
+    const target = id
+    if (!target || summarizing) return
+    setSummarizing(true)
+    supportApi.generateHandoffSummary(target)
+      .then((view) => { if (active.current === target) setHandoff(view) })
+      .catch((err) => { if (active.current === target) void toast.warning((err as Error).message) })
+      .finally(() => { if (active.current === target) setSummarizing(false) })
+  }
+
   const generate = async (target = id, style?: string) => {
     if (!target || generating) return
     const request = ++assistantRequest.current
@@ -315,14 +326,13 @@ export function SupportWorkbench() {
             onIgnore={(style) => void adopt(style, '', 'ignore')}
             onRegenerate={(style) => void generate(id, style)} onRewrite={rewrite} />
         </> : <section className="service-section yt-card yt-reply-empty" aria-label="回复建议">
-          <h3>回复建议<span className="r">{generating ? '生成中' : <Button size="small" type="link" disabled={!id}
-            onClick={() => void generate()}>{assistant?.stale ? '重新生成' : '生成'}</Button>}</span></h3>
+          <h3>回复建议<span className="r">{generating ? <span className="yt-gen-pill is-busy">生成中</span> : <button type="button" className="yt-gen-pill" disabled={!id}
+            onClick={() => void generate()}>{assistant?.stale ? '重新生成回复' : '生成回复'}</button>}</span></h3>
           {generating && stages.length > 0 && <ol className="yt-stages" aria-label="生成进度">
             {stages.map((item) => <li key={item.name} className={`is-${item.status}`}>{item.name}</li>)}
           </ol>}
         </section>}
-        <HandoffSummary summary={handoff && !handoff.stale ? handoff.summary : assistant && !assistant.stale ? assistant.serviceSummary : null}
-          state={summarizing || (generating && !handoff) ? '生成中' : handoff && !handoff.stale ? null : assistant?.stale ? '待更新' : assistant ? null : '待生成'} />
+        <HandoffSummary summary={handoff?.summary} busy={summarizing} stale={Boolean(handoff?.stale)} onGenerate={summarize} />
         {assistant && !assistant.stale ? <IntentRow primary={intentLabels[assistant.intent ?? 'unknown']}
           items={profile?.conversationId === id ? (profile?.memory?.pending ?? []).map((item) => item.text) : []}
           missing={assistant.missingInformation} /> : null}

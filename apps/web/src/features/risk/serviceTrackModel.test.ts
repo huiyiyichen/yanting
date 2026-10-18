@@ -3,6 +3,7 @@
  * T1 主干阶段与订单记录不符（没付款却亮、有售后工单却不亮售后中）；
  * T2 里程碑混入无关会话的工单；承诺没写内容或过期未标已超期；
  * T3 第 N 次进线编号错误，悬停拿不到前次摘要。
+ * T4 工单卡片外露机器值（return_refund 等），应显示中文类型（用户反馈 10-18 #6）。
  */
 import { describe, expect, it } from 'vitest'
 import type { ConsumerProfileView, RiskIncidentDetailView } from '../../api/client'
@@ -15,7 +16,7 @@ const detail = {
     { conversationId: 'S1', firstAt: '2026-05-05T02:00:00Z', orders: [{ orderId: 'O1', paidAt: '2026-05-01T02:00:00Z', shippedAt: '2026-05-02T02:00:00Z', sourceStatus: '已发货' }],
       workOrders: [], timeline: [msg('customer', '还没到', '2026-05-05T02:00:00Z'), msg('operator', '已催快递', '2026-05-05T02:05:00Z')] },
     { conversationId: 'S2', firstAt: '2026-05-08T02:00:00Z', orders: [],
-      workOrders: [{ workOrderId: 'W1', workOrderType: '售后退货', createdAt: '2026-05-08T03:00:00Z', completedAt: null, sourceStatus: '处理中' }],
+      workOrders: [{ workOrderId: 'W1', workOrderType: 'return_refund', createdAt: '2026-05-08T03:00:00Z', completedAt: null, sourceStatus: '处理中' }],
       timeline: [msg('customer', '我要退货', '2026-05-08T02:00:00Z')] },
     { conversationId: 'S9', firstAt: '2026-05-06T02:00:00Z', orders: [], timeline: [],
       workOrders: [{ workOrderId: 'W9', workOrderType: '物流', createdAt: '2026-05-06T02:00:00Z', sourceStatus: '' }] },
@@ -40,5 +41,10 @@ describe('serviceTrack', () => {
     const second = items[2]
     expect(second.kind === 'contact' && second.nth === 2 && second.levels[0] === 'angry').toBe(true)
     expect(second.kind === 'contact' && second.previous).toBe('客户：还没到\n客服：已催快递')
+  })
+  it('T4 工单类型显示中文', () => {
+    const items = buildMilestones(detail, profile, Date.parse('Sat 2026-05-09 8:00 AM HKT (UTC+08:00)'))
+    const ticket = items.find((m) => m.kind === 'ticket')
+    expect(ticket?.kind === 'ticket' && ticket.type).toBe('售后退货')
   })
 })

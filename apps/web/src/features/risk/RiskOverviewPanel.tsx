@@ -1,8 +1,10 @@
-import { Popover } from 'antd'
+import { WORK_TYPE } from './serviceTrackModel'
+import { DatePicker, Popover } from 'antd'
+import dayjs from 'dayjs'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { shMonthDay } from '../service-desk/shTime'
-import { dailyTotals, daysIn, recentWindow, shiftRange, windowFrom } from './distDays'
+import { daysIn, recentWindow } from './distDays'
 import type { DateRange, ProductClueView, RiskOverviewView } from '../../api/client'
 import { serviceRiskTypeLabels } from '../../contracts/enums'
 
@@ -20,35 +22,6 @@ const STACK_GAP = 1
 /** 每根柱合并几个小时：柱子总数尽量不超过 60。 */
 export function mergeStep(dayCount: number, hoursPerDay: number, maxBars = 60): number {
   return [1, 2, 3, 4, 6, 8].find((step) => dayCount * Math.ceil(hoursPerDay / step) <= maxBars) ?? 12
-}
-
-/** 自选缩略条：全部日期每天一格，高度=负面条数；点某天取那天起 7 天，按住拖过几天选这一段。 */
-function DistOverview({ overview, shown, onPick, onSelect, onShift }: {
-  overview: RiskOverviewView; shown: string[]; onPick: (date: string) => void
-  onSelect: (range: DateRange) => void; onShift: (days: number) => void
-}) {
-  const rows = dailyTotals(overview.hourly)
-  const max = Math.max(1, ...rows.map((r) => r.negative))
-  const [drag, setDrag] = useState<{ a: number; b: number } | null>(null)
-  const [lo, hi] = drag ? [Math.min(drag.a, drag.b), Math.max(drag.a, drag.b)] : [-1, -1]
-  return <div className="yt-dist-overview" role="group" aria-label="声纹缩略条"
-    onMouseLeave={() => setDrag(null)}
-    onMouseUp={() => {
-      if (drag && drag.a !== drag.b) onSelect({ from: rows[lo].date, to: rows[hi].date })
-      setDrag(null)
-    }}
-    onKeyDown={(event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-      event.preventDefault(); onShift((event.key === 'ArrowLeft' ? -1 : 1) * (event.shiftKey ? 7 : 1))
-    }}>
-    {rows.map((r, i) => <button type="button" key={r.date} aria-pressed={shown.includes(r.date)}
-      className={drag && i >= lo && i <= hi ? 'is-drag' : undefined}
-      aria-label={`${r.date.slice(5).replace('-', '/')} 负面 ${r.negative}`}
-      onMouseDown={() => setDrag({ a: i, b: i })}
-      onMouseEnter={() => { if (drag) setDrag({ ...drag, b: i }) }}
-      onClick={() => { if (!drag || drag.a === drag.b) onPick(r.date) }}>
-      <i style={{ height: `${Math.max(8, (r.negative / max) * 100)}%` }} /></button>)}
-  </div>
 }
 
 function DistributionVoiceprint({ overview, days, hot, onMarker, onBrush }: {
@@ -142,7 +115,6 @@ function DistributionVoiceprint({ overview, days, hot, onMarker, onBrush }: {
   </div>
 }
 
-const WORK_TYPE: Record<string, string> = { adverse_reaction: '不良反应', return_refund: '售后退货', reship_exchange: '补发换货', offline_payment: '线下打款', logistics: '物流' }
 
 /** 商品线索展开（全景方案 5.4，反馈 ⑤）：按批次分组列出工单、订单尾号与会话；只列原始记录，不下结论。 */
 export function ClueCases({ clue, onFilterConversation }: { clue: ProductClueView; onFilterConversation: (conversationId: string) => void }) {
@@ -180,10 +152,6 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
   const recent = recentWindow(overview.hourly)
   const view = range ? 'custom' : mode
   const days = range ? daysIn(everyDay, range) : mode === 'all' ? everyDay : recent
-  const pick = (date: string) => {
-    const shown = windowFrom(overview.hourly, date)
-    if (shown.length) onRange({ from: shown[0], to: shown.at(-1)! })
-  }
   // 标题数字随当前显示的日期
   const shownBuckets = overview.hourly.filter((b) => days.includes(b.date))
   const shownTotal = shownBuckets.reduce((sum, b) => sum + b.calm + b.dissatisfied + b.angry, 0)
@@ -203,8 +171,11 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
         <div className="yt-panel-head"><h3>情绪声纹</h3>
           <span className="yt-num">{days.length ? `${md(days[0])}–${md(days.at(-1))}` : '—'}</span>
           <span>消费者消息 <b>{shownTotal}</b> 负面 <b>{shownTotal ? Math.round((shownNegative / shownTotal) * 100) : 0}%</b></span>
-          {range && <button type="button" className="yt-dist-clear" aria-label="清除时间段" onClick={() => onRange(null)}>
-            {md(range.from)}–{md(range.to)} ×</button>}
+          {/* 用户反馈 10-18 #4：自选改为日期区间选择，只能选有数据的日子 */}
+          {view === 'custom' && <DatePicker.RangePicker size="small" className="yt-dist-picker" aria-label="自选时间段" allowClear
+            value={range ? [dayjs(range.from), dayjs(range.to)] : null} format="MM/DD"
+            minDate={dayjs(everyDay[0])} maxDate={dayjs(everyDay.at(-1))}
+            onChange={(value) => onRange(value?.[0] && value[1] ? { from: value[0].format('YYYY-MM-DD'), to: value[1].format('YYYY-MM-DD') } : null)} />}
           {recent.length < everyDay.length && <span className="yt-dist-range" role="group" aria-label="声纹范围">
             <button type="button" aria-pressed={view === 'recent'} onClick={() => { setMode('recent'); onRange(null) }}>近 7 天</button>
             <button type="button" aria-pressed={view === 'all'} onClick={() => { setMode('all'); onRange(null) }}>全部</button>
@@ -214,8 +185,6 @@ export function RiskOverviewPanel({ overview, clues, onFilterType, onFilterConve
         </div>
         <DistributionVoiceprint overview={overview} days={days} hot={hotConversation}
           onMarker={onMarker ?? onFilterConversation} onBrush={onRange} />
-        {view === 'custom' && recent.length < everyDay.length && <DistOverview overview={overview} shown={days} onPick={pick}
-          onSelect={onRange} onShift={(n) => onRange(shiftRange(everyDay, range ?? { from: days[0], to: days.at(-1)! }, n))} />}
       </div>
     </div>
     <div className="yt-monitor-grid">

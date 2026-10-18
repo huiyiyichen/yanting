@@ -7,7 +7,7 @@
  * A5 依据折叠没有数量；展开状态无 aria-expanded；数量为 0 的类别仍占一行（知识依据除外，需显示“0”提示依据不足）。
  */
 import { fireEvent, render, screen } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EvidenceFolds, HandoffSummary, IntentRow, NextSteps } from './AssistBlocks'
 
 beforeEach(() => localStorage.clear())
@@ -55,17 +55,28 @@ describe('AssistBlocks', () => {
 /**
  * 交接摘要（重新保留，改为 AI 总结）：
  * H1 无模型结果时拼接聊天原句；H2 有 service_summary 时仍显示“待生成”或不显示正文。
+ * H3 摘要不能单独生成：没有“生成摘要”胶囊按钮，或点击后没调摘要生成（用户反馈 10-18 #1，与生成回复分开）。
  */
 describe('HandoffSummary', () => {
-  it('H1 shows only 待生成 without AI summary', () => {
-    render(<HandoffSummary summary={null} state="待生成" />)
+  it('H1 H3 shows a 生成摘要 capsule without AI summary', () => {
+    const onGenerate = vi.fn()
+    render(<HandoffSummary summary={null} busy={false} stale={false} onGenerate={onGenerate} />)
     const region = screen.getByRole('region', { name: '交接摘要' })
-    expect(region).toHaveTextContent('交接摘要待生成')
     expect(region.querySelector('p')).toBeNull()
+    const button = screen.getByRole('button', { name: '生成摘要' })
+    expect(button).toHaveClass('yt-gen-pill')
+    fireEvent.click(button)
+    expect(onGenerate).toHaveBeenCalledTimes(1)
+  })
+  it('H3 busy shows 生成中 and stale offers 更新摘要', () => {
+    const { rerender } = render(<HandoffSummary summary={null} busy stale={false} onGenerate={vi.fn()} />)
+    expect(screen.getByRole('region', { name: '交接摘要' })).toHaveTextContent('生成中')
+    rerender(<HandoffSummary summary="旧摘要" busy={false} stale onGenerate={vi.fn()} />)
+    expect(screen.getByRole('button', { name: '更新摘要' })).toBeInTheDocument()
   })
   it('H2 shows the AI summary', () => {
-    render(<HandoffSummary summary=" 空包投诉，已建退款工单待财务审核，客户催促到账。 " state={null} />)
+    render(<HandoffSummary summary=" 空包投诉，已建退款工单待财务审核，客户催促到账。 " busy={false} stale={false} onGenerate={vi.fn()} />)
     expect(screen.getByText('空包投诉，已建退款工单待财务审核，客户催促到账。')).toBeInTheDocument()
-    expect(screen.queryByText('待生成')).toBeNull()
+    expect(screen.queryByRole('button', { name: '生成摘要' })).toBeNull()
   })
 })

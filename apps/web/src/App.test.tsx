@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConfigProvider } from 'antd'
 import { MemoryRouter } from 'react-router-dom'
@@ -341,7 +341,7 @@ describe('颜听工作台', () => {
     // 交接摘要只用模型生成的 service_summary；未生成时不拼接聊天原句
     const brief = await screen.findByRole('region', { name: '交接摘要' })
     await screen.findByText('好的，谢谢。')
-    expect(brief).toHaveTextContent('待生成')
+    expect(within(brief).getByRole('button', { name: '生成摘要' })).toBeInTheDocument()
     expect(brief).not.toHaveTextContent('好的，谢谢。')
     expect(brief).not.toHaveTextContent('退货已经寄回了')
     const headings = screen.getAllByRole('heading', { level: 3 }).map((node) => node.textContent)

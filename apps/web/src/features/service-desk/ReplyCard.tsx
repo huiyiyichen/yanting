@@ -87,12 +87,12 @@ export function ReplyCard({ suggestions, sources = [], adoptable, automatic, gen
   }
 
   return <article className={`yt-reply${generating ? ' is-refreshing' : ''}${verified ? ' is-verified' : ''}`} aria-label="回复建议">
-    {verified && <span className="yt-reply-stamp">已核验</span>}
-    {notes.length > 0 && !generating && <Tooltip title={<ul className="yt-reply-notes">{notes.map((note) => <li key={note}>{note}</li>)}</ul>}>
-      <span className="yt-reply-stamp is-review" aria-label={`待确认：${notes.join('；')}`}>待确认</span></Tooltip>}
     {holder}
     <div className="yt-reply-head">
       <h3><BulbOutlined />回复建议</h3>
+      {verified && <span className="yt-reply-stamp">已核验</span>}
+      {notes.length > 0 && !generating && <Tooltip title={<ul className="yt-reply-notes">{notes.map((note) => <li key={note}>{note}</li>)}</ul>}>
+        <span className="yt-reply-stamp is-review" aria-label={`待确认：${notes.join('；')}`}>待确认</span></Tooltip>}
       {suggestions.length > 1 && <div className="yt-reply-styles" role="tablist" aria-label="回复风格">
         {suggestions.map((item) => <button type="button" role="tab" key={item.style}
           aria-selected={item.style === current.style} className={item.style === current.style ? 'on' : undefined}
