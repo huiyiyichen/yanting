@@ -1461,6 +1461,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/support/desk/risks/{incident_id}/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Risk Follow Up */
+        post: operations["risk_follow_up_api_support_desk_risks__incident_id__follow_up_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/desk/risks/{incident_id}/intervene": {
         parameters: {
             query?: never;
@@ -3829,6 +3846,18 @@ export interface components {
             /** Highlights */
             highlights?: components["schemas"]["EvidenceHighlight"][];
         };
+        /** RiskFollowUpRequest */
+        RiskFollowUpRequest: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string;
+            /** Expectedversion */
+            expectedVersion: string;
+        };
         /** RiskIncidentDetailView */
         RiskIncidentDetailView: {
             incident: components["schemas"]["RiskIncidentView"];
@@ -3962,6 +3991,13 @@ export interface components {
              * @enum {string}
              */
             currentAction: "intervene" | "review" | "record_only" | "none";
+            /** Followupat */
+            followUpAt?: string | null;
+            /**
+             * Followupdue
+             * @default false
+             */
+            followUpDue: boolean;
         };
         /** RiskInterventionRequest */
         RiskInterventionRequest: {
@@ -7867,6 +7903,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RiskIncidentStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RiskIncidentDetailView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    risk_follow_up_api_support_desk_risks__incident_id__follow_up_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+                "X-Demo-Operator"?: string;
+            };
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RiskFollowUpRequest"];
             };
         };
         responses: {

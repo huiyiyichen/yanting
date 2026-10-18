@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -216,6 +217,9 @@ class RiskIncidentView(ApiModel):
     service_closed_at: str | None = None
     latest_customer_at: str | None = None
     current_action: Literal["intervene", "review", "record_only", "none"] = "none"
+    #: 约定的下次跟进时间（最近一次处置是“约定跟进”时才有）
+    follow_up_at: str | None = None
+    follow_up_due: bool = False
 
 
 class RiskIncidentDetailView(ApiModel):
@@ -270,6 +274,12 @@ class RiskEpisodeView(ApiModel):
 
 class RiskIncidentStatusRequest(ApiModel):
     status: Literal["in_progress", "resolved", "ignored", "reopen"]
+    note: str = Field(min_length=1, max_length=2000)
+    expected_version: str = Field(min_length=1)
+
+
+class RiskFollowUpRequest(ApiModel):
+    at: datetime
     note: str = Field(min_length=1, max_length=2000)
     expected_version: str = Field(min_length=1)
 

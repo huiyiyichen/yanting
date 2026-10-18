@@ -25,6 +25,7 @@ from app.routes.commit import CommitBeforeResponseRoute
 from app.schemas.base import ApiModel
 from app.schemas.service_breakpoints import ServiceBreakpointAssessmentView
 from app.schemas.service_desk import (
+    RiskFollowUpRequest,
     DemoOperatorRosterView,
     ReceptionStatsView,
     RiskIncidentDetailView,
@@ -214,6 +215,14 @@ def risk_update(
         session, incident_id, payload.status, payload.note, payload.expected_version,
         actor=actor,
     )
+
+
+@router.post("/risks/{incident_id}/follow-up", response_model=RiskIncidentDetailView)
+def risk_follow_up(
+    incident_id: str, payload: RiskFollowUpRequest, session: Session = Depends(get_session),
+    actor: str = Depends(operators.current_operator),
+):
+    return incidents.follow_up(session, incident_id, payload.at, payload.note, payload.expected_version, actor=actor)
 
 
 @router.post("/risks/{incident_id}/intervene", response_model=RiskIncidentDetailView)

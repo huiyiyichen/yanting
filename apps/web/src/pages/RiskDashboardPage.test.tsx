@@ -4,8 +4,6 @@ import { ConfigProvider } from 'antd'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RiskDashboardPage } from './RiskDashboardPage'
-import { ApiError } from '../api/client'
-import { emotionStatus } from '../features/service-desk/riskPresentation'
 
 const api = vi.hoisted(() => ({
   risks: vi.fn(), reception: vi.fn(), risk: vi.fn(), analyze: vi.fn(), operators: vi.fn(), intervene: vi.fn(), judge: vi.fn(), score: vi.fn(),
@@ -73,11 +71,6 @@ function Location() {
   return <output data-testid="location">{location.pathname}{location.search}</output>
 }
 
-async function openBreakpoints(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByTestId('risk-open-incident-1'))
-  await user.click(await screen.findByRole('tab', { name: '处置记录' }))
-  await screen.findByRole('heading', { name: '物流进度 · 重复咨询未解决' })
-}
 
 describe('风险服务断点', () => {
   it('首次打开前置官方历史记录并能打开对应会话', async () => {
@@ -106,60 +99,6 @@ describe('风险服务断点', () => {
     expect(screen.getByTitle('一个特别特别长的消费者昵称**')).toHaveClass('yt-rk-name')
     expect(document.querySelector('.yt-rk-status')).not.toBeNull()
   })
-
-  it('查看证据不调用模型，并保留资料更新后的待分析状态', async () => {
-    const user = userEvent.setup()
-    renderPage()
-    await openBreakpoints(user)
-    expect(screen.getAllByText('中风险').length).toBeGreaterThan(0)
-    expect(screen.getByText('待更新分析')).toBeInTheDocument()
-    expect(screen.getByText('请问物流有没有进展')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '分析服务断点' })).toBeEnabled()
-    expect(api.analyze).not.toHaveBeenCalled()
-  }, 15000)
-
-  it('明确分析后回读对应会话结果，不发送客服消息', async () => {
-    const user = userEvent.setup()
-    api.analyze.mockImplementation(async () => {
-      detail = { incident, contexts: [], evidence: [], tickets: [], handlingHistory: [],
-        serviceBreakpointAssessments: [{ ...assessment, stale: false }] }
-      return { ...assessment, stale: false }
-    })
-    renderPage()
-    await openBreakpoints(user)
-    await user.click(screen.getByRole('button', { name: '分析服务断点' }))
-    await waitFor(() => expect(api.analyze).toHaveBeenCalledTimes(1))
-    expect(api.analyze).toHaveBeenCalledWith('conv-1')
-    expect(await screen.findByText('已分析')).toBeInTheDocument()
-    expect(screen.queryByText('待更新分析')).not.toBeInTheDocument()
-  }, 15000)
-
-  it('合并事件只显示一个排查入口，可选择对应会话而不是堆多个检查面板', async () => {
-    const user = userEvent.setup()
-    const second = { ...assessment, conversationId: 'conv-2', analyzed: false, stale: false, findings: [] }
-    detail = { ...detail, serviceBreakpointAssessments: [assessment, second] }
-    api.risk.mockResolvedValue(detail)
-    renderPage()
-    await user.click(await screen.findByTestId('risk-open-incident-1'))
-    await user.click(await screen.findByRole('tab', { name: '处置记录' }))
-    expect(await screen.findAllByRole('region', { name: '服务排查' })).toHaveLength(1)
-    await user.click(screen.getByRole('combobox', { name: '排查会话' }))
-    await user.click(await screen.findByText('conv-2', { selector: '.ant-select-item-option-content' }))
-    expect(screen.getByRole('button', { name: '分析服务断点 conv-2' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: '打开会话 conv-2' })).toBeInTheDocument()
-  }, 15000)
-
-  it('分析失败保留旧证据，不显示成功结果', async () => {
-    const user = userEvent.setup()
-    api.analyze.mockRejectedValueOnce(new Error('模型不可用'))
-    renderPage()
-    await openBreakpoints(user)
-    await user.click(screen.getByRole('button', { name: '分析服务断点' }))
-    expect(await screen.findByText('模型不可用')).toBeInTheDocument()
-    expect(screen.getByText('待更新分析')).toBeInTheDocument()
-    expect(screen.getByText('请问物流有没有进展')).toBeInTheDocument()
-    expect(screen.queryByText('分析已保存')).not.toBeInTheDocument()
-  }, 15000)
 
   it('触发条件消退时显示待人工复核，不要求先介入', async () => {
     const user = userEvent.setup()
@@ -268,7 +207,6 @@ describe('风险服务断点', () => {
           body: '嗯，这还差不多', emotion: 'calm' },
       ],
     })
-    const user = userEvent.setup()
     renderPage('/risk?conversation=conv-1')
     await waitFor(() => expect(api.risk).toHaveBeenCalledWith('incident-1'))
     await screen.findByRole('heading', { name: '消费者甲' })
@@ -277,9 +215,9 @@ describe('风险服务断点', () => {
     expect(screen.queryByRole('region', { name: '情绪轨迹' })).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: '情绪弧线' })).not.toBeInTheDocument()
     expect(await screen.findByText('嗯，这还差不多')).toBeInTheDocument()
-    expect(screen.getAllByRole('tab').map((node) => node.textContent)).toEqual(expect.arrayContaining(['对话回放', '服务轨迹', '处置记录']))
-    await user.click(screen.getByRole('tab', { name: '处置记录' }))
-    expect(screen.getByText('暂无处置记录')).toBeInTheDocument()
+    // 用户反馈 10-18 #7：去掉“处置记录”页签，只留对话回放、服务轨迹
+    expect(screen.getAllByRole('tab').map((node) => node.textContent)).toEqual(expect.arrayContaining(['对话回放', '服务轨迹']))
+    expect(screen.queryByRole('tab', { name: '处置记录' })).toBeNull()
     expect(screen.getByRole('radio', { name: '官方记录' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.queryByRole('button', { name: '接管并回复' })).not.toBeInTheDocument()
     expect(api.analyze).not.toHaveBeenCalled()
@@ -329,24 +267,6 @@ describe('风险服务断点', () => {
     expect(api.analyze).not.toHaveBeenCalled()
   })
 
-  it('模型核验原文不泄漏到错误提示', async () => {
-    const user = userEvent.setup()
-    api.analyze.mockRejectedValueOnce(new ApiError(400, 'model_output_invalid', '服务断点分析未通过',
-      'draft.service_breakpoints为空数组，内部核验详情'))
-    renderPage()
-    await openBreakpoints(user)
-    await user.click(screen.getByRole('button', { name: '分析服务断点' }))
-    expect(await screen.findByText('分析结果暂不可用，请重试')).toBeInTheDocument()
-    expect(screen.queryByText(/draft.service_breakpoints/)).not.toBeInTheDocument()
-  }, 15000)
-
-  it.each([
-    ['angry', 'stable', '持续激烈'], ['dissatisfied', 'stable', '持续不满'],
-    ['calm', 'stable', '平稳'], ['calm', 'unknown', '平稳'], ['angry', 'rising', '激烈 · 加剧'],
-    ['dissatisfied', 'falling', '不满 · 缓和'],
-  ] as const)('情绪程度%s趋势%s显示%s', (currentEmotion, emotionTrend, label) => {
-    expect(emotionStatus({ currentEmotion, emotionTrend })).toBe(label)
-  })
   it('F5 范围只在顶部切换；页签为 待处理/待复核/已关闭/全部；点行打开详情，无“详情”按钮', async () => {
     const user = userEvent.setup()
     api.risks.mockResolvedValue([incident])

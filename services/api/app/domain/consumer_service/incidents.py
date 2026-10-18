@@ -21,6 +21,7 @@ from app.domain.consumer_service.models import (
     DatasetRow,
     RiskEpisodeRow,
     RiskLifecycleRow,
+    ServiceDeskEventRow,
     ServiceTicketRow,
 )
 from app.domain.consumer_service.operators import DEFAULT_OPERATOR
@@ -365,10 +366,55 @@ def list_incidents(
             latest_customer_at=latest_at.isoformat() if latest_at else None,
             current_action=current_action,
         ))
+    for item in result:
+        _apply_follow_up(session, item)
     return sorted(result, key=lambda item: (
         {"none": 0, "record_only": 0, "review": 1, "intervene": 2}[item.current_action],
         item.triage_score, LEVEL_RANK[item.risk_level], item.updated_at,
     ), reverse=True)
+
+
+FOLLOW_UP = "follow_up"
+
+
+def _follow_up_of(row: ServiceDeskEventRow | None) -> datetime | None:
+    if row is None or row.action != FOLLOW_UP:
+        return None
+    try:
+        at = datetime.fromisoformat(row.note.split("|", 1)[0])
+    except ValueError:
+        return None
+    return at if at.tzinfo else at.replace(tzinfo=UTC)
+
+
+def _apply_follow_up(session: Session, item: RiskIncidentView, now: datetime | None = None) -> None:
+    """最近一次处置是“约定跟进”才算数；之后任何处置都会清除它（F3）。到期加入分诊原因（F2）。"""
+    latest = session.scalar(select(ServiceDeskEventRow).where(
+        ServiceDeskEventRow.entity_id == item.incident_id, ServiceDeskEventRow.entity_kind == "risk",
+    ).order_by(ServiceDeskEventRow.created_at.desc(), ServiceDeskEventRow.event_id.desc()).limit(1))
+    at = _follow_up_of(latest)
+    if at is None or item.risk_status in {"resolved", "ignored"}:
+        return
+    item.follow_up_at = at.isoformat()
+    item.follow_up_due = at <= (now or datetime.now(UTC))
+    if item.follow_up_due:
+        item.triage_reasons = ["跟进到期", *item.triage_reasons]
+
+
+def follow_up(session: Session, incident_id: str, at: datetime, note: str, expected_version: str,
+              *, actor: str = DEFAULT_OPERATOR) -> RiskIncidentDetailView:
+    """只记录约定的跟进时间，不改风险状态，也不做任何业务动作（F5）。"""
+    at = at if at.tzinfo else at.replace(tzinfo=UTC)
+    if at <= datetime.now(UTC):
+        raise ValidationRejected("跟进时间需晚于现在")
+    if not note.strip():
+        raise ValidationRejected("请填写跟进备注")
+    detail = incident_detail(session, incident_id)
+    if detail.incident.version != expected_version:
+        raise ConflictError("风险已更新，请刷新后重试")
+    record_event(session, incident_id, "risk", FOLLOW_UP, f"{at.astimezone(UTC).isoformat()}|{note.strip()}",
+                 detail.incident.conversation_ids[0], actor=actor)
+    return incident_detail(session, incident_id)
 
 
 def _legacy_contact_context(

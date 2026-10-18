@@ -606,6 +606,9 @@ export const deskApi = {
   scan: () => request<components['schemas']['RiskScanView']>('/api/support/desk/risks/scan', { method: 'POST', role: 'support' }),
   updateRisk: (id: string, status: 'in_progress' | 'resolved' | 'ignored' | 'reopen', note: string, expectedVersion: string) =>
     request<RiskIncidentDetailView>(`/api/support/desk/risks/${id}/status`, { method: 'POST', body: { status, note, expectedVersion }, role: 'support' }),
+  /** 约定下次跟进：只记录时间，不改风险状态。 */
+  followUpRisk: (id: string, at: string, note: string, expectedVersion: string) =>
+    request<RiskIncidentDetailView>(`/api/support/desk/risks/${id}/follow-up`, { method: 'POST', body: { at, note, expectedVersion }, role: 'support' }),
 }
 
 export const knowledgeApi = {

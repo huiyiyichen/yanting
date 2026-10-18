@@ -3,6 +3,8 @@
  * T1 主干阶段与订单记录不符（没付款却亮、有售后工单却不亮售后中）；
  * T2 里程碑混入无关会话的工单；承诺没写内容或过期未标已超期；
  * T3 第 N 次进线编号错误，悬停拿不到前次摘要。
+ * T5 断点没标在卡片上：未完结工单不显示停滞天数；客户最后一句没人回的进线不标“未回复”（用户反馈 10-18 #7 修订）。
+ * T6 处置事件外露机器值（in_progress、follow_up），约定跟进不显示跟进时间。
  * T4 工单卡片外露机器值（return_refund 等），应显示中文类型（用户反馈 10-18 #6）。
  */
 import { describe, expect, it } from 'vitest'
@@ -46,5 +48,21 @@ describe('serviceTrack', () => {
     const items = buildMilestones(detail, profile, Date.parse('Sat 2026-05-09 8:00 AM HKT (UTC+08:00)'))
     const ticket = items.find((m) => m.kind === 'ticket')
     expect(ticket?.kind === 'ticket' && ticket.type).toBe('售后退货')
+  })
+  it('T5 断点标记', () => {
+    const items = buildMilestones(detail, profile, Date.parse('2026-05-12T08:00:00+08:00'))
+    const ticket = items.find((m) => m.kind === 'ticket')
+    expect(ticket?.kind === 'ticket' && ticket.stalledDays).toBe(3)
+    const contacts = items.filter((m) => m.kind === 'contact')
+    expect(contacts.map((m) => m.kind === 'contact' && m.unanswered)).toEqual([false, true])
+  })
+  it('T6 处置事件中文与跟进时间', () => {
+    const withEvents = { ...detail, handlingHistory: [
+      { eventId: 'e1', actor: '客服A', action: 'in_progress', note: '人工核实', createdAt: '2026-05-09T09:00:00+08:00' },
+      { eventId: 'e2', actor: '客服A', action: 'follow_up', note: '2026-05-10T02:00:00+00:00|约客户回电', createdAt: '2026-05-09T09:10:00+08:00' },
+    ] } as unknown as RiskIncidentDetailView
+    const handling = buildMilestones(withEvents, profile).filter((m) => m.kind === 'handling')
+    expect(handling.map((m) => m.kind === 'handling' && [m.action, m.note])).toEqual([
+      ['开始处理', '客服A · 人工核实'], ['约定跟进', '客服A · 05/10 10:00 · 约客户回电']])
   })
 })

@@ -790,3 +790,11 @@ html[data-theme='light'] .yt-risk-page .yt-dist-calm { fill: #14a577; fill-opaci
 html[data-theme='dark'] .reception-plugin .yt-gen-pill:not(.is-busy) { background: linear-gradient(180deg, #4a3a26, #3b2e1f); color: #f0c98a; border-color: #6b5233; }
 
 .yt-risk-page .yt-dist-picker { height: 26px; border-radius: 8px; }
+
+/* 用户反馈 10-18 #7：下次跟进 */
+.yt-follow-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 0 8px; border-radius: 999px; font-size: 12px; line-height: 20px;
+  background: var(--m-raised, #f6f3f8); color: var(--m-ink-2, inherit); }
+.yt-follow-chip.is-due { background: rgba(212, 56, 88, 0.14); color: #d43858; font-weight: 600; }
+.yt-follow-form { display: grid; gap: 10px; }
+.yt-track-flag { display: inline-block; margin-left: 8px; padding: 0 7px; border-radius: 999px; font-size: 11px; line-height: 18px; font-weight: 600;
+  background: rgba(212, 56, 88, 0.14); color: #d43858; vertical-align: 1px; }

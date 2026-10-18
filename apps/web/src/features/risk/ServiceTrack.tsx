@@ -29,11 +29,11 @@ export function ServiceTrack({ detail, profile, onContact }: {
         <span className="t yt-num">{fmt(m.at)}</span>
         {m.kind === 'contact' && <Tooltip title={m.previous ? <span className="yt-track-prev">{m.previous}</span> : undefined}>
           <button type="button" onClick={() => onContact(m.conversationId)} aria-label={`第${m.nth}次进线 ${m.conversationId}`}>
-            <b>第 {m.nth} 次进线</b></button></Tooltip>}
+            <b>第 {m.nth} 次进线</b>{m.unanswered && <span className="yt-track-flag">客户最后一句未回复</span>}</button></Tooltip>}
         {m.kind === 'promise' && <><b>承诺</b><p>{m.text}</p><em className={`is-${m.status}`}>{PROMISE[m.status]}</em></>}
         {m.kind === 'ticket' && <><b>生成工单</b>
           <Link to={`/platform/work-orders?q=${encodeURIComponent(m.id)}`}>#{m.id}</Link>
-          <p>{m.type}</p><em className={m.done ? 'is-fulfilled' : 'is-pending'}>{m.status || (m.done ? '已完结' : '处理中')}</em></>}
+          <p>{m.type}{m.stalledDays >= 3 && <span className="yt-track-flag">停滞 {m.stalledDays} 天</span>}</p><em className={m.done ? 'is-fulfilled' : 'is-pending'}>{m.status || (m.done ? '已完结' : '处理中')}</em></>}
         {m.kind === 'handling' && <><b>{m.action}</b>{m.note && <p>{m.note}</p>}</>}
       </li>)}
     </ol>
