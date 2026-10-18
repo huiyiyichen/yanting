@@ -285,6 +285,15 @@ def use(trace: Trace | None) -> Iterator[Trace | None]:
         _current.reset(token)
 
 
+def _requested(provider: Any, kwargs: dict[str, Any]) -> str | None:
+    """实际请求的模型：Agent 分配的优先，否则按档位取提供方默认。"""
+    if kwargs.get("model"):
+        return str(kwargs["model"])
+    attr = "fast_model_id" if kwargs.get("model_tier") == "fast" else "model_id"
+    value = getattr(provider, attr, None)
+    return value if isinstance(value, str) and value else None
+
+
 def traced_complete(provider: Any, messages: list[Any], *, stage: str, prompt_code: str | None = None,
                     **kwargs: Any) -> Any:
     """provider.complete that also records a model_call span on the current trace (T2/T3)."""
@@ -295,11 +304,13 @@ def traced_complete(provider: Any, messages: list[Any], *, stage: str, prompt_co
     except Exception as exc:
         if trace is not None:
             trace.model_call(stage=stage, started=started, messages=messages, error=exc,
-                             tier=kwargs.get("model_tier"), prompt_code=prompt_code)
+                             tier=kwargs.get("model_tier"), prompt_code=prompt_code,
+                             model_requested=_requested(provider, kwargs))
         raise
     if trace is not None:
         trace.model_call(stage=stage, started=started, messages=messages, result=result,
-                         tier=kwargs.get("model_tier"), prompt_code=prompt_code)
+                         tier=kwargs.get("model_tier"), prompt_code=prompt_code,
+                         model_requested=_requested(provider, kwargs))
     return result
 
 

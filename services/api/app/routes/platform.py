@@ -1161,3 +1161,72 @@ def model_usage(
     except ValueError as exc:
         raise ValidationRejected(str(exc)) from exc
     return usage_summary(session, prices, start=start, end=end)
+
+
+# ── 按 Agent 分配模型（反馈 10-18 #4）──────────────────────────────────────
+class AgentModelItem(ApiModel):
+    key: str
+    label: str
+    description: str
+    tier: str
+    model: str | None = None
+    default_model: str | None = None
+
+
+class AgentModelsView(ApiModel):
+    agents: list[AgentModelItem]
+
+
+class AgentModelsRequest(ApiModel):
+    assignments: dict[str, str | None]
+
+
+def _agent_models_view(session: Any, context: RuntimeContext) -> AgentModelsView:
+    from app.domain.platform.settings import LLM_AGENTS, load_agent_models
+
+    provider = context.model_provider
+    defaults = {
+        "main": provider.model_id,
+        "vision": getattr(provider, "vision_model_id", "") or context.settings.llm_vision_model,
+    }
+    saved = load_agent_models(session)
+    return AgentModelsView(agents=[AgentModelItem(
+        key=key, label=label, description=description, tier=tier,
+        model=saved.get(key), default_model=defaults.get(tier) or provider.model_id or None,
+    ) for key, label, description, tier in LLM_AGENTS])
+
+
+@router.get("/agent-models", response_model=AgentModelsView)
+def get_agent_models(
+    session: Any = Depends(get_session),
+    context: RuntimeContext = Depends(get_context),
+    _role: ViewRole = Depends(require_support),
+) -> AgentModelsView:
+    return _agent_models_view(session, context)
+
+
+@router.put("/agent-models", response_model=AgentModelsView)
+def put_agent_models(
+    payload: AgentModelsRequest,
+    session: Any = Depends(get_session),
+    context: RuntimeContext = Depends(get_context),
+    _role: ViewRole = Depends(require_support),
+) -> AgentModelsView:
+    """保存各 Agent 的模型；只接受网关真实提供或已配置的模型，空值表示回退默认。"""
+    from app.domain.platform.settings import AGENT_KEYS, save_agent_models
+
+    unknown = sorted(set(payload.assignments) - AGENT_KEYS)
+    if unknown:
+        raise ValidationRejected(f"未知的 Agent：{unknown[0]}")
+    wanted = {v.strip() for v in payload.assignments.values() if v and v.strip()}
+    if wanted:
+        provider = context.model_provider
+        allowed = {m for m in (provider.model_id, getattr(provider, "vision_model_id", ""),
+                               getattr(provider, "fast_model_id", "")) if m}
+        with contextlib.suppress(Exception):
+            allowed |= set(provider.list_models())
+        missing = sorted(wanted - allowed)
+        if missing:
+            raise ValidationRejected(f"网关没有提供模型：{missing[0]}")
+    save_agent_models(session, payload.assignments)
+    return _agent_models_view(session, context)

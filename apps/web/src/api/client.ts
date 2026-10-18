@@ -511,6 +511,10 @@ export const platformApi = {
   /** 网关真实模型列表（打开配置抽屉时取） */
   gatewayModels: () => request<{ models: string[]; configured: string[]; reachable: boolean }>('/api/platform/models/gateway', { role: 'support' }),
   usage: () => request<UsageView>('/api/platform/usage', { role: 'support' }),
+  /** 按 Agent 分配模型（反馈 10-18 #4） */
+  agentModels: () => request<AgentModelsView>('/api/platform/agent-models', { role: 'support' }),
+  saveAgentModels: (assignments: Record<string, string | null>) =>
+    request<AgentModelsView>('/api/platform/agent-models', { role: 'support', method: 'PUT', body: { assignments } }),
   knowledge: () => request<KnowledgeOverviewView>('/api/platform/knowledge', { role: 'support' }),
   knowledgeBases: () =>
     request<KnowledgeBaseItem[]>('/api/platform/knowledge-bases', { role: 'support' }),
@@ -647,3 +651,6 @@ export const promptApi = {
   revisions: (id: string) => request<PromptRevisionView[]>(`/api/platform/prompt-templates/${id}/revisions`, { role: 'support' }),
   restore: (id: string, revision: number, expectedRevision: number) => request<PromptTemplateView>(`/api/platform/prompt-templates/${id}/restore`, { method: 'POST', body: { revision, expectedRevision }, role: 'support' }),
 }
+
+export type AgentModelItem = { key: string; label: string; description: string; tier: string; model?: string | null; defaultModel?: string | null }
+export type AgentModelsView = { agents: AgentModelItem[] }

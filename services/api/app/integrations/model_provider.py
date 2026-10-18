@@ -76,6 +76,7 @@ class ModelProvider(Protocol):
         json_mode: bool = False,
         timeout_seconds: float | None = None,
         model_tier: str = "main",
+        model: str | None = None,
     ) -> ChatResult: ...
 
 
@@ -239,10 +240,13 @@ class OpenAICompatibleModelProvider:
         json_mode: bool = False,
         timeout_seconds: float | None = None,
         model_tier: str = "main",
+        model: str | None = None,
     ) -> ChatResult:
         wants_vision = any(message.image_data_urls for message in messages)
         # 改写、分类等轻任务走快速模型（未配置时回退主模型）
-        model = self.fast_model_id if model_tier == "fast" else self._model
+        # 按 Agent 分配的模型（反馈 10-18 #4）优先；未分配时按档位回退
+        override = (model or "").strip()
+        model = override or (self.fast_model_id if model_tier == "fast" else self._model)
         base_url, api_key = self._base_url, self._api_key
         if wants_vision:
             if not self.supports_vision:
@@ -250,7 +254,7 @@ class OpenAICompatibleModelProvider:
                     "多模态模型未配置",
                     detail="请求包含图片，但未设置 YANTING_LLM_VISION_MODEL",
                 )
-            model = self._vision_model
+            model = override or self._vision_model
             base_url = self._vision_base_url or base_url
             api_key = self._vision_api_key or api_key
 
@@ -380,9 +384,11 @@ class MockModelProvider:
         json_mode: bool = False,
         timeout_seconds: float | None = None,
         model_tier: str = "main",
+        model: str | None = None,
     ) -> ChatResult:
         del temperature, max_tokens, timeout_seconds, model_tier
         self._calls.append(list(messages))
+        self.requested_models = [*getattr(self, "requested_models", []), model]
         if self._responses:
             text = self._responses.pop(0)
         elif json_mode:
@@ -391,7 +397,7 @@ class MockModelProvider:
             text = "mock: 这是测试用模拟回复，不代表真实模型输出。"
         return ChatResult(
             text=text,
-            model=self._model_id,
+            model=model or self._model_id,
             latency_seconds=0.0,
             is_mock=True,
         )

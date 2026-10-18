@@ -73,6 +73,14 @@ def read_handoff_summary(session: Session, conversation_id: str) -> HandoffSumma
     return _view(row, conversation.mode_revision)
 
 
+def _assigned(session: Session, agent: str) -> dict[str, str]:
+    """Agent 分配了模型才传 model（反馈 10-18 #4）；未分配保持原档位。"""
+    from app.domain.platform.settings import agent_model
+
+    model = agent_model(session, agent)
+    return {"model": model} if model else {}
+
+
 def _prompt(session: Session, code: str, default: str) -> str:
     """模型配置页可按代码覆盖（YT_SUMMARY / YT_MEMORY）；未配置时用内置版本。"""
     from app.domain.platform.settings import get_enabled_template
@@ -149,7 +157,7 @@ def generate_handoff_summary(session: Session, provider: Any, conversation_id: s
                     "openWorkOrders": work, "orders": orders,
                 }, ensure_ascii=False)),
             ], stage="summary", prompt_code=SUMMARY_PROMPT_CODE, temperature=0, max_tokens=200,
-                json_mode=True, model_tier="fast")
+                json_mode=True, model_tier="fast", **_assigned(session, "handoff_summary"))
             candidate = str(json.loads(result.text).get("summary", "")).strip()
             issues = summary_issues(candidate, evidence_text)
             trace.decision("summary_check", issues or ["通过"], label="摘要校验",
@@ -203,7 +211,7 @@ def update_memory(session: Session, provider: Any, conversation_id: str, sources
                     "previousMemory": [item.dump() for item in previous.items],
                 }, ensure_ascii=False)),
             ], stage="memory", prompt_code=MEMORY_PROMPT_CODE, temperature=0, max_tokens=1200,
-                json_mode=True, model_tier="fast")
+                json_mode=True, model_tier="fast", **_assigned(session, "memory"))
             raw = json.loads(result.text).get("memory", [])
             items, rejected = [], []
             for value in raw[:16] if isinstance(raw, list) else []:

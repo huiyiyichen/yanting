@@ -364,6 +364,10 @@ class FlowState(TypedDict, total=False):
     style_issues: list[str]
 
 
+#: 模型调用阶段 → 可分配模型的 Agent
+STAGE_AGENT = {"image": "vision", "draft": "composer", "verify": "verifier"}
+
+
 def _active_risk_level(session: Session, conversation_id: str) -> str:
     """只读当前已落库的有效风险，不在生成链路里触发风险扫描。"""
     from app.domain.consumer_service.models import ServiceRiskAlertRow
@@ -402,6 +406,12 @@ def run_grounded_workflow(
             "customer_message" if automatic else "operator_generate",
             conversation_id=conversation_id, orchestration="multi" if multi else "single",
         )
+
+    from app.domain.platform.settings import load_agent_models
+    try:
+        agent_models = load_agent_models(session)
+    except Exception:  # pragma: no cover - 读不到分配时一律用默认模型
+        agent_models = {}
 
     def remaining_seconds():
         if deadline is None:
@@ -541,6 +551,10 @@ def run_grounded_workflow(
         remaining = remaining_seconds()
         started = time.perf_counter()
         input_characters = None
+        # 按 Agent 分配的模型（反馈 10-18 #4）；未分配用默认（含图时用视觉模型）
+        assigned = agent_models.get(STAGE_AGENT.get(stage, ""))
+        requested = assigned or (getattr(provider, "vision_model_id", None) if images else None) \
+            or getattr(provider, "model_id", None)
         try:
             messages = [
                 ChatMessage(role="system", content=system),
@@ -557,9 +571,11 @@ def run_grounded_workflow(
                 messages,
                 temperature=0, max_tokens=max_tokens, json_mode=True,
                 **({"timeout_seconds": remaining} if remaining is not None else {}),
+                **({"model": assigned} if assigned else {}),
             )
         except Exception as exc:
             trace.model_call(stage=stage, started=started, messages=locals().get("messages"), error=exc,
+                             model_requested=requested if isinstance(requested, str) else None,
                              prompt_code=str(state.get("prompt_version") or "").split("@")[0] or None,
                              prompt_revision=str(state.get("prompt_version") or "@").split("@")[-1] or None,
                              contract_version=WORKFLOW_VERSION)
@@ -572,6 +588,7 @@ def run_grounded_workflow(
             })
             raise
         trace.model_call(stage=stage, started=started, messages=messages, result=result,
+                         model_requested=requested if isinstance(requested, str) else None,
                          prompt_code=str(state.get("prompt_version") or "").split("@")[0] or None,
                          prompt_revision=str(state.get("prompt_version") or "@").split("@")[-1] or None,
                          contract_version=WORKFLOW_VERSION)

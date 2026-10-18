@@ -35,6 +35,7 @@ import {
 } from 'antd'
 import { useSearchParams } from 'react-router-dom'
 import { TraceConsole } from '../features/trace/TraceConsole'
+import { AgentModelsPanel } from '../features/platform/AgentModelsPanel'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -364,6 +365,7 @@ export function ModelConfigPage() {
           embeddingOptions={embeddingOptions} rerankOptions={rerankOptions} testingRerank={testingRerank}
           handleTestRerank={handleTestRerank} />
       </Drawer>
+      <AgentModelsPanel />
       {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
         </> },
         { key: 'trace', label: 'Agent 追踪', children: <TraceConsole initialTrace={params.get('trace')} /> }]} />

@@ -301,3 +301,14 @@ html[data-theme='dark'] .yt-chead-av, html[data-theme='dark'] .chat-message-surf
 .yt-usage-kpis.is-main strong { font-size: 28px; }
 .yt-usage-kpis.is-minor > div { padding: 6px 10px; background: transparent; }
 .yt-usage-kpis.is-minor strong { font-size: 15px; color: var(--yt-ink-2); }
+/* Agent 模型分配（反馈 10-18 #4） */
+.yt-agent-models { margin-top: 24px; }
+.yt-am-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.yt-am-head .yt-section-title { margin: 0; }
+.yt-am-head .hint { font-size: 12px; color: var(--yt-ink-3); margin-right: auto; }
+.yt-agent-models ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; }
+.yt-agent-models li { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 190px); gap: 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--yt-card); border: 1px solid var(--yt-hair, rgba(42, 31, 51, .08)); }
+.yt-agent-models .ic { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--yt-plum); color: var(--yt-gold); }
+.yt-agent-models .nm { display: grid; min-width: 0; line-height: 1.35; } .yt-agent-models .nm b { font-size: 14px; }
+.yt-agent-models .nm small { font-size: 12px; color: var(--yt-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-agent-models .sel { width: 100%; }

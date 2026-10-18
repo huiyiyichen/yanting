@@ -88,6 +88,48 @@ SUGGESTION_CODE = "REPLY_SUGGEST"
 REPLY_CODE = "REPLY"
 
 
+#: 按 Agent 分配模型（反馈 10-18 #4）：JSON {agentKey: model}；未分配的 Agent 用默认模型
+AGENT_MODELS_KEY = "agents.models"
+#: 实际调用大模型的 Agent：(key, 中文名, 说明, 默认档位)
+LLM_AGENTS: tuple[tuple[str, str, str, str], ...] = (
+    ("composer", "共情起草", "理解问题并起草带引用的回复", "main"),
+    ("verifier", "核验", "独立核对回复中的事实与来源", "main"),
+    ("vision", "视觉", "读取客户发送的图片", "vision"),
+    ("handoff_summary", "交接摘要", "转人工时给接手客服的摘要", "main"),
+    ("memory", "记忆", "从对话中提炼服务记忆", "main"),
+)
+AGENT_KEYS = frozenset(key for key, *_ in LLM_AGENTS)
+
+
+def load_agent_models(session: Session) -> dict[str, str]:
+    import json
+
+    raw = get_setting(session, AGENT_MODELS_KEY)
+    try:
+        data = json.loads(raw) if raw else {}
+    except ValueError:
+        return {}
+    return {k: v.strip() for k, v in data.items() if k in AGENT_KEYS and isinstance(v, str) and v.strip()}
+
+
+def agent_model(session: Session | None, agent: str) -> str | None:
+    """某个 Agent 被分配的模型；读取失败一律回退默认模型，不打断接待。"""
+    if session is None:
+        return None
+    try:
+        return load_agent_models(session).get(agent)
+    except Exception:  # pragma: no cover - defensive
+        return None
+
+
+def save_agent_models(session: Session, assignments: dict[str, str | None], *, actor: str = "demo") -> dict[str, str]:
+    import json
+
+    clean = {k: v.strip() for k, v in assignments.items() if k in AGENT_KEYS and v and v.strip()}
+    set_setting(session, AGENT_MODELS_KEY, json.dumps(clean, ensure_ascii=False, sort_keys=True), actor=actor)
+    return clean
+
+
 def get_setting(session: Session, key: str) -> str | None:
     row = session.get(RuntimeSettingRow, key)
     return row.value if row is not None else None
