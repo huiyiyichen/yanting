@@ -16,6 +16,8 @@ from app.domain.consumer_service.workspace import active_batch  # noqa: E402
 from app.knowledge.ingest import ingest_manifest, load_manifest  # noqa: E402
 from app.runtime import build_runtime  # noqa: E402
 
+SUPPLEMENTED = "见团队补充的商品专属资料（氨基酸表活，不含维A酸/视黄醇类、水杨酸、二苯酮类、酒精、香精）。"
+
 
 def main() -> None:
     runtime = build_runtime()
@@ -29,6 +31,10 @@ def main() -> None:
             select(ServiceOrderRow).where(ServiceOrderRow.batch_id == active_batch(session))
         ):
             products[(row.sku, row.product_name)] = row
+        fictional = {
+            item["sku"] for item in json.loads(
+                (root / "fictional-products.json").read_text(encoding="utf-8"))["products"]
+        }
         lines = ["# 官方虚构商品目录", "", "来源：赛题一业务数据 Excel 的订单表。", ""]
         for (sku, name), row in sorted(products.items()):
             lines.extend(
@@ -36,7 +42,8 @@ def main() -> None:
                     f"## {name}",
                     f"货号：{sku}",
                     f"订单单价：{row.unit_price_minor / 100:.2f} 元",
-                    "成分、功效与适用性：源文件未提供，不作判断。",
+                    "成分、功效与适用性："
+                    + (SUPPLEMENTED if sku in fictional else "源文件未提供，不作判断。"),
                     "",
                 ]
             )

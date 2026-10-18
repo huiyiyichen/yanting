@@ -22,6 +22,7 @@ KNOWLEDGE_ROOT = REPO / "data/knowledge/loreal"
 PRODUCT_HEADING = re.compile(r"^## (.+)$", re.MULTILINE)
 SKU_LINE = re.compile(r"^货号：(.+)$", re.MULTILINE)
 PRICE_LINE = re.compile(r"^订单单价：(.+)$", re.MULTILINE)
+SUPPLEMENTED = "见团队补充的商品专属资料（氨基酸表活，不含维A酸/视黄醇类、水杨酸、二苯酮类、酒精、香精）。"
 BOUNDARY_LINE = re.compile(r"^成分、功效与适用性：(.+)$", re.MULTILINE)
 
 
@@ -79,7 +80,7 @@ def validate(cases_path: Path) -> dict:
             not sku
             or not price
             or not boundary
-            or boundary.group(1).strip() != "源文件未提供，不作判断。"
+            or boundary.group(1).strip() not in {"源文件未提供，不作判断。", SUPPLEMENTED}
         ):
             invalid_product_boundaries.append(name)
     expected_products = source_products(SOURCE_PATH)

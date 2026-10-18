@@ -16,6 +16,8 @@ from app.knowledge.models import (
 
 BASE_ID = "loreal-product-references"
 REGISTRY = REPO_ROOT / "data/knowledge/loreal/reference-products.json"
+FICTIONAL_BASE_ID = "loreal-fictional-products"
+FICTIONAL_REGISTRY = REPO_ROOT / "data/knowledge/loreal/fictional-products.json"
 
 
 def seed_reference_products(session: Session) -> None:
@@ -50,4 +52,29 @@ def seed_reference_products(session: Session) -> None:
             product_aliases=product.get("aliases", []),
             market=product["market"], provenance="official_reference",
             source_label=product["source_label"], source_url=product["source_url"],
+        ))
+    seed_fictional_products(session)
+
+
+def seed_fictional_products(session: Session) -> None:
+    """官方虚构商品的团队补充资料：货号与订单表一致，发布后按商品专属资料检索。"""
+    registry = json.loads(FICTIONAL_REGISTRY.read_text(encoding="utf-8"))
+    if session.get(KnowledgeBaseRow, FICTIONAL_BASE_ID) is None:
+        session.add(KnowledgeBaseRow(
+            knowledge_base_id=FICTIONAL_BASE_ID, name="演示商品资料",
+            source_type="product_knowledge", enabled=True,
+        ))
+    for product in registry["products"]:
+        document_id = f"loreal-fictional-{product['sku'].lower()}"
+        if session.get(KnowledgeDraftRow, document_id) is not None:
+            continue
+        session.add(KnowledgeDraftRow(
+            document_id=document_id, knowledge_base_id=FICTIONAL_BASE_ID,
+            title=f"{product['name']} 商品资料", content=product["content"],
+            revision=1, status="draft",
+        ))
+        write_metadata(session, document_id, "draft", DocumentMetadata(
+            scope="product_specific", product_sku=product["sku"], product_name=product["name"],
+            product_aliases=product.get("aliases", []), market=product["market"],
+            provenance="team_fictional", source_label=product["source_label"],
         ))
