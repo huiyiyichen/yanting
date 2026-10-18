@@ -489,7 +489,24 @@ export const healthApi = {
  * 这是**本机 Demo 的运维视角**：只有 `support` 角色可读，服务端保证不返回密钥。
  * 页面据此展示真实模型名、网关主机与健康状态，并提供真实的连通性测试。
  */
+type Schemas = components['schemas']
+export type TraceListView = Schemas['TraceListView']
+export type TraceDetailView = Schemas['TraceDetailView']
+
 export const platformApi = {
+  /** Agent 追踪台（多 Agent 8.3） */
+  traces: (q: { conversationId?: string; status?: string; hasRepair?: boolean; limit?: number } = {}) => {
+    const params = new URLSearchParams()
+    if (q.conversationId) params.set('conversationId', q.conversationId)
+    if (q.status) params.set('status', q.status)
+    if (q.hasRepair) params.set('hasRepair', 'true')
+    params.set('limit', String(q.limit ?? 50))
+    return request<TraceListView>(`/api/platform/traces?${params}`, { role: 'support' })
+  },
+  trace: (id: string) => request<TraceDetailView>(`/api/platform/traces/${encodeURIComponent(id)}`, { role: 'support' }),
+  traceExport: (id: string) => request<unknown>(`/api/platform/traces/${encodeURIComponent(id)}/export`, { role: 'support' }),
+  traceArtifact: (sha: string) => request<Schemas['ArtifactView']>(`/api/platform/trace-artifacts/${sha}`, { role: 'support' }),
+  sourceRecord: (id: string) => request<Schemas['SourceRecordView']>(`/api/platform/source-records/${encodeURIComponent(id)}`, { role: 'support' }),
   models: () => request<ModelConfigView>('/api/platform/models', { role: 'support' }),
   usage: () => request<UsageView>('/api/platform/usage', { role: 'support' }),
   knowledge: () => request<KnowledgeOverviewView>('/api/platform/knowledge', { role: 'support' }),

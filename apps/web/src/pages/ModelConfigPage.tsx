@@ -28,10 +28,13 @@ import {
   Space,
   Table,
   Tag,
+  Tabs,
   Tooltip,
   Typography,
   message,
 } from 'antd'
+import { useSearchParams } from 'react-router-dom'
+import { TraceConsole } from '../features/trace/TraceConsole'
 import type { ColumnsType } from 'antd/es/table'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -51,6 +54,8 @@ const STATE_META: Record<string, { label: string; color: string }> = {
 }
 
 export function ModelConfigPage() {
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('tab') === 'trace' ? 'trace' : 'models'
   const [config, setConfig] = useState<ModelConfigView | null>(null)
   const [usage, setUsage] = useState<UsageView | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -299,6 +304,8 @@ export function ModelConfigPage() {
         </Button>
       } />
       <div className="yt-page">
+      <Tabs className="yt-config-tabs" activeKey={tab} onChange={(key) => setParams((old) => { const next = new URLSearchParams(old); next.set('tab', key); if (key !== 'trace') next.delete('trace'); return next })}
+        items={[{ key: 'models', label: '模型与成本', children: <>
 
       {error ? (
         <Alert
@@ -353,6 +360,8 @@ export function ModelConfigPage() {
           handleTestRerank={handleTestRerank} />
       </Drawer>
       {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
+        </> },
+        { key: 'trace', label: 'Agent 追踪', children: <TraceConsole initialTrace={params.get('trace')} /> }]} />
       </div>
     </div>
   )

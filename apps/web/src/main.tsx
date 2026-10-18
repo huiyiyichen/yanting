@@ -17,6 +17,7 @@ import './styles/global.css'
 import './styles/yanting.css'
 import './styles/concept.css'
 import './styles/panorama.css'
+import './styles/trace.css'
 
 const container = document.getElementById('root')
 if (!container) {
