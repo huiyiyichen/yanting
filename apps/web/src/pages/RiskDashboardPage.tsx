@@ -34,6 +34,10 @@ function signalState(signal: Signal, incident: RiskIncidentView) {
   return { active: '当前触发', review: '待复核', historical: '历史信号', closed: '已关闭' }[signalAttention(signal)]
 }
 
+/** 风险结论行只保留有意义的状态；历史信号不再占位（反馈 10-18 #2） */
+function conclusionState(state: string) {
+  return state === '历史信号' ? null : state
+}
 
 export function RiskDashboardPage() {
   const [rows, setRows] = useState<RiskIncidentView[]>([])
@@ -356,7 +360,7 @@ export function RiskDashboardPage() {
             <Button aria-label="更多处置" title="更多处置" icon={<MoreOutlined />} />
           </Dropdown>
         </div>
-        <RiskConclusion onJump={(cid, mid) => { setDetailTab('replay'); window.setTimeout(() => replayRef.current?.focus(cid, mid), 0) }}
+        <RiskConclusion onJump={(cid, mid, hint) => { setDetailTab('replay'); window.setTimeout(() => replayRef.current?.focus(cid, mid, hint), 0) }}
           footer={incident.historicalSensitivity > 0 ? `近 3 次进线中 ${incident.historicalSensitivity} 次有风险` : null}
           rows={[...signalGroups.values()].map((group) => {
             const signal = group.find((item) => signalAttention(item) === 'active') ?? group[0]
@@ -369,8 +373,9 @@ export function RiskDashboardPage() {
             const targets = group.filter((item) => !['resolved', 'ignored'].includes(item.riskStatus))
             return { key: signal.riskType, level: signal.riskLevel, type: serviceRiskTypeLabels[signal.riskType],
               text: quote?.body ?? (fact ? `${fact.label} ${fact.body}` : signal.triggerSummary), highlights: quote?.highlights,
-              at: quote?.occurredAt ?? fact?.occurredAt, jump: quote?.conversationId ? { conversationId: quote.conversationId, messageId: quote.ref } : undefined,
-              state: signalState(signal, incident),
+              at: quote?.occurredAt ?? fact?.occurredAt, jump: quote?.conversationId ? { conversationId: quote.conversationId, messageId: quote.ref }
+                : { conversationId: fact?.conversationId ?? signal.conversationId, messageId: '', riskType: signal.riskType, at: fact?.occurredAt ?? signal.createdAt },
+              state: conclusionState(signalState(signal, incident)),
               tools: targets.length > 0 ? <Dropdown menu={{ items: targets.map((item) => ({
                   key: item.alertId, label: `${signalState(item, incident) === '已标误报' ? '恢复预警' : '标记误报'}${targets.length > 1 ? ` · ${item.conversationId}` : ''}`,
                 })), onClick: ({ key }) => {

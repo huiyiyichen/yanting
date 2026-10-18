@@ -7,7 +7,22 @@ import { shHourMinute, shMonthDay } from '../service-desk/shTime'
 import { EmotionSwatch, SWATCH_LABEL } from '../voiceprint/EmotionSwatch'
 import { EmotionReplay } from './EmotionReplay'
 
-export type ReplayHandle = { focus: (conversationId: string, messageId: string) => void }
+export type FocusHint = { riskType?: string; at?: string | null }
+export type ReplayHandle = { focus: (conversationId: string, messageId: string, hint?: FocusHint) => void }
+
+/** 结论行没有原话时，按信号类型→时间最近→最后一条客户消息，找回放里对应的消息。 */
+export function resolveFocusMessage(notes: ServiceScoreView['notes'], messageId: string, hint?: FocusHint) {
+  if (messageId && notes.some((note) => note.messageId === messageId)) return messageId
+  if (!hint) return messageId
+  const typed = hint.riskType ? notes.find((note) => (note.signals ?? []).includes(hint.riskType as never)) : undefined
+  if (typed) return typed.messageId
+  const at = hint.at ? Date.parse(hint.at) : NaN
+  const pool = notes.filter((note) => note.role !== 'system')
+  if (!Number.isNaN(at) && pool.length) {
+    return pool.reduce((best, note) => Math.abs(Date.parse(note.at) - at) < Math.abs(Date.parse(best.at) - at) ? note : best).messageId
+  }
+  return [...pool].reverse().find((note) => note.role === 'customer')?.messageId ?? messageId
+}
 const ROLE = { operator: '客服', assistant: '智能助手', system: '系统' } as const
 
 /** 对话回放（全景方案 4.5，风险页反馈 4）：情绪曲线 + 服务轴 + 完整消息流，悬停/聚焦消息高亮音符，点击音符滚到消息。 */
@@ -21,7 +36,7 @@ export const ConversationReplay = forwardRef<ReplayHandle, {
   const [error, setError] = useState('')
   const [active, setActive] = useState<string | null>(null)
   const list = useRef<HTMLOListElement>(null)
-  const pendingFocus = useRef<string | null>(null)
+  const pendingFocus = useRef<{ messageId: string; hint?: FocusHint } | null>(null)
   const load = useCallback((id: string) => {
     setError('')
     deskApi.conversationScore(id).then((score) => setScores((old) => ({ ...old, [id]: score })))
@@ -41,13 +56,18 @@ export const ConversationReplay = forwardRef<ReplayHandle, {
     return true
   }, [])
   useImperativeHandle(ref, () => ({
-    focus: (conversationId, messageId) => {
-      if (conversationId && conversationId !== current) { pendingFocus.current = messageId; setCurrent(conversationId); return }
-      scrollTo(messageId)
+    focus: (conversationId, messageId, hint) => {
+      if ((conversationId && conversationId !== current) || !score) {
+        pendingFocus.current = { messageId, hint }
+        if (conversationId && conversationId !== current) setCurrent(conversationId)
+        return
+      }
+      scrollTo(resolveFocusMessage(score.notes, messageId, hint))
     },
-  }), [current, scrollTo])
+  }), [current, score, scrollTo])
   useEffect(() => {
-    if (score && pendingFocus.current && scrollTo(pendingFocus.current)) pendingFocus.current = null
+    const pending = pendingFocus.current
+    if (score && pending && scrollTo(resolveFocusMessage(score.notes, pending.messageId, pending.hint))) pendingFocus.current = null
   }, [score, scrollTo])
   return <div className="yt-replay">
     {conversationIds.length > 1 && <div className="yt-replay-convs" role="tablist" aria-label="关联会话">
