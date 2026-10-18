@@ -2,24 +2,22 @@ import { CaretRightOutlined, DownloadOutlined, PauseOutlined } from '@ant-design
 import { Button, Checkbox, Input, Segmented, Select } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { platformApi, type TraceDetailView, type TraceListView } from '../../api/client'
-import { BlackboardView } from './BlackboardView'
 import { CitationChain } from './CitationChain'
+import { OrchestrationTree } from './OrchestrationTree'
 import { SpanInspector } from './SpanInspector'
-import { TraceFlow } from './TraceFlow'
-import { TraceTimeline } from './TraceTimeline'
-import { buildLanes, replayFrames } from './traceModel'
+import { buildLanes, modelsOf, replayFrames } from './traceModel'
 
 const STATUS: Record<string, string> = { sent: '已发送', handoff: '转人工', failed: '失败', running: '运行中', ok: '完成', stale: '已过期' }
 const hm = (iso: string) => new Date(Date.parse(iso) + 8 * 3600000).toISOString().slice(5, 16).replace('T', ' ').replace('-', '/')
 const secs = (a: string, b?: string | null) => (b ? `${((Date.parse(b) - Date.parse(a)) / 1000).toFixed(1)}s` : '')
 
-/** Agent 追踪台（模型配置页签，多 Agent 8.3）：筛选、列表、四个视图、节点检查器、回放、导出。 */
+/** Agent 追踪台（模型配置页签）：筛选、列表、编排卡片树（主视图，含耗时）与引用链、节点检查器、回放、导出。 */
 export function TraceConsole({ initialTrace }: { initialTrace?: string | null }) {
   const [list, setList] = useState<TraceListView | null>(null)
   const [filters, setFilters] = useState<{ status?: string; conversationId?: string; hasRepair: boolean }>({ hasRepair: false })
   const [currentId, setCurrentId] = useState<string | null>(initialTrace ?? null)
   const [detail, setDetail] = useState<TraceDetailView | null>(null)
-  const [view, setView] = useState<'时序' | '流程' | '引用' | '黑板'>('时序')
+  const [view, setView] = useState<'编排' | '引用'>('编排')
   const [inspect, setInspect] = useState<string | null>(null)
   const [lit, setLit] = useState<Set<string> | null>(null)
   const timer = useRef<number | null>(null)
@@ -84,18 +82,16 @@ export function TraceConsole({ initialTrace }: { initialTrace?: string | null })
       <section className="yt-trace-detail">
         {detail ? <>
           <div className="yt-trace-head">
-            <Segmented size="small" value={view} onChange={(v) => setView(v as typeof view)} options={['时序', '流程', '引用', '黑板']} />
+            <Segmented size="small" value={view} onChange={(v) => setView(v as typeof view)} options={['编排', '引用']} />
             <span className="meta">{detail.traceId} · {detail.orchestration === 'multi' ? '多 Agent' : '单流程'} · {STATUS[detail.status] ?? detail.status}</span>
             <Button size="small" icon={lit ? <PauseOutlined /> : <CaretRightOutlined />} onClick={play}>回放</Button>
             <Button size="small" icon={<DownloadOutlined />} onClick={() => void exportTrace()}>导出</Button>
           </div>
-          {view === '时序' && <TraceTimeline rows={lanes.rows} total={lanes.total} lit={lit} selected={inspect ?? undefined} onSelect={setInspect} />}
-          {view === '流程' && <TraceFlow rows={lanes.rows} onSelect={setInspect} />}
+          {view === '编排' && <OrchestrationTree startedAt={detail.startedAt} spans={detail.spans} lit={lit} selected={inspect} onSelect={setInspect} />}
           {view === '引用' && <CitationChain citations={detail.citations} />}
-          {view === '黑板' && <BlackboardView spans={detail.spans} />}
         </> : <p className="yt-empty">选择一条追踪</p>}
       </section>
     </div>
-    <SpanInspector span={span} models={detail?.spans.filter((s) => s.kind === 'model' && s.parentSpanId === inspect) ?? []} onClose={() => setInspect(null)} />
+    <SpanInspector span={span} models={detail ? modelsOf(detail.spans, inspect) : []} onClose={() => setInspect(null)} />
   </div>
 }

@@ -7,7 +7,7 @@
  * L5 引用链没把同一分段的多个来源归在一起；未核验来源没有标出。
  */
 import { describe, expect, it } from 'vitest'
-import { buildLanes, citationChain, replayFrames } from './traceModel'
+import { buildLanes, buildOrchestration, cardStateText, citationChain, replayFrames } from './traceModel'
 
 const t = (ms: number) => new Date(Date.parse('2026-05-01T00:00:00Z') + ms).toISOString()
 const span = (o: Record<string, unknown>) => ({ parentSpanId: null, attempt: 1, parallelGroup: null, status: 'ok', label: '', reasons: [], kind: 'agent', ...o })
@@ -44,5 +44,27 @@ describe('traceModel', () => {
     ] as never)
     expect(chain.map((c) => [c.index, c.sources.length])).toEqual([[1, 1], [2, 2]])
     expect(chain[1].sources[1].ok).toBe(false)
+  })
+
+  it('O1–O4 编排卡片树：并行分支成行、重试合并、模型调用（model_call）归到卡片、一句话产出', () => {
+    const more = [...spans,
+      span({ spanId: 'd2m', seq: 7, kind: 'model_call', parentSpanId: 'd2', name: 'composer', startedAt: t(1900), endedAt: t(2500), durationMs: 600, modelReturned: 'qwen-plus' }),
+      span({ spanId: 'p', seq: 8, kind: 'gate', name: 'program_check', summary: '程序核验通过', startedAt: t(2600), endedAt: t(2610), durationMs: 10 }),
+    ]
+    ;(more[5] as Record<string, unknown>).summary = '草稿 86 字'
+    ;(more[6] as Record<string, unknown>).summary = '草稿 90 字 · 第 2 次起草'
+    const { rows } = buildOrchestration(t(0), more as never)
+    expect(rows.map((r) => r.key)).toEqual(['gate', 'workers', 'compose', 'checks', 'out', 'send'])
+    const workers = rows[1]
+    expect(workers.fan).toBe(true)
+    expect(workers.cards.map((c) => c.label)).toEqual(['轨迹查询', '知识', '视觉'])
+    expect(workers.cards[2].state).toBe('skipped'); expect(workers.cards[2].summary).toBe('无图片')
+    expect(cardStateText(workers.cards[0])).toBe('已返回结果')
+    const composer = rows[2].cards[0]
+    expect(composer.attempts).toBe(2); expect(composer.state).toBe('ok'); expect(composer.spanId).toBe('d2')
+    expect(composer.summary).toBe('草稿 90 字 · 第 2 次起草')
+    expect(composer.model).toBe('qwen-plus'); expect(composer.durationMs).toBe(1800)
+    expect(rows[3].cards.map((c) => [c.label, c.state])).toEqual([['程序核验', 'ok'], ['核验', 'none']])
+    expect(buildLanes(t(0), more as never).rows.find((r) => r.spanId === 'd2')!.models).toHaveLength(1)
   })
 })

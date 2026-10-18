@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.audit.span_io import describe as describe_span
 from app.domain.consumer_service.cited_text import (
     CitedText,
     ReplyStyle,
@@ -431,6 +432,13 @@ def run_grounded_workflow(
                         span.reasons.append({"reviewFlags": result["review_flags"]})
                     if result.get("auxiliary_dropped"):
                         span.reasons.append({"auxiliaryDropped": result["auxiliary_dropped"]})
+                    span_input, span_output, span_summary = describe_span(key or name, state, result)
+                    if span_input is not None:
+                        span.extra["input_artifact"] = trace.artifact("agent_input", span_input)
+                    if span_output is not None:
+                        span.extra["output_artifact"] = trace.artifact("agent_output", span_output)
+                    if span_summary:
+                        span.reasons.append({"summary": span_summary})
             except Exception as exc:
                 exc.trace_buffer = trace
                 if on_step is not None:

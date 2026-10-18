@@ -61,8 +61,21 @@ class TraceSpanView(ApiModel):
     input_artifact: str | None = None
     output_artifact: str | None = None
     reasons: list[Any]
+    summary: str | None = None
     error_code: str | None = None
     error_detail: str | None = None
+
+
+
+def _reasons(raw: str | None) -> list[Any]:
+    return [r for r in json.loads(raw or "[]") if not (isinstance(r, dict) and set(r) == {"summary"})]
+
+
+def _summary_line(raw: str | None) -> str | None:
+    for item in json.loads(raw or "[]"):
+        if isinstance(item, dict) and set(item) == {"summary"}:
+            return str(item["summary"])
+    return None
 
 
 class TraceCitationView(ApiModel):
@@ -199,7 +212,8 @@ def _detail(session, trace_id: str) -> TraceDetailView:
             contract_version=s.contract_version, prompt_tokens=s.prompt_tokens,
             completion_tokens=s.completion_tokens, cached_tokens=s.cached_tokens, finish_reason=s.finish_reason,
             input_artifact=s.input_artifact, output_artifact=s.output_artifact,
-            reasons=json.loads(s.reasons_json or "[]"), error_code=s.error_code, error_detail=s.error_detail,
+            reasons=_reasons(s.reasons_json), summary=_summary_line(s.reasons_json),
+            error_code=s.error_code, error_detail=s.error_detail,
         ) for s in spans],
         citations=[TraceCitationView(
             message_id=c.message_id, reply_style=c.reply_style, segment_index=c.segment_index,

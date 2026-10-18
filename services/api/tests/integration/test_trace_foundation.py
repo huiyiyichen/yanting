@@ -220,3 +220,19 @@ def test_concurrent_jobs_keep_spans_in_their_own_trace(workspace):
             spans = session.scalars(select(AgentSpanRow).where(AgentSpanRow.trace_id == trace.trace_id)).all()
             assert sum(s.name == "safety_gate" for s in spans) == 1
             assert sum(s.name == "send_gate" for s in spans) == 1
+
+
+def test_agent_nodes_carry_readable_input_output_and_summary(workspace):
+    """反馈 10-18 #3a：Agent 节点（非模型调用）点开输入/输出不能是「无」，并带一句话产出。"""
+    client, _factory, _ = workspace
+    _cid, view = _generate(client)
+    detail = client.get(f"/api/platform/traces/{view['modelUsage']['traceId']}", headers=SUPPORT).json()
+    agents = {s["name"]: s for s in detail["spans"] if s["kind"] != "model_call"}
+    for name in ("trajectory", "knowledge", "composer", "program_check", "output_gate"):
+        assert agents[name]["outputArtifact"], name
+        assert agents[name]["summary"], name
+        assert not any(isinstance(r, dict) and "summary" in r for r in agents[name]["reasons"])
+    assert agents["composer"]["inputArtifact"]
+    assert agents["composer"]["summary"].startswith("草稿 ")
+    artifact = client.get(f"/api/platform/trace-artifacts/{agents['composer']['outputArtifact']}", headers=SUPPORT)
+    assert artifact.status_code == 200 and "回复" in json.dumps(artifact.json(), ensure_ascii=False)

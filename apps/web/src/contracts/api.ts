@@ -4925,6 +4925,8 @@ export interface components {
             outputArtifact?: string | null;
             /** Reasons */
             reasons: unknown[];
+            /** Summary */
+            summary?: string | null;
             /** Errorcode */
             errorCode?: string | null;
             /** Errordetail */
