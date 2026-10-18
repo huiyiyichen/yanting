@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param()
 
 # 演练前把演示库恢复到快照状态。只操作 demo.sqlite3 与 demo-qdrant，不碰主运行库。

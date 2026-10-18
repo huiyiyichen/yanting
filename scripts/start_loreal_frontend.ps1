@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$Background,
     # 生产包预览：先构建再用 vite preview 提供静态产物。

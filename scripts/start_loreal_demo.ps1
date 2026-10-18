@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$OpenBrowser,
     # demo：路演用 data/runtime/demo.sqlite3（由 build_demo_database.py + reset_demo.ps1 准备）
