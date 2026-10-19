@@ -44,18 +44,7 @@ html[data-theme='dark'] .yt-trace, .yt-orch, .yt-insp { --tr-ok: #2f9e74; --tr-a
 .yt-orch-over .track i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--tr-agent); opacity: .85; }
 .yt-orch-over .track i.is-ok:nth-child(even) { background: var(--tr-model); }
 .yt-orch-over .track i.is-fail { background: var(--tr-fail); } .yt-orch-over .track i.is-skipped { background: var(--tr-prog); opacity: .5; }
-.yt-orch-row { position: relative; padding-top: 26px; display: flex; flex-direction: column; align-items: center; }
-.yt-orch-row.is-first { padding-top: 14px; }
-.yt-orch-row:not(.is-first)::before { content: ''; position: absolute; top: 0; left: 50%; height: 26px; border-left: 1.5px solid var(--oc-line); }
-.yt-orch-row:not(.is-first)::after { content: ''; position: absolute; top: 19px; left: calc(50% - 3.5px); border: 3.5px solid transparent; border-top: 5px solid var(--oc-line); border-bottom: 0; }
 .yt-orch-cards { position: relative; display: grid; grid-template-columns: minmax(0, 340px); justify-content: center; gap: var(--oc-gap); width: 100%; }
-.yt-orch-row.is-fan { padding-top: 40px; padding-bottom: 14px; }
-.yt-orch-row.is-fan::before { height: 14px; } .yt-orch-row.is-fan::after { display: none; }
-.yt-orch-row.is-fan .yt-orch-cards { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
-.yt-orch-row.is-fan .yt-orch-cards::before, .yt-orch-row.is-fan .yt-orch-cards::after { content: ''; position: absolute; left: calc((100% - (var(--n) - 1) * var(--oc-gap)) / (2 * var(--n))); right: calc((100% - (var(--n) - 1) * var(--oc-gap)) / (2 * var(--n))); border-top: 1.5px solid var(--oc-line); }
-.yt-orch-row.is-fan .yt-orch-cards::before { top: -26px; } .yt-orch-row.is-fan .yt-orch-cards::after { bottom: -14px; }
-.yt-orch-row.is-fan .yt-oc::before, .yt-orch-row.is-fan .yt-oc::after { content: ''; position: absolute; left: 50%; border-left: 1.5px solid var(--oc-line); }
-.yt-orch-row.is-fan .yt-oc::before { top: -27px; height: 26px; } .yt-orch-row.is-fan .yt-oc::after { bottom: -15px; height: 14px; }
 .yt-orch-tag { position: absolute; top: -2px; left: calc(50% + 8px); font-size: 10.5px; line-height: 14px; color: var(--tr-ink3); letter-spacing: .04em; }
 .yt-oc { position: relative; display: grid; gap: 8px; min-width: 0; padding: 12px 14px 10px; border-radius: 14px; text-align: left; cursor: pointer;
   border: 1.5px solid var(--tr-line); background: var(--tr-card); color: var(--tr-ink); font: inherit;
@@ -88,7 +77,6 @@ html[data-theme='dark'] .yt-oc-head .dur { color: var(--tr-model); }
 .yt-orch.is-compact { --oc-gap: 8px; }
 .yt-orch.is-compact .yt-orch-over { padding: 8px 10px; }
 .yt-orch.is-compact .yt-orch-cards { grid-template-columns: minmax(0, 250px); }
-.yt-orch.is-compact .yt-orch-row.is-fan .yt-orch-cards { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
 .yt-orch.is-compact .yt-orch-row.is-fan .yt-oc { padding: 8px 8px 7px; }
 .yt-orch.is-compact .yt-orch-row.is-fan .yt-oc-sum { -webkit-line-clamp: 3; min-height: 4.2em; }
 .yt-orch.is-compact .yt-oc { padding: 9px 10px 8px; gap: 6px; border-radius: 12px; }
@@ -175,3 +163,46 @@ html[data-theme='dark'] .yt-oc .bd.is-leader { color: var(--tr-model); }
 .yt-orch-loop .t b { margin-right: 6px; color: #b07a16; }
 .yt-orch-loop q { min-width: 0; overflow: hidden; color: var(--tr-ink3); white-space: nowrap; text-overflow: ellipsis; quotes: none; }
 .yt-orch.is-compact .yt-orch-loop { margin-top: 6px; padding: 4px 8px; }
+
+/* 反馈 10-20：角色配色、SVG 连线与流动效果、结局分叉（AI 自动发送 / 人工接续） */
+.yt-orch { --t-leader: #8b6fd0; --t-worker: #3d8fd6; --t-check: #d39a2c; --t-gate: #2f9e74; --t-send: #2f9e74; --t-human: #e5733a; --t-off: color-mix(in srgb, var(--tr-prog) 55%, transparent); }
+.yt-orch .t-leader { --tone: var(--t-leader); } .yt-orch .t-worker { --tone: var(--t-worker); } .yt-orch .t-check { --tone: var(--t-check); }
+.yt-orch .t-gate { --tone: var(--t-gate); } .yt-orch .t-send { --tone: var(--t-send); } .yt-orch .t-human { --tone: var(--t-human); }
+.yt-orch-row { position: relative; display: flex; flex-direction: column; align-items: center; }
+.yt-orch-row.is-fan .yt-orch-cards { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 0; }
+.yt-orch-row.is-fan .yt-orch-cell { padding: 0 calc(var(--oc-gap) / 2); min-width: 0; display: grid; }
+.yt-orch-cell { display: grid; min-width: 0; }
+.yt-orch-row.is-fork .yt-orch-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 760px); margin: 0 auto; }
+.yt-orch-tag { top: 2px; padding: 0 6px; border-radius: 999px; background: var(--tr-card); }
+.yt-orch-row.is-fork.is-handoff .yt-orch-tag { color: var(--t-human); font-weight: 600; }
+.yt-orch-row.is-fork.is-send .yt-orch-tag { color: var(--t-send); font-weight: 600; }
+.yt-link { position: relative; width: 100%; flex: none; }
+.yt-orch-row.is-fork .yt-link { width: min(100%, 760px); }
+.yt-link svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.yt-link path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.yt-link .is-on .base { stroke: color-mix(in srgb, var(--tone) 28%, transparent); stroke-width: 4px; }
+.yt-link .is-on .flow { stroke: var(--tone); stroke-width: 2px; stroke-dasharray: 7 6; animation: yt-flow 0.9s linear infinite; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--tone) 60%, transparent)); }
+.yt-link .is-off .base { stroke: var(--t-off); stroke-width: 1.5px; stroke-dasharray: 3 4; }
+.yt-link .arrow { position: absolute; bottom: -1px; width: 0; height: 0; transform: translateX(-50%); border: 4.5px solid transparent; border-top: 6px solid var(--tone); border-bottom: 0; }
+.yt-link .arrow.is-off { border-top-color: var(--t-off); }
+@keyframes yt-flow { to { stroke-dashoffset: -13; } }
+@media (prefers-reduced-motion: reduce) { .yt-link .is-on .flow { animation: none; } }
+/* 卡片：图标按角色着色 */
+.yt-oc .yt-oc-head .ic { background: color-mix(in srgb, var(--tone, var(--tr-agent)) 14%, var(--tr-card)); color: var(--tone, var(--tr-agent)); }
+.yt-oc.is-leader .yt-oc-head .ic { background: var(--yt-plum, #2a1f33); color: var(--yt-gold, #d9b47c); }
+.yt-oc .bd.is-worker { background: color-mix(in srgb, var(--t-worker) 14%, transparent); color: var(--t-worker); }
+.yt-oc .bd.is-send { background: color-mix(in srgb, var(--t-send) 14%, transparent); color: var(--t-send); }
+.yt-oc .bd.is-human, .yt-oc .bd.is-trigger { background: color-mix(in srgb, var(--t-human) 16%, transparent); color: var(--t-human); }
+.yt-oc.is-trigger { border-color: var(--t-human); box-shadow: 0 0 0 3px color-mix(in srgb, var(--t-human) 18%, transparent), 0 6px 18px -10px rgba(42, 31, 51, .25); }
+/* 结局卡：走过的那条实色点亮，没走的那条灰色虚线 */
+.yt-oc.is-send.is-ok { border-color: var(--t-send); background: color-mix(in srgb, var(--t-send) 6%, var(--tr-card)); }
+.yt-oc.is-human.is-ok { border-color: var(--t-human); background: color-mix(in srgb, var(--t-human) 6%, var(--tr-card)); }
+.yt-oc.is-human.is-ok .st { color: var(--t-human); }
+.yt-oc.is-send.is-none, .yt-oc.is-human.is-none { opacity: .55; }
+.yt-oc.is-send.is-none .ic, .yt-oc.is-human.is-none .ic { filter: grayscale(1); }
+.yt-oc-in.is-plain { background: color-mix(in srgb, var(--t-human) 8%, transparent); }
+.yt-oc-in.is-plain::before { content: none; } .yt-oc-in.is-plain > span b { color: var(--t-human); }
+.yt-oc.is-none .yt-oc-checks .anticon { color: var(--tr-ink3); }
+.yt-orch-over .track i.t-worker { background: var(--t-worker); } .yt-orch-over .track i.t-check { background: var(--t-check); }
+.yt-orch-over .track i.t-leader { background: var(--t-leader); } .yt-orch-over .track i.t-gate { background: var(--t-gate); }
+.yt-orch.is-compact .yt-orch-row.is-fork .yt-orch-cards, .yt-orch.is-compact .yt-orch-row.is-fork .yt-link { width: 100%; }

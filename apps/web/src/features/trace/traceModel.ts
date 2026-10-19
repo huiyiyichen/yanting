@@ -6,7 +6,7 @@ export type TraceCitation = components['schemas']['TraceCitationView']
 export const AGENT_LABEL: Record<string, string> = {
   safety_gate: '安全闸门', triage: '分诊', router: '路由', trajectory: '轨迹查询', knowledge: '知识', vision: '视觉', understand: '意图情绪', join: '汇合',
   composer: '共情起草', program_check: '程序核验', verify_decision: '核验决策', verifier: '核验', output_gate: '输出闸门',
-  send_gate: '发送闸门', rewriter: '改写', memory: '记忆', handoff_summary: '交接摘要', sentinel: '风险哨兵',
+  send_gate: '发送闸门', handoff: '人工接续', rewriter: '改写', memory: '记忆', handoff_summary: '交接摘要', sentinel: '风险哨兵',
 }
 export const spanLabel = (s: Pick<TraceSpan, 'name' | 'label'>) => AGENT_LABEL[s.name] ?? (s.label || s.name)
 
@@ -85,8 +85,10 @@ export function checksOf(span: Pick<TraceSpan, 'reasons'> | null | undefined): T
 export type OrchCard = {
   key: string; label: string; role: string; state: CardState; summary: string
   /** 角色徽标：Leader / Worker / 闸门 / 核验 */
-  badge: 'leader' | 'worker' | 'gate' | 'check' | 'agent'
+  badge: 'leader' | 'worker' | 'gate' | 'check' | 'agent' | 'send' | 'human'
   checks: TraceCheck[]
+  /** 本次转人工由这个节点触发 */
+  trigger?: boolean
   /** 汇合点（Leader）收到的各 Worker 结果 */
   inputs: { label: string; text: string }[]
   spanId: string | null; start: number; end: number; durationMs: number | null
@@ -123,8 +125,9 @@ const LAYOUT: { key: string; names: string[]; fan?: boolean; optional?: boolean;
   { key: 'compose', names: ['composer'] },
   { key: 'checks', names: ['program_check', 'verifier'], fan: true, title: '核验' },
   { key: 'out', names: ['output_gate'] },
-  { key: 'send', names: ['send_gate'] },
 ]
+/** 发送闸门与人工接续并入末尾的分叉（AI 自动发送 / 人工接续），不再单独占一行。 */
+const FORK_NAMES = ['send_gate', 'handoff']
 const STATE_TEXT: Record<CardState, string> = { ok: '已完成', fail: '失败', skipped: '跳过', none: '未运行', running: '运行中' }
 export const cardStateText = (c: Pick<OrchCard, 'state' | 'role'>) => c.state === 'ok' && c.role.startsWith('Worker') ? '已返回结果' : STATE_TEXT[c.state]
 
@@ -163,7 +166,7 @@ export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { row
       issues: last && last.kind !== 'decision' ? (last.span.reasons ?? []).filter((r) => typeof r === 'string').length : 0,
     }
   }
-  const known = new Set(LAYOUT.flatMap((l) => l.names))
+  const known = new Set([...LAYOUT.flatMap((l) => l.names), ...FORK_NAMES])
   const rows: OrchRow[] = []
   for (const l of LAYOUT) {
     if (l.optional && !l.names.some((n) => byName.has(n))) continue
@@ -193,4 +196,85 @@ export function modelsOf(spans: TraceSpan[], spanId: string | null): TraceSpan[]
   const walk = (pid: string) => spans.forEach((s) => { if (s.parentSpanId === pid) { if (isModelSpan(s)) out.push(s); walk(s.spanId) } })
   walk(spanId)
   return out
+}
+
+// ── 结局分叉：AI 自动发送 / 人工接续（反馈 10-20）────────────────────────────
+export type ForkPath = 'send' | 'handoff' | 'pending' | 'none'
+export type HandoffRule = { key: string; codes: string[]; name: string; detail: string; nodes: string[] }
+/** 会转人工的情况。nodes 是触发它的节点（按优先顺序，取本次真的出现的第一个）。 */
+export const HANDOFF_RULES: HandoffRule[] = [
+  { key: 'safety', codes: ['safety_review'], name: '风险预检命中', detail: '投诉、12315、曝光或严重不适', nodes: ['safety_gate'] },
+  { key: 'agent', codes: ['model_requested', 'customer_requested'], name: 'Agent 判断需人工', detail: '退款、赔偿等超出 AI 权限的诉求', nodes: ['composer'] },
+  { key: 'verify', codes: ['invalid_reply'], name: '核验未通过', detail: '修复一次后仍有事实或承诺问题', nodes: ['verifier', 'program_check', 'output_gate'] },
+  { key: 'image', codes: ['unsupported_image'], name: '图片需人工', detail: '视觉 Agent 无法判断的图片', nodes: ['vision'] },
+  { key: 'timeout', codes: ['reply_timeout'], name: '超过等待时限', detail: '客户等待过久', nodes: [] },
+  { key: 'fault', codes: ['generation_failed', 'model_unavailable', 'failed'], name: '模型故障', detail: '生成失败或模型不可用', nodes: [] },
+  { key: 'operator', codes: ['operator_takeover'], name: '客服主动接管', detail: '客服在接待台接手', nodes: [] },
+]
+const HANDOFF_TEXT: Record<string, string> = {
+  reply_timeout: '超过等待时限', invalid_reply: '回复未通过核验', safety_review: '安全闸门命中', generation_failed: '生成失败',
+  model_unavailable: '模型不可用', unsupported_image: '图片需人工查看', customer_requested: '客户要求人工', operator_takeover: '人工已接管',
+  model_requested: 'Agent 判断需要人工', failed: '运行失败',
+}
+const DRAFT_STATUSES = new Set(['draft', 'needs_review', 'partial'])
+
+/** 从追踪里找出转人工的原因代码：优先人工接续节点记下的 reason_code，旧数据从发送闸门的说明里反查。 */
+export function handoffReason(spans: TraceSpan[]): string | null {
+  const top = spans.filter((s) => !isModelSpan(s))
+  for (const s of top.filter((x) => x.name === 'handoff')) for (const r of s.reasons ?? []) {
+    if (r && typeof r === 'object' && 'reason_code' in r) return String((r as { reason_code: unknown }).reason_code)
+  }
+  const gate = top.filter((s) => s.name === 'send_gate').at(-1)
+  const text = [gate?.summary ?? '', ...(gate?.reasons ?? []).map((r) => (typeof r === 'string' ? r : JSON.stringify(r)))].join(' ')
+  if (!text.includes('转人工')) return null
+  const hit = Object.entries(HANDOFF_TEXT).find(([, v]) => text.includes(v))
+  if (hit) return hit[0]
+  return text.includes('安全') ? 'safety_review' : 'model_requested'
+}
+
+export type Fork = { path: ForkPath; send: OrchCard; handoff: OrchCard; reason: string | null; triggerKey: string | null; rule: HandoffRule | null }
+
+/** 末尾分叉：两条路都画出来，走了哪条点亮哪条；另一条写明为什么没走。 */
+export function buildFork(spans: TraceSpan[], rows: OrchRow[], status: string | undefined, outcomeText: string | null | undefined): Fork {
+  const top = [...spans].filter((s) => !isModelSpan(s)).sort((a, b) => a.seq - b.seq)
+  const sendSpan = top.filter((s) => s.name === 'send_gate').at(-1) ?? null
+  const handoffSpan = top.filter((s) => s.name === 'handoff').at(-1) ?? null
+  let code = handoffReason(spans)
+  if (!code && status === 'handoff') code = 'model_requested'
+  if (!code && status === 'failed') code = 'failed'
+  const draft = status != null && DRAFT_STATUSES.has(status)
+  const path: ForkPath = code ? 'handoff' : status === 'sent' ? 'send' : draft ? 'handoff' : status === 'running' || !status ? 'pending' : 'none'
+  const rule = code ? HANDOFF_RULES.find((r) => r.codes.includes(code!)) ?? null : null
+  const present = new Map(rows.flatMap((r) => r.cards).map((c) => [c.key, c]))
+  const triggerKey = rule?.nodes.find((n) => present.has(n)) ?? null
+  if (triggerKey) present.get(triggerKey)!.trigger = true
+  const reason = code ? (HANDOFF_TEXT[code] ?? code) : null
+  const base = (key: string, label: string, badge: OrchCard['badge'], span: TraceSpan | null): OrchCard => ({
+    key, label, role: badge === 'send' ? 'Leader · 收口' : '人工 · 接续', badge, state: 'none', summary: '', checks: [], inputs: [],
+    spanId: span?.spanId ?? null, start: 0, end: 0, durationMs: null, model: null, records: span ? 1 : 0, attempts: span ? 1 : 0, issues: 0,
+  })
+  const send = base('send', 'AI 自动发送', 'send', path === 'send' ? sendSpan : null)
+  const handoff = base('handoff', '人工接续', 'human', handoffSpan ?? (path === 'handoff' ? sendSpan : null))
+  const triggerLabel = triggerKey ? present.get(triggerKey)!.label : null
+  if (path === 'send') {
+    send.state = 'ok'
+    send.summary = outcomeText || '已自动回复客户'
+    send.checks = checksOf(sendSpan)
+  } else {
+    send.summary = path === 'pending' ? '等待编排结果' : draft && !code ? '草稿模式不自动发送' : path === 'none' ? '本轮被客户新消息取代，未发送' : `未发送：${reason}`
+  }
+  if (path === 'handoff') {
+    handoff.state = 'ok'
+    handoff.summary = draft && !code ? '草稿模式：建议回复交给客服审核后发送' : `转人工：${reason}，会话切到人工辅助，等待客服接手`
+    if (triggerLabel) handoff.inputs = [{ label: '触发', text: `${triggerLabel} → ${rule?.name ?? reason}` }]
+    const own = checksOf(handoffSpan).filter((c) => c.name !== '触发原因')
+    handoff.checks = draft && !code ? [] : [
+      ...(rule ? [{ name: rule.name, hit: true, detail: rule.detail }] : reason ? [{ name: reason, hit: true, detail: '' }] : []),
+      ...own,
+    ]
+  } else {
+    handoff.summary = path === 'pending' ? '满足任一条件即转人工' : '本次未触发转人工'
+    handoff.checks = HANDOFF_RULES.filter((r) => r.key !== 'operator').map((r) => ({ name: r.name, hit: false, detail: r.detail }))
+  }
+  return { path, send, handoff, reason, triggerKey, rule }
 }

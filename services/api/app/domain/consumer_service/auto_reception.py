@@ -316,6 +316,16 @@ def _finish_handoff(
                 trace.decision("send_gate", [{"summary": f"未发送 → 转人工（{_HANDOFF_TEXT.get(reason, reason)}）"},
                                              {"checks": [{"name": "发送条件", "hit": True, "detail": _HANDOFF_TEXT.get(reason, reason)}]}],
                                label="发送闸门")
+                text = _HANDOFF_TEXT.get(reason, reason)
+                handoff_checks = [
+                    {"name": "触发原因", "hit": True, "detail": text},
+                    {"name": "会话模式", "hit": False, "detail": "AI 自动接待 → 人工辅助，等待客服接手"},
+                ]
+                if reply:
+                    handoff_checks.append({"name": "过渡话术", "hit": False, "detail": reply[:80]})
+                # 人工接续节点：追踪图按线流转到这张卡（反馈 10-20）
+                trace.decision("handoff", [{"summary": f"转人工：{text}"}, {"reason_code": reason},
+                                           {"checks": handoff_checks}], label="人工接续")
                 trace.finish("handoff")
                 trace.flush(session)
             try:
