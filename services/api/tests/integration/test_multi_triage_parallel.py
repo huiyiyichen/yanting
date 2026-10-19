@@ -147,3 +147,69 @@ def test_single_mode_has_no_triage_and_runs_sequentially(workspace, orchestratio
     assert len(searched) == 1
     assert spans["trajectory"].parallel_group is None
     assert spans["trajectory"].ended_at <= spans["knowledge"].started_at
+
+
+def _understanding_provider(provider, verdict):
+    seen = {"understand": 0, "compose": []}
+
+    def complete(messages, **kwargs):
+        head = messages[0].content
+        if head.startswith("CUSTOMER_UNDERSTANDING_V1"):
+            seen["understand"] += 1
+            seen["tier"] = kwargs.get("model_tier")
+            value = verdict
+        elif head.startswith("GROUNDING_REVIEW_V1"):
+            value = {"supported": True, "issues": []}
+        else:
+            seen["compose"].append((head, json.loads(messages[1].content)))
+            value = DRAFT
+        return ChatResult(text=json.dumps(value, ensure_ascii=False), model="fixture", latency_seconds=0,
+                          is_mock=True, prompt_tokens=10, completion_tokens=5)
+    provider.complete = complete
+    return seen
+
+
+def test_understanding_agent_runs_in_parallel_and_overrides_draft_labels(workspace):
+    """P6 意图与情绪从起草拆出：与取证并行；拿不准时用快速档模型；起草采用其结论。"""
+    client, factory, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "呵呵，你们服务真好啊")
+    seen = _understanding_provider(provider, {"intent": "other", "emotion_level": "dissatisfied",
+                                              "evidence": "服务真好啊"})
+
+    result = _run(factory, provider, cid, lambda query, session=None: ([], "not_found"))
+
+    spans = _spans(result)
+    assert spans["understand"].parallel_group == "evidence"
+    models = [s for s in result["trace"].spans if s.kind == "model_call" and s.parent_span_id == spans["understand"].span_id]
+    assert len(models) == 1 and seen["understand"] == 1 and seen["tier"] == "fast"
+    head, payload = seen["compose"][0]
+    assert payload["customerUnderstanding"]["emotionLevel"] == "dissatisfied"
+    assert "COMPOSER_UNDERSTANDING_V1" in head
+    assert result["draft"].emotion_level == "dissatisfied" and result["draft"].intent == "other"  # DRAFT 写的是 calm/logistics
+    summary = next(r["summary"] for r in spans["understand"].reasons if isinstance(r, dict) and "summary" in r)
+    assert summary.startswith("模型判定")
+
+
+def test_understanding_agent_skips_model_when_rules_are_sure(workspace):
+    client, factory, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "我的快递怎么还没到")
+    seen = _understanding_provider(provider, {"intent": "other", "emotion_level": "calm", "evidence": ""})
+
+    result = _run(factory, provider, cid, lambda query, session=None: ([], "not_found"))
+
+    assert seen["understand"] == 0
+    assert result["understanding"].source == "rule" and result["draft"].intent == "logistics"
+
+
+def test_single_mode_has_no_understanding_agent(workspace):
+    client, factory, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "呵呵，你们服务真好啊")
+    seen = _understanding_provider(provider, {"intent": "other", "emotion_level": "dissatisfied", "evidence": ""})
+
+    result = _run(factory, provider, cid, lambda query, session=None: ([], "not_found"), orchestration="single")
+
+    assert "understand" not in _spans(result) and seen["understand"] == 0
+    assert "customerUnderstanding" not in seen["compose"][0][1]

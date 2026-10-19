@@ -96,3 +96,18 @@ describe('修复回路（阶段 5）', () => {
     expect(buildOrchestration(t(0), loop.slice(0, 3) as never).repair).toBeNull()
   })
 })
+
+describe('意图情绪 Agent', () => {
+  it('U5 与取证 Worker 同排显示为 Worker · 理解', () => {
+    const s = [
+      span({ spanId: 't', seq: 0, name: 'triage', startedAt: t(0), endedAt: t(5), durationMs: 5 }),
+      span({ spanId: 'j', seq: 1, name: 'trajectory', parallelGroup: 'evidence', startedAt: t(5), endedAt: t(300), durationMs: 295 }),
+      span({ spanId: 'u', seq: 2, name: 'understand', parallelGroup: 'evidence', startedAt: t(5), endedAt: t(200), durationMs: 195 }),
+      span({ spanId: 'k', seq: 3, name: 'composer', startedAt: t(300), endedAt: t(900), durationMs: 600 }),
+    ]
+    const workers = buildOrchestration(t(0), s as never).rows.find((r) => r.key === 'workers')!
+    expect(workers.cards.map((c) => c.label)).toEqual(['轨迹查询', '意图情绪'])
+    expect(workers.cards[1].role).toBe('Worker · 理解')
+    expect(workers.title).toBe('并行调用 2 个 Worker')
+  })
+})

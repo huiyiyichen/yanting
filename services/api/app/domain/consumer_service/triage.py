@@ -32,7 +32,8 @@ _PRODUCT = re.compile(
     r"面霜|精华|乳液|水乳|洁面|卸妆|眼霜|面膜|口红|粉底|安瓶|玻尿酸|视黄醇|烟酰胺|A醇|"
     r"过敏|红肿|刺痛|发痒|瘙痒|起疹|泛红|不适|烂脸|就医"
 )
-_ADVERSE = re.compile(r"过敏|红肿|刺痛|发痒|瘙痒|起疹|泛红|不适|烂脸|就医|医院|呼吸困难")
+# “不适合 / 不适用”是选购问题，不是皮肤不适
+_ADVERSE = re.compile(r"过敏|红肿|刺痛|发痒|瘙痒|起疹|泛红|不适(?![合用])|烂脸|就医|医院|呼吸困难")
 _LOGISTICS = re.compile(
     r"物流|快递|发货|到哪|到了没|没到|还没到|几天到|单号|签收|派送|揽收|催|退款|退货|换货|补发|进度|到账|打款|"
     r"订单|取消|地址|改地址|拦截"
@@ -44,7 +45,7 @@ _INTENT_RULES = (
     ("adverse_reaction", _ADVERSE),
     ("refund", re.compile(r"退款|打款|到账")),
     ("return", re.compile(r"退货")),
-    ("replacement", re.compile(r"换货|补发")),
+    ("replacement", re.compile(r"换货|补发|少发|漏发|发错")),
     ("logistics", re.compile(r"物流|快递|发货|到哪|没到|几天到|单号|签收|派送|揽收")),
     ("order_status", re.compile(r"订单|取消|改地址")),
     ("product_question", _PRODUCT),

@@ -1188,6 +1188,7 @@ def _agent_models_view(session: Any, context: RuntimeContext) -> AgentModelsView
     defaults = {
         "main": provider.model_id,
         "vision": getattr(provider, "vision_model_id", "") or context.settings.llm_vision_model,
+        "fast": getattr(provider, "fast_model_id", "") or provider.model_id,
     }
     saved = load_agent_models(session)
     return AgentModelsView(agents=[AgentModelItem(

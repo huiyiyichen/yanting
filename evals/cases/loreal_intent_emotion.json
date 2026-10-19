@@ -1,0 +1,648 @@
+{
+ "version": "2026-10-20",
+ "annotation": "团队人工编写并标注的意图/情绪评测集，覆盖基础、否定/转述、反讽/隐含、无关键词意图、混合意图、上文情绪六类；非官方原文。标注口径：intent 取当前这句最主要的业务诉求，皮肤不适优先 adverse_reaction，只有投诉/曝光而无更具体诉求时为 complaint；emotion 为消费者此刻情绪（结合上文），礼貌催问算 calm，抱怨、反讽、着急算 dissatisfied，威胁投诉/曝光、辱骂算 angry。",
+ "labels": {
+  "intent": [
+   "product_question",
+   "order_status",
+   "logistics",
+   "refund",
+   "return",
+   "replacement",
+   "adverse_reaction",
+   "complaint",
+   "other"
+  ],
+  "emotion": [
+   "calm",
+   "dissatisfied",
+   "angry"
+  ]
+ },
+ "cases": [
+  {
+   "id": "IE01",
+   "recent": [],
+   "latest": "我的快递到哪了？",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE02",
+   "recent": [],
+   "latest": "订单什么时候发货呀",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE03",
+   "recent": [],
+   "latest": "这款精华敏感肌能用吗",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE04",
+   "recent": [],
+   "latest": "小蜜罐面霜早上用还是晚上用比较好",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE05",
+   "recent": [],
+   "latest": "退款什么时候到账",
+   "intent": "refund",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE06",
+   "recent": [],
+   "latest": "我想退货，怎么操作",
+   "intent": "return",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE07",
+   "recent": [],
+   "latest": "能帮我换个色号吗，想换成02",
+   "intent": "replacement",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE08",
+   "recent": [],
+   "latest": "帮我改一下收货地址",
+   "intent": "order_status",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE09",
+   "recent": [],
+   "latest": "在吗",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE10",
+   "recent": [],
+   "latest": "好的谢谢",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE11",
+   "recent": [],
+   "latest": "这个防晒是物理防晒还是化学防晒",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE12",
+   "recent": [],
+   "latest": "麻烦帮我取消这个订单",
+   "intent": "order_status",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE13",
+   "recent": [],
+   "latest": "怎么还没发货，都三天了",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE14",
+   "recent": [],
+   "latest": "收到的面霜瓶子碎了，给我补发一个",
+   "intent": "replacement",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE15",
+   "recent": [],
+   "latest": "少发了一支口红，赶紧处理",
+   "intent": "replacement",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE16",
+   "recent": [],
+   "latest": "用了两天脸上起疹子还痒",
+   "intent": "adverse_reaction",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE17",
+   "recent": [],
+   "latest": "你们这是假货吧，跟专柜的味道完全不一样",
+   "intent": "product_question",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE18",
+   "recent": [],
+   "latest": "再不给我退款我就去12315投诉",
+   "intent": "refund",
+   "emotion": "angry",
+   "tags": [
+    "complaint"
+   ]
+  },
+  {
+   "id": "IE19",
+   "recent": [],
+   "latest": "我要投诉你们，太欺负人了",
+   "intent": "complaint",
+   "emotion": "angry",
+   "tags": [
+    "complaint"
+   ]
+  },
+  {
+   "id": "IE20",
+   "recent": [],
+   "latest": "骗子店铺，等着差评吧",
+   "intent": "complaint",
+   "emotion": "angry",
+   "tags": [
+    "complaint"
+   ]
+  },
+  {
+   "id": "IE21",
+   "recent": [],
+   "latest": "退款拖了一周了还没到，你们到底管不管",
+   "intent": "refund",
+   "emotion": "dissatisfied",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE22",
+   "recent": [],
+   "latest": "用完脸烂了，医药费你们必须赔",
+   "intent": "adverse_reaction",
+   "emotion": "angry",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE23",
+   "recent": [],
+   "latest": "我不是要投诉，就想问下物流",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "negation"
+   ]
+  },
+  {
+   "id": "IE24",
+   "recent": [],
+   "latest": "朋友说可以打12315，不过我还是先问问你们，退款到哪一步了",
+   "intent": "refund",
+   "emotion": "calm",
+   "tags": [
+    "negation"
+   ]
+  },
+  {
+   "id": "IE25",
+   "recent": [],
+   "latest": "没有不满意，只是想确认下用法",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "negation"
+   ]
+  },
+  {
+   "id": "IE26",
+   "recent": [],
+   "latest": "如果以后有质量问题，投诉流程是怎样的",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "negation"
+   ]
+  },
+  {
+   "id": "IE27",
+   "recent": [],
+   "latest": "呵呵，你们服务真好啊",
+   "intent": "other",
+   "emotion": "dissatisfied",
+   "tags": [
+    "sarcasm"
+   ]
+  },
+  {
+   "id": "IE28",
+   "recent": [
+    "快递怎么还没到"
+   ],
+   "latest": "真行，又让我等",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "sarcasm"
+   ]
+  },
+  {
+   "id": "IE29",
+   "recent": [],
+   "latest": "厉害了，一个快递能走半个月",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "sarcasm"
+   ]
+  },
+  {
+   "id": "IE30",
+   "recent": [
+    "我的包裹呢"
+   ],
+   "latest": "每次问都是让我等等等",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE31",
+   "recent": [],
+   "latest": "等了五天了还是这个状态",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE32",
+   "recent": [
+    "退款到账了吗",
+    "退款呢"
+   ],
+   "latest": "这都第三次问了",
+   "intent": "other",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE33",
+   "recent": [
+    "什么时候能补发"
+   ],
+   "latest": "算了，不指望了",
+   "intent": "other",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE34",
+   "recent": [],
+   "latest": "行吧，你们说什么就是什么",
+   "intent": "other",
+   "emotion": "dissatisfied",
+   "tags": [
+    "sarcasm"
+   ]
+  },
+  {
+   "id": "IE35",
+   "recent": [],
+   "latest": "我上周买的那个东西呢",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE36",
+   "recent": [],
+   "latest": "钱什么时候退回来",
+   "intent": "refund",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE37",
+   "recent": [],
+   "latest": "东西不想要了",
+   "intent": "return",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE38",
+   "recent": [],
+   "latest": "拍错了，能重新拍吗",
+   "intent": "order_status",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE39",
+   "recent": [],
+   "latest": "这个和雅诗兰黛小棕瓶比哪个好",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE40",
+   "recent": [],
+   "latest": "包装上的日期怎么看",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE41",
+   "recent": [],
+   "latest": "开票的话怎么弄",
+   "intent": "order_status",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE42",
+   "recent": [],
+   "latest": "快递员说放驿站了但我没看到",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE43",
+   "recent": [],
+   "latest": "这款面霜适合干皮吗，顺便问下什么时候发货",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "id": "IE44",
+   "recent": [],
+   "latest": "精华到了，想问下和面霜的使用顺序",
+   "intent": "product_question",
+   "emotion": "calm",
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "id": "IE45",
+   "recent": [],
+   "latest": "用了过敏了，我要退货退款",
+   "intent": "adverse_reaction",
+   "emotion": "dissatisfied",
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "id": "IE46",
+   "recent": [],
+   "latest": "色号不适合我，可以换一支吗",
+   "intent": "replacement",
+   "emotion": "calm",
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "id": "IE47",
+   "recent": [],
+   "latest": "快递还没到，另外这款能不能孕妇用",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "mixed"
+   ]
+  },
+  {
+   "id": "IE48",
+   "recent": [
+    "怎么还没发货，太过分了"
+   ],
+   "latest": "好吧那我再等等",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE49",
+   "recent": [
+    "退款怎么还没到，急死了"
+   ],
+   "latest": "好的，谢谢你帮我查",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE50",
+   "recent": [
+    "怎么还没发货，太过分了"
+   ],
+   "latest": "那现在到底什么时候能发",
+   "intent": "logistics",
+   "emotion": "dissatisfied",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE51",
+   "recent": [
+    "我要投诉你们",
+    "你们等着"
+   ],
+   "latest": "你别跟我说流程，我就要个结果",
+   "intent": "complaint",
+   "emotion": "angry",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE52",
+   "recent": [
+    "瓶子碎了真无语"
+   ],
+   "latest": "嗯，那就按你说的办",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE53",
+   "recent": [
+    "这破规则什么玩意"
+   ],
+   "latest": "所以还是不能退？",
+   "intent": "refund",
+   "emotion": "dissatisfied",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE54",
+   "recent": [
+    "物流到哪了"
+   ],
+   "latest": "知道了",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "context"
+   ]
+  },
+  {
+   "id": "IE55",
+   "recent": [],
+   "latest": "你们店有线下门店吗",
+   "intent": "other",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE56",
+   "recent": [],
+   "latest": "能不能便宜点",
+   "intent": "order_status",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE57",
+   "recent": [],
+   "latest": "这个赠品什么时候发",
+   "intent": "logistics",
+   "emotion": "calm",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE58",
+   "recent": [],
+   "latest": "口红断了",
+   "intent": "replacement",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  },
+  {
+   "id": "IE59",
+   "recent": [],
+   "latest": "涂上有点刺痛正常吗",
+   "intent": "adverse_reaction",
+   "emotion": "calm",
+   "tags": [
+    "basic"
+   ]
+  },
+  {
+   "id": "IE60",
+   "recent": [],
+   "latest": "别再给我发模板回复了",
+   "intent": "complaint",
+   "emotion": "dissatisfied",
+   "tags": [
+    "implicit"
+   ]
+  }
+ ]
+}

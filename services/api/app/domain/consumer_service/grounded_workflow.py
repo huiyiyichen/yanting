@@ -55,6 +55,7 @@ from app.domain.consumer_service.reply_policy import (
     validate_customer_reply,
 )
 from app.domain.consumer_service.triage import TriageRoute, conservative_route, triage
+from app.domain.consumer_service.understanding import payload_for_composer, understand
 from app.domain.consumer_service.verification_policy import verification_reasons
 from app.errors import ConflictError, ModelOutputInvalid, ProviderNotConfigured, ProviderTimeout
 from app.integrations.model_provider import ChatMessage, ModelProvider
@@ -98,6 +99,11 @@ MOVED_FIELDS = ("memory", "service_summary", "service_breakpoints")
 COMPOSER_SCOPE = (
     "\n\nCOMPOSER_SCOPE_V1\n本轮只写回复建议、个性化建议、next_steps、missing_information、handoff_required、"
     "current_question、intent、emotion_level。不输出memory、service_summary、service_breakpoints：这些由其他环节负责。"
+)
+#: 有意图与情绪 Agent 的结论时（customerUnderstanding），起草直接采用，不再自己判断
+COMPOSER_UNDERSTANDING = (
+    "\nCOMPOSER_UNDERSTANDING_V1\nintent、emotion_level已由意图与情绪环节给出（customerUnderstanding），"
+    "原样填写这两个字段，按该情绪调整共情语气，不要重新判断。"
 )
 
 
@@ -353,6 +359,7 @@ def merge_steps(old: list | None, new: list | None) -> list:
 class FlowState(TypedDict, total=False):
     multi: bool
     route: TriageRoute
+    understanding: Any
     knowledge_sources: list[GroundingSource]
     context: Any
     sources: list[GroundingSource]
@@ -390,7 +397,7 @@ class FlowState(TypedDict, total=False):
 
 
 #: 模型调用阶段 → 可分配模型的 Agent
-STAGE_AGENT = {"image": "vision", "draft": "composer", "verify": "verifier"}
+STAGE_AGENT = {"image": "vision", "draft": "composer", "verify": "verifier", "understand": "understand"}
 
 
 def _active_risk_level(session: Session, conversation_id: str) -> str:
@@ -610,7 +617,7 @@ def run_grounded_workflow(
 
     def complete(
         state: FlowState, stage: str, system: str, payload: dict, max_tokens: int,
-        *, repair_request: dict | None = None, images: list[str] | None = None,
+        *, repair_request: dict | None = None, images: list[str] | None = None, tier: str = "main",
     ):
         alive()
         remaining = remaining_seconds()
@@ -619,6 +626,7 @@ def run_grounded_workflow(
         # 按 Agent 分配的模型（反馈 10-18 #4）；未分配用默认（含图时用视觉模型）
         assigned = agent_models.get(STAGE_AGENT.get(stage, ""))
         requested = assigned or (getattr(provider, "vision_model_id", None) if images else None) \
+            or (getattr(provider, "fast_model_id", None) if tier == "fast" else None) \
             or getattr(provider, "model_id", None)
         try:
             messages = [
@@ -637,6 +645,7 @@ def run_grounded_workflow(
                 temperature=0, max_tokens=max_tokens, json_mode=True,
                 **({"timeout_seconds": remaining} if remaining is not None else {}),
                 **({"model": assigned} if assigned else {}),
+                **({"model_tier": tier} if tier != "main" and not assigned else {}),
             )
         except Exception as exc:
             trace.model_call(stage=stage, started=started, messages=locals().get("messages"), error=exc,
@@ -803,6 +812,17 @@ def run_grounded_workflow(
             route = conservative_route(bool(first["images"]), f"分诊异常：{type(exc).__name__}")
         return {**first, "route": route}
 
+    def understand_node(state: FlowState):
+        """意图与情绪 Agent：规则优先，拿不准时才用快速档模型（U1）；只读消费者原话。"""
+        customer = [m.body for m in state["messages"] if m.sender_role.value == "customer" and m.body]
+
+        def ask(system: str, payload: dict) -> str:
+            result, _ = complete(state, "understand", system, payload, 200, tier="fast")
+            return result.text
+
+        found = understand(state["latest_message"], customer[:-1], ask_model=ask)
+        return {"understanding": found}
+
     def join(state: FlowState):
         """汇合节点 J1：把知识和视觉分支的结果并入轨迹查询的来源目录，再交给起草。"""
         route = state["route"]
@@ -887,7 +907,10 @@ def run_grounded_workflow(
             if repair_request:
                 repair_request.pop("memorySourceIds")
                 repair_request["rules"] = [r for r in repair_request["rules"] if not r.startswith("memory")]
-        contract = OUTPUT_CONTRACT + (COMPOSER_SCOPE if multi else "")
+        understood = payload_for_composer(state.get("understanding")) if multi else None
+        if understood:
+            payload["customerUnderstanding"] = understood
+        contract = OUTPUT_CONTRACT + (COMPOSER_SCOPE + (COMPOSER_UNDERSTANDING if understood else "") if multi else "")
         result, calls = complete(state, "draft", state["system_prompt"] + contract, payload, 3000,
                                  repair_request=repair_request)
         raw_draft = None
@@ -898,6 +921,9 @@ def run_grounded_workflow(
             moved = moved_field_issues(raw_draft) if multi else []
             draft = GroundedDraft.model_validate(raw_draft)
             draft = normalize_draft_customer_language(draft)
+            if understood:  # 意图与情绪以理解 Agent 为准，起草写错也不影响下游
+                draft = draft.model_copy(update={"intent": understood["intent"],
+                                                 "emotion_level": understood["emotionLevel"]})
             issues = []
             if moved:
                 draft, issues = None, moved
@@ -1137,15 +1163,17 @@ def run_grounded_workflow(
             ("trajectory", "服务轨迹", trajectory, "query", "trajectory"),
             ("knowledge", "知识检索", knowledge_branch, "query", "knowledge"),
             ("vision", "图片读取", observe, "agent", "vision"),
+            ("understand", "意图与情绪", understand_node, "agent", "understand"),
             *shared,
         ]:
-            group = "evidence" if key in {"trajectory", "knowledge", "vision"} else None
+            group = "evidence" if key in {"trajectory", "knowledge", "vision", "understand"} else None
             graph.add_node(key, tracked(name, handler, span_key, kind, group))
         graph.add_node("join", join)  # 汇合只合并状态，不单独记跨度
         graph.add_edge(START, "triage")
-        graph.add_conditional_edges("triage", lambda s: s["route"].workers(),
-                                    ["trajectory", "knowledge", "vision"])
-        for key in ("trajectory", "knowledge", "vision"):
+        # 意图与情绪 Agent 每轮都和取证 Worker 并行（规则能判断时不调模型，几乎零成本）
+        graph.add_conditional_edges("triage", lambda s: [*s["route"].workers(), "understand"],
+                                    ["trajectory", "knowledge", "vision", "understand"])
+        for key in ("trajectory", "knowledge", "vision", "understand"):
             graph.add_edge(key, "join")
         graph.add_edge("join", "compose")
     else:

@@ -94,6 +94,7 @@ AGENT_MODELS_KEY = "agents.models"
 LLM_AGENTS: tuple[tuple[str, str, str, str], ...] = (
     ("composer", "共情起草", "理解问题并起草带引用的回复", "main"),
     ("verifier", "核验", "独立核对回复中的事实与来源", "main"),
+    ("understand", "意图情绪", "判断消费者意图与情绪（规则拿不准时才调用）", "fast"),
     ("vision", "视觉", "读取客户发送的图片", "vision"),
     ("handoff_summary", "交接摘要", "转人工时给接手客服的摘要", "main"),
     ("memory", "记忆", "从对话中提炼服务记忆", "main"),

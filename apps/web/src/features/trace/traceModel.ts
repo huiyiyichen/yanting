@@ -4,7 +4,7 @@ export type TraceSpan = components['schemas']['TraceSpanView']
 export type TraceCitation = components['schemas']['TraceCitationView']
 
 export const AGENT_LABEL: Record<string, string> = {
-  safety_gate: '安全闸门', triage: '分诊', router: '路由', trajectory: '轨迹查询', knowledge: '知识', vision: '视觉', join: '汇合',
+  safety_gate: '安全闸门', triage: '分诊', router: '路由', trajectory: '轨迹查询', knowledge: '知识', vision: '视觉', understand: '意图情绪', join: '汇合',
   composer: '共情起草', program_check: '程序核验', verify_decision: '核验决策', verifier: '核验', output_gate: '输出闸门',
   send_gate: '发送闸门', rewriter: '改写', memory: '记忆', handoff_summary: '交接摘要', sentinel: '风险哨兵',
 }
@@ -112,14 +112,14 @@ export function repairLoopOf(spans: TraceSpan[]): RepairLoop | null {
 }
 
 const ROLE: Record<string, string> = {
-  safety_gate: '闸门 · 入口', triage: 'Leader · 理解与分派', trajectory: 'Worker · 查询', knowledge: 'Worker · 检索', vision: 'Worker · 看图',
+  safety_gate: '闸门 · 入口', triage: 'Leader · 理解与分派', trajectory: 'Worker · 查询', knowledge: 'Worker · 检索', vision: 'Worker · 看图', understand: 'Worker · 理解',
   composer: 'Leader · 汇总起草', program_check: '核验 · 程序', verifier: '核验 · 模型', output_gate: '闸门 · 输出', send_gate: '闸门 · 发送',
 }
 /** 编排布局：单卡行=汇合点，多卡行=并行分支。分诊只在本次真的运行时出现。 */
 const LAYOUT: { key: string; names: string[]; fan?: boolean; optional?: boolean; title?: string }[] = [
   { key: 'gate', names: ['safety_gate'] },
   { key: 'triage', names: ['triage'], optional: true },
-  { key: 'workers', names: ['trajectory', 'knowledge', 'vision'], fan: true, title: '并行取证' },
+  { key: 'workers', names: ['trajectory', 'knowledge', 'understand', 'vision'], fan: true, title: '并行取证' },
   { key: 'compose', names: ['composer'] },
   { key: 'checks', names: ['program_check', 'verifier'], fan: true, title: '核验' },
   { key: 'out', names: ['output_gate'] },

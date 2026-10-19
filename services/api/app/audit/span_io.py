@@ -103,6 +103,15 @@ def _describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tupl
         summary = f"派发 {'、'.join(workers)}" + (" · 保守路由" if dumped.get("conservative") else "") \
             + (f" · {dumped.get('intent_hint')}" if dumped.get("intent_hint") not in {None, "unknown"} else "")
         return _brief({"最新客户消息": latest, "图片": len(result.get("images") or [])}), _brief(output), summary
+    if agent == "understand":
+        found = result.get("understanding")
+        dumped = found.dump() if hasattr(found, "dump") else {}
+        output = {"意图": dumped.get("intent"), "情绪": dumped.get("emotion_level"), "依据": dumped.get("evidence"),
+                  "判定方式": dumped.get("source"), "规则结论": {"意图": dumped.get("rule_intent"),
+                                                         "情绪": dumped.get("rule_emotion")},
+                  "理由": dumped.get("reasons"), "版本": dumped.get("version")}
+        from app.domain.consumer_service.understanding import summary as understand_summary
+        return _brief({"最新客户消息": latest}), _brief(output), understand_summary(found) if found else ""
     if agent == "knowledge":
         hits = result.get("knowledge") or []
         titles = list(dict.fromkeys(str(h.get("document_title", "")) for h in hits if h.get("document_title")))

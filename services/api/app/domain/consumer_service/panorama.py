@@ -98,7 +98,7 @@ def handoff_label(reason: str, quote: str | None) -> str:
 AGENT_LABEL = {
     "safety_gate": "安全闸门", "triage": "分诊", "trajectory": "轨迹查询", "knowledge": "知识", "vision": "视觉",
     "composer": "共情起草", "program_check": "程序核验", "verifier": "核验", "output_gate": "输出闸门",
-    "send_gate": "发送闸门", "rewriter": "改写",
+    "send_gate": "发送闸门", "rewriter": "改写", "understand": "意图情绪",
 }
 
 

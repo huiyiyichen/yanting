@@ -1,9 +1,9 @@
-import { ApiOutlined, CheckCircleFilled, CheckOutlined, ClockCircleOutlined, CloseCircleFilled, CloseOutlined, CustomerServiceOutlined, MinusCircleOutlined, RollbackOutlined, RightOutlined, RobotOutlined, SafetyCertificateOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { ApiOutlined, CheckCircleFilled, CheckOutlined, ClockCircleOutlined, CloseCircleFilled, CloseOutlined, CustomerServiceOutlined, HeartOutlined, MinusCircleOutlined, RollbackOutlined, RightOutlined, RobotOutlined, SafetyCertificateOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import type { CSSProperties } from 'react'
 import { useMemo } from 'react'
 import { buildOrchestration, cardStateText, fmtMs, type OrchCard, type TraceSpan } from './traceModel'
 
-const ICON: Record<string, typeof RobotOutlined> = { safety_gate: SafetyCertificateOutlined, output_gate: SafetyCertificateOutlined, send_gate: SendOutlined, program_check: ApiOutlined }
+const ICON: Record<string, typeof RobotOutlined> = { understand: HeartOutlined, safety_gate: SafetyCertificateOutlined, output_gate: SafetyCertificateOutlined, send_gate: SendOutlined, program_check: ApiOutlined }
 const STATE_ICON = { ok: CheckCircleFilled, fail: CloseCircleFilled, skipped: MinusCircleOutlined, none: MinusCircleOutlined, running: ClockCircleOutlined }
 const BADGE: Record<OrchCard['badge'], string> = { leader: 'Leader', worker: 'Worker', gate: '闸门', check: '核验', agent: 'Agent' }
 
