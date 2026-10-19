@@ -332,8 +332,11 @@ def traced_complete(provider: Any, messages: list[Any], *, stage: str, prompt_co
 def traced(session: Any, graph: str, trigger_type: str, *, conversation_id: str | None,
            ok_status: str = "draft", **values: Any) -> Iterator[Trace]:
     """A whole on-demand run (rewrite, breakpoint analysis) as one trace, flushed into ``session``."""
+    # start_trace 会把自己设为当前追踪；先记下外层追踪，结束后恢复。
+    # 过去 reset 只回到 start_trace 设好的值，发送后的记忆 Agent 会把自动接待的追踪“顶掉”，
+    # 发送闸门找不到原追踪，整条追踪停在运行中且没有发送闸门节点。
+    outer = _current.get()
     trace = start_trace(graph, trigger_type, conversation_id=conversation_id, **values)
-    token = _current.set(trace)
     try:
         yield trace
     except Exception as exc:
@@ -344,4 +347,4 @@ def traced(session: Any, graph: str, trigger_type: str, *, conversation_id: str 
         trace.finish(ok_status)
         trace.flush(session)
     finally:
-        _current.reset(token)
+        _current.set(outer)

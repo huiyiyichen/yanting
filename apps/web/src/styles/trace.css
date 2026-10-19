@@ -203,6 +203,6 @@ html[data-theme='dark'] .yt-oc .bd.is-leader { color: var(--tr-model); }
 .yt-oc-in.is-plain { background: color-mix(in srgb, var(--t-human) 8%, transparent); }
 .yt-oc-in.is-plain::before { content: none; } .yt-oc-in.is-plain > span b { color: var(--t-human); }
 .yt-oc.is-none .yt-oc-checks .anticon { color: var(--tr-ink3); }
-.yt-orch-over .track i.t-worker { background: var(--t-worker); } .yt-orch-over .track i.t-check { background: var(--t-check); }
-.yt-orch-over .track i.t-leader { background: var(--t-leader); } .yt-orch-over .track i.t-gate { background: var(--t-gate); }
+.yt-orch .yt-orch-over .track i[class*='t-'] { background: var(--tone); }
+.yt-orch .yt-orch-over .track i.is-fail { background: var(--tr-fail); }
 .yt-orch.is-compact .yt-orch-row.is-fork .yt-orch-cards, .yt-orch.is-compact .yt-orch-row.is-fork .yt-link { width: 100%; }

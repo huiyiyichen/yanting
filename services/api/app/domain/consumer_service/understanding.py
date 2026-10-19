@@ -41,6 +41,11 @@ INTENTS = (
     "adverse_reaction", "complaint", "other",
 )
 EMOTIONS = ("calm", "dissatisfied", "angry")
+INTENT_TEXT = {
+    "product_question": "商品咨询", "order_status": "订单进度", "logistics": "物流查询", "refund": "退款",
+    "return": "退货", "replacement": "补发/换货", "adverse_reaction": "皮肤不适", "complaint": "投诉", "other": "其他",
+}
+EMOTION_TEXT = {"calm": "平稳", "dissatisfied": "不满", "angry": "愤怒"}
 _EMOTION_OF = {ANGRY: "angry", DISSATISFIED: "dissatisfied"}
 _RANK = {"calm": 0, "dissatisfied": 1, "angry": 2}
 
@@ -195,7 +200,9 @@ def understand(latest: str, recent: list[str], *,
 
 def summary(result: Understanding) -> str:
     label = {"rule": "规则判定", "model": "模型判定", "rule_fallback": "模型失败，按规则"}[result.source]
-    return f"{label}：意图 {result.intent}，情绪 {result.emotion_level}" + (
+    intent = INTENT_TEXT.get(result.intent, result.intent)
+    emotion = EMOTION_TEXT.get(result.emotion_level, result.emotion_level)
+    return f"{label}：意图 {intent}，情绪 {emotion}" + (
         f"（依据「{result.evidence}」）" if result.evidence else "")
 
 
