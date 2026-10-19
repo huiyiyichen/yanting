@@ -12,7 +12,7 @@ import { TraceConsole } from './TraceConsole'
 
 const t = (ms: number) => new Date(Date.parse('2026-05-01T00:00:00Z') + ms).toISOString()
 const span = (o: Record<string, unknown>) => ({ parentSpanId: null, attempt: 1, parallelGroup: null, status: 'ok', label: '', reasons: [], kind: 'agent', ...o })
-const detail = { traceId: 'trc-2', graph: 'reception', triggerType: 'message', status: 'sent', orchestration: 'multi', startedAt: t(0), endedAt: t(2000),
+const detail = { traceId: 'trc-2', graph: 'reception', triggerType: 'message', status: 'sent', triggerText: '面霜什么时候发货', outcomeText: '亲，已经在打包啦', orchestration: 'multi', startedAt: t(0), endedAt: t(2000),
   totals: {}, lanes: [], versions: {}, citations: [{ replyStyle: 'recommended', segmentIndex: 1, segmentText: '售后在处理', sourceId: 'ticket:K1', sheetName: '售后表', rowNumber: 12, verdict: 'verified' }],
   spans: [span({ spanId: 'a', seq: 0, name: 'composer', summary: '草稿 86 字', inputArtifact: 'in-a', outputArtifact: 'out-a', startedAt: t(0), endedAt: t(1500), durationMs: 1500 }),
     span({ spanId: 'm', seq: 1, kind: 'model_call', inputArtifact: 'in-m', outputArtifact: 'out-m', parentSpanId: 'a', name: 'composer', startedAt: t(100), endedAt: t(1400), durationMs: 1300, modelReturned: 'qwen-plus', promptTokens: 6800, completionTokens: 410, promptCode: 'YT_COMPOSER', promptRevision: 'r3' })] }
@@ -35,7 +35,11 @@ describe('TraceConsole', () => {
     fireEvent.click(screen.getByRole('button', { name: '共情起草' }))
     expect(await screen.findByText('内容-in-a')).toBeInTheDocument()
     expect(await screen.findByText('内容-in-m')).toBeInTheDocument()
-    fireEvent.click(await screen.findByRole('tab', { name: '版本' }))
+    // 反馈 10-19 #1：起点是客户原话、终点是发出的回复
+    expect(screen.getByText('面霜什么时候发货')).toBeInTheDocument()
+    expect(screen.getByText('亲，已经在打包啦')).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: '问题' })).toBeNull()
+    fireEvent.click(await screen.findByRole('tab', { name: '模型' }))
     expect(await screen.findByText('YT_COMPOSER@r3')).toBeInTheDocument()
     expect(screen.getAllByText('qwen-plus').length).toBeGreaterThan(1)
     fireEvent.click(screen.getByText('引用'))

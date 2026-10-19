@@ -236,3 +236,34 @@ def test_agent_nodes_carry_readable_input_output_and_summary(workspace):
     assert agents["composer"]["summary"].startswith("草稿 ")
     artifact = client.get(f"/api/platform/trace-artifacts/{agents['composer']['outputArtifact']}", headers=SUPPORT)
     assert artifact.status_code == 200 and "回复" in json.dumps(artifact.json(), ensure_ascii=False)
+
+
+def test_gates_record_what_they_checked(workspace):
+    """反馈 10-19 #1/#3：闸门与程序核验写明逐项检查，追踪带起点消息与终点回复。
+
+    F7 安全闸门只写「未命中」，看不出查了什么；程序核验只写「通过」。
+    F8 发送闸门没有发送条件明细；追踪详情没有客户原话与最终发出的回复。
+    """
+    client, factory, _ = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "咨询物流")
+    process_job(client.app.state.runtime, jobs(factory, cid)[0].job_id)
+    job = jobs(factory, cid)[0]
+    with factory() as session:
+        trace_id = session.scalar(select(AgentTraceRow.trace_id).where(AgentTraceRow.job_id == job.job_id))
+    detail = client.get(f"/api/platform/traces/{trace_id}", headers=SUPPORT).json()
+    spans = {s["name"]: s for s in detail["spans"] if s["kind"] != "model_call"}
+    checks = lambda name: next(r["checks"] for r in spans[name]["reasons"] if isinstance(r, dict) and "checks" in r)
+    assert [c["name"] for c in checks("safety_gate")] == ["就医 / 严重不良反应", "投诉 / 维权"]
+    assert not any(c["hit"] for c in checks("safety_gate")) and "未触发" in spans["safety_gate"]["summary"]
+    assert len(checks("program_check")) >= 5
+    assert {c["name"] for c in checks("send_gate")} == {"服务模式", "消息版本", "等待时限"}
+    assert detail["triggerText"] == "咨询物流" and detail["outcomeText"]
+
+
+def test_safety_gate_names_the_hit_phrase():
+    from app.domain.consumer_service.auto_reception import _safety_checks
+
+    hits = [c for c in _safety_checks("用了脸肿了，我要投诉你们") if c["hit"]]
+    assert [c["name"] for c in hits] == ["就医 / 严重不良反应", "投诉 / 维权"]
+    assert "脸肿" in hits[0]["detail"]

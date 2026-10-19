@@ -43,6 +43,17 @@ def _source_kinds(sources: list[Any]) -> dict[str, int]:
     return out
 
 
+VERIFY_REASON_TEXT = {
+    "cited": "引用了资料", "number": "含数字", "status": "含订单/物流状态", "efficacy": "含功效说法",
+    "product": "含商品结论", "advice": "有个性化建议", "breakpoints": "有服务断点", "images": "有图片",
+    "high_risk": "高风险会话", "safety_intent": "安全类问题", "policy_disabled": "按需核验未开启",
+}
+
+
+def verify_reason_text(reasons: list[Any]) -> list[str]:
+    return [VERIFY_REASON_TEXT.get(str(r), str(r)) for r in reasons or []]
+
+
 def _replies(draft: Any) -> list[dict[str, Any]]:
     return [{"style": getattr(r, "style", ""), "body": getattr(r, "body", "")}
             for r in getattr(draft, "reply_suggestions", []) or []]
@@ -97,20 +108,29 @@ def _describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tupl
                 _brief(output), summary)
     if agent in {"program_check", "verifier"}:
         draft = state.get("draft")
-        output = {"问题": issues}
-        if agent == "verifier":
-            output["核验原因"] = state.get("verify_reasons") or []
-        label = "程序核验" if agent == "program_check" else "事实核验"
-        summary = f"{label}通过" if not issues else f"发现 {len(issues)} 个问题：{issues[0][:40]}"
-        if agent == "program_check" and not issues and result.get("verify_reasons"):
-            summary += " · 需独立核验"
+        why = verify_reason_text(result.get("verify_reasons") or state.get("verify_reasons") or [])
+        if agent == "program_check":
+            checks = result.get("check_items") or []
+            failed = [c for c in checks if c.get("hit")]
+            output = {"检查项": [{"项目": c["name"], "结果": ("✗ " if c.get("hit") else "✓ ") + c["detail"]} for c in checks],
+                      "问题": issues, "需事实核验的原因": why}
+            summary = (f"{len(checks)} 项检查全部通过" if not failed else f"{len(failed)} 项未通过：{failed[0]['name']}") \
+                if checks else ("程序核验通过" if not issues else f"发现 {len(issues)} 个问题：{issues[0][:40]}")
+            if not issues and why:
+                summary += f" · {'、'.join(why[:2])}，交事实核验"
+            return _brief({"回复": _replies(draft)}), _brief(output), summary
+        output = {"问题": issues, "核验原因": why}
+        summary = (f"逐条对照来源，{'、'.join(why[:2])}均有据" if why else "事实核验通过") if not issues \
+            else f"发现 {len(issues)} 个问题：{issues[0][:40]}"
         return _brief({"回复": _replies(draft)}), _brief(output), summary
     if agent == "output_gate":
         draft = result.get("draft") or state.get("draft")
         replies = _replies(draft)
         dropped = result.get("segments_dropped") or 0
         flags = result.get("review_flags") or []
-        summary = "输出确认" + (f" · 删去 {dropped} 段" if dropped else "") + (f" · {len(flags)} 处待复核" if flags else "")
+        chars = len(replies[0]["body"]) if replies else 0
+        summary = (f"定稿 {chars} 字" if replies else "没有可发送的回复") + (f" · 删去 {dropped} 段" if dropped else "") \
+            + (f" · {len(flags)} 处待复核" if flags else "")
         return None, _brief({"最终回复": replies, "待复核": flags, "删去段数": dropped}), summary
     keys = sorted(k for k in result if k not in {"steps", "calls"})
     return None, _brief({k: result[k] for k in keys[:8]}), ""

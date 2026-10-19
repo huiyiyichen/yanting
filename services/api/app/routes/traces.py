@@ -94,6 +94,9 @@ class TraceDetailView(TraceSummaryView):
     trigger_message_id: str | None = None
     job_id: str | None = None
     outcome_message_id: str | None = None
+    #: 起点与终点（反馈 10-19 #1）：客户这句话 → … → 最后发出的那句话
+    trigger_text: str | None = None
+    outcome_text: str | None = None
     versions: dict[str, Any]
     spans: list[TraceSpanView]
     citations: list[TraceCitationView]
@@ -200,9 +203,16 @@ def _detail(session, trace_id: str) -> TraceDetailView:
     records = {r.record_id: r for r in session.scalars(
         select(SourceRecordRow).where(SourceRecordRow.record_id.in_(record_ids)))} if record_ids else {}
     alias = _aliases(session, {row.conversation_id} if row.conversation_id else set()).get(row.conversation_id or "")
+    from app.domain.case_state.models import MessageRow
+
+    def body(message_id: str | None) -> str | None:
+        message = session.get(MessageRow, message_id) if message_id else None
+        return message.body if message is not None else None
+
     return TraceDetailView(
         **_summary(row, spans, alias), trigger_message_id=row.trigger_message_id, job_id=row.job_id,
-        outcome_message_id=row.outcome_message_id, versions=json.loads(row.versions_json or "{}"),
+        outcome_message_id=row.outcome_message_id, trigger_text=body(row.trigger_message_id),
+        outcome_text=body(row.outcome_message_id), versions=json.loads(row.versions_json or "{}"),
         spans=[TraceSpanView(
             span_id=s.span_id, parent_span_id=s.parent_span_id, seq=s.seq, kind=s.kind, name=s.name,
             label=s.label, attempt=s.attempt, parallel_group=s.parallel_group, status=s.status,

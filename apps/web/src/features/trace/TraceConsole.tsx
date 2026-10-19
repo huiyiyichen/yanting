@@ -87,7 +87,8 @@ export function TraceConsole({ initialTrace }: { initialTrace?: string | null })
             <Button size="small" icon={lit ? <PauseOutlined /> : <CaretRightOutlined />} onClick={play}>回放</Button>
             <Button size="small" icon={<DownloadOutlined />} onClick={() => void exportTrace()}>导出</Button>
           </div>
-          {view === '编排' && <OrchestrationTree startedAt={detail.startedAt} spans={detail.spans} lit={lit} selected={inspect} onSelect={setInspect} />}
+          {view === '编排' && <OrchestrationTree startedAt={detail.startedAt} spans={detail.spans} lit={lit} selected={inspect} onSelect={setInspect}
+            trigger={detail.triggerText ?? null} outcome={detail.outcomeText ?? null} outcomeStatus={detail.status} />}
           {view === '引用' && <CitationChain citations={detail.citations} />}
         </> : <p className="yt-empty">选择一条追踪</p>}
       </section>

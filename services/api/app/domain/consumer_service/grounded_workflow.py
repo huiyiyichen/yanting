@@ -356,6 +356,7 @@ class FlowState(TypedDict, total=False):
     verification_issues: list[VerificationIssue]
     verify_invoked: bool
     verify_reasons: list[str]
+    check_items: list[dict]
     risk_level: str
     segments_dropped: int
     auxiliary_dropped: list[str]
@@ -438,6 +439,8 @@ def run_grounded_workflow(
                     span.reasons = [str(issue)[:200] for issue in result.get("issues", [])[:8]]
                     if result.get("verify_reasons"):
                         span.reasons.append({"verifyReasons": result["verify_reasons"]})
+                    if result.get("check_items"):
+                        span.reasons.append({"checks": result["check_items"]})
                     if result.get("review_flags"):
                         span.reasons.append({"reviewFlags": result["review_flags"]})
                     if result.get("auxiliary_dropped"):
@@ -828,19 +831,24 @@ def run_grounded_workflow(
             return {"issues": state["issues"]}
         catalog = {s.source_id: s for s in state["sources"]}
         issues = validate_memory(draft.memory, catalog)
+        memory_issues = len(issues)
         issues.extend(validate_dialogue_fields(
             draft,
             [message.body for message in state["messages"]
              if message.sender_role.value == "customer" and message.body],
         ))
+        dialogue_issues = len(issues) - memory_issues
         qualified_replies = []
         reply_issues = []
+        counts = {"text": 0, "claims": 0, "care": 0}
+        claim_total = sum(len(reply.claims) for reply in draft.reply_suggestions)
+        n_replies = len(draft.reply_suggestions)
         for reply in draft.reply_suggestions:
-            candidate_issues = [
-                *validate_customer_reply(reply.body, catalog),
-                *validate_claims(reply.body, reply.claims, catalog),
-                *validate_care_preferences([reply.body], state["latest_message"]),
-            ]
+            text_issues = validate_customer_reply(reply.body, catalog)
+            claim_issues = validate_claims(reply.body, reply.claims, catalog)
+            care_issues = validate_care_preferences([reply.body], state["latest_message"])
+            counts["text"] += len(text_issues); counts["claims"] += len(claim_issues); counts["care"] += len(care_issues)
+            candidate_issues = [*text_issues, *claim_issues, *care_issues]
             if candidate_issues:
                 reply_issues.extend(candidate_issues)
             else:
@@ -880,8 +888,23 @@ def run_grounded_workflow(
             risk_level=state.get("risk_level", "none"), intent=draft.intent,
             enabled=(settings or get_settings()).verify_on_demand,
         )
+        check_items = [
+            {"name": "事实引用", "hit": bool(counts["claims"]),
+             "detail": f"{claim_total} 条事实逐条对照来源" + (f"，{counts['claims']} 处不符" if counts["claims"] else "，全部有据")},
+            {"name": "正文安全", "hit": bool(counts["text"]),
+             "detail": f"{counts['text']} 处承诺/内部字段" if counts["text"] else "无越权承诺、无内部字段"},
+            {"name": "客户拒绝过的建议", "hit": bool(counts["care"]),
+             "detail": f"{counts['care']} 处再次推荐" if counts["care"] else "未再推荐客户拒绝的方案"},
+            {"name": "记忆与诉求字段", "hit": bool(memory_issues or dialogue_issues),
+             "detail": f"{memory_issues + dialogue_issues} 处无来源" if memory_issues or dialogue_issues else "引用均可追溯"},
+            {"name": "个性化建议", "hit": bool(advice_issues),
+             "detail": "依据不足，已撤下" if advice_issues else ("依据齐全" if draft.personalized_advice else "本轮没有建议")},
+        ]
+        if n_replies > 1 and len(qualified_replies) < n_replies and qualified_replies:
+            check_items.append({"name": "候选回复", "hit": True,
+                                "detail": f"{n_replies} 版中保留 {len(qualified_replies)} 版"})
         return {"draft": draft, "issues": list(dict.fromkeys(issues)), "service_findings": findings,
-                "verify_reasons": reasons}
+                "verify_reasons": reasons, "check_items": check_items}
 
     def verify(state: FlowState):
         draft = state["draft"]

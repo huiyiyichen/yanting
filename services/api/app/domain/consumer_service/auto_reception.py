@@ -199,12 +199,31 @@ def _eligible(conversation: ConversationRow | None, job: AutoReplyJobRow) -> boo
     )
 
 
+_HANDOFF_TEXT = {
+    "reply_timeout": "超过等待时限", "invalid_reply": "回复未通过核验", "safety_review": "安全闸门命中",
+    "generation_failed": "生成失败", "model_unavailable": "模型不可用", "unsupported_image": "图片需人工查看",
+    "customer_requested": "客户要求人工", "operator_takeover": "人工已接管", "cancelled": "已取消",
+}
+_SERIOUS_TERMS = ("呼吸困难", "喉咙肿", "去医院", "已经就医", "脸肿")
+
+
+def _safety_checks(text: str) -> list[dict]:
+    """安全闸门逐项检查（反馈 10-19 #3）：记录查了什么、命中了哪句话，追踪里才看得出闸门在做事。"""
+    from app.domain.consumer_service.emotion import _COMPLAINT_RE, _signal_matches
+
+    serious = next((term for term in _SERIOUS_TERMS if term in text), None)
+    complaint = next(_signal_matches(_COMPLAINT_RE, text), None)
+    return [
+        {"name": "就医 / 严重不良反应", "hit": bool(serious),
+         "detail": f"命中“{serious}”" if serious else "未出现" + "、".join(_SERIOUS_TERMS[:3]) + "等"},
+        {"name": "投诉 / 维权", "hit": complaint is not None,
+         "detail": f"命中“{complaint.group(0)}”" if complaint is not None else "未出现投诉、12315、曝光等"},
+    ]
+
+
 def _safety_handoff(text: str) -> bool:
     """Only the current message decides; an open adverse-reaction ticket alone does not."""
-    from app.domain.consumer_service.emotion import has_complaint_signal
-
-    serious = any(term in text for term in ("呼吸困难", "喉咙肿", "去医院", "已经就医", "脸肿"))
-    return serious or has_complaint_signal(text)
+    return any(item["hit"] for item in _safety_checks(text))
 
 
 def validate_auto_reply(body: str, context: Any, *, claims=None, sources=None) -> None:
@@ -294,7 +313,9 @@ def _finish_handoff(
                 reason, reply = "reply_timeout", None
             trace = tracer.current()
             if trace is not None and trace.job_id == job_id:
-                trace.decision("send_gate", [f"转人工：{reason}"], label="发送闸门")
+                trace.decision("send_gate", [{"summary": f"未发送 → 转人工（{_HANDOFF_TEXT.get(reason, reason)}）"},
+                                             {"checks": [{"name": "发送条件", "hit": True, "detail": _HANDOFF_TEXT.get(reason, reason)}]}],
+                               label="发送闸门")
                 trace.finish("handoff")
                 trace.flush(session)
             try:
@@ -367,9 +388,14 @@ def process_job(runtime: Any, job_id: str) -> None:
             )
             progress.begin(job_id, conversation_id)
             progress.mark(job_id, "安全检查", "running")
-            handoff = _safety_handoff(trigger.body or "")
-            trace.decision("safety_gate", ["命中人工、就医或投诉信号，转人工（不调模型）" if handoff else "未命中"],
-                           label="安全闸门")
+            checks = _safety_checks(trigger.body or "")
+            handoff = any(item["hit"] for item in checks)
+            hits = [item for item in checks if item["hit"]]
+            trace.decision("safety_gate", [
+                {"summary": f"{hits[0]['name']}：{hits[0]['detail']} → 转人工，不调模型" if hits
+                 else f"{len(checks)} 项检查均未触发 → 交给 Agent 处理"},
+                {"checks": checks},
+            ], label="安全闸门")
             progress.mark(job_id, "安全检查", "handoff" if handoff else "passed")
             attachments = json.loads(trigger.attachments_json or "[]")
         if remaining <= 0:
@@ -505,7 +531,12 @@ def process_job(runtime: Any, job_id: str) -> None:
             if trace is not None and trace.job_id == job_id:
                 from app.audit.trace_models import ReplyCitationRow
 
-                trace.decision("send_gate", ["模式、版本、时限均满足，自动发送"], label="发送闸门")
+                left = max(0, int(remaining_job_seconds(runtime, job)))
+                trace.decision("send_gate", [{"summary": f"自动发送 {len(body)} 字"}, {"checks": [
+                    {"name": "服务模式", "hit": False, "detail": "AI 自动接待，未被人工接管"},
+                    {"name": "消息版本", "hit": False, "detail": "生成期间客户没有新消息"},
+                    {"name": "等待时限", "hit": False, "detail": f"剩余 {left} 秒"},
+                ]}], label="发送闸门")
                 trace.finish("sent", outcome_message_id=reply.message_id)
                 trace.flush(session)
                 session.execute(update(ReplyCitationRow).where(

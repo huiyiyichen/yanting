@@ -46,6 +46,12 @@ describe('traceModel', () => {
     expect(chain[1].sources[1].ok).toBe(false)
   })
 
+  it('O5 闸门逐项检查从 reasons.checks 读出', () => {
+    const gate = span({ spanId: 'g', seq: 0, kind: 'decision', name: 'safety_gate', summary: '2 项检查均未触发', startedAt: t(0), endedAt: t(1), durationMs: 1,
+      reasons: [{ checks: [{ name: '投诉 / 维权', hit: false, detail: '未出现投诉' }, { name: '就医 / 严重不良反应', hit: true, detail: '命中“脸肿”' }] }] })
+    const card = buildOrchestration(t(0), [gate] as never).rows[0].cards[0]
+    expect(card.checks.map((c) => c.hit)).toEqual([false, true]); expect(card.badge).toBe('gate')
+  })
   it('O1–O4 编排卡片树：并行分支成行、重试合并、模型调用（model_call）归到卡片、一句话产出', () => {
     const more = [...spans,
       span({ spanId: 'd2m', seq: 7, kind: 'model_call', parentSpanId: 'd2', name: 'composer', startedAt: t(1900), endedAt: t(2500), durationMs: 600, modelReturned: 'qwen-plus' }),
@@ -54,17 +60,21 @@ describe('traceModel', () => {
     ;(more[5] as Record<string, unknown>).summary = '草稿 86 字'
     ;(more[6] as Record<string, unknown>).summary = '草稿 90 字 · 第 2 次起草'
     const { rows } = buildOrchestration(t(0), more as never)
-    expect(rows.map((r) => r.key)).toEqual(['gate', 'workers', 'compose', 'checks', 'out', 'send'])
+    expect(rows.map((r) => r.key)).toEqual(['gate', 'workers', 'compose', 'checks'])
     const workers = rows[1]
     expect(workers.fan).toBe(true)
-    expect(workers.cards.map((c) => c.label)).toEqual(['轨迹查询', '知识', '视觉'])
-    expect(workers.cards[2].state).toBe('skipped'); expect(workers.cards[2].summary).toBe('无图片')
+    // 反馈 10-19 #4：没运行/跳过的节点不占位
+    expect(workers.cards.map((c) => c.label)).toEqual(['轨迹查询', '知识'])
+    expect(workers.title).toBe('并行派发 2 个 Worker')
     expect(cardStateText(workers.cards[0])).toBe('已返回结果')
     const composer = rows[2].cards[0]
     expect(composer.attempts).toBe(2); expect(composer.state).toBe('ok'); expect(composer.spanId).toBe('d2')
     expect(composer.summary).toBe('草稿 90 字 · 第 2 次起草')
     expect(composer.model).toBe('qwen-plus'); expect(composer.durationMs).toBe(1800)
-    expect(rows[3].cards.map((c) => [c.label, c.state])).toEqual([['程序核验', 'ok'], ['核验', 'none']])
+    expect(rows[3].cards.map((c) => [c.label, c.state])).toEqual([['程序核验', 'ok']])
+    expect(rows[3].fan).toBe(false)
+    expect(composer.inputs.map((i) => i.label)).toEqual(['轨迹查询', '知识'])
+    expect(composer.badge).toBe('leader'); expect(workers.cards[0].badge).toBe('worker')
     expect(buildLanes(t(0), more as never).rows.find((r) => r.spanId === 'd2')!.models).toHaveLength(1)
   })
 })

@@ -44,7 +44,8 @@ export function ConversationTrace({ conversationId, refreshKey }: { conversation
       {currentId && <Link className="open" to={`/platform/models?tab=trace&trace=${encodeURIComponent(currentId)}`}>追踪台<ExportOutlined /></Link>}
     </div>
     {detail && detail.traceId === currentId
-      ? <OrchestrationTree compact startedAt={detail.startedAt} spans={detail.spans} selected={inspect} onSelect={setInspect} />
+      ? <OrchestrationTree compact startedAt={detail.startedAt} spans={detail.spans} selected={inspect} onSelect={setInspect}
+        trigger={detail.triggerText ?? null} outcome={detail.outcomeText ?? null} outcomeStatus={detail.status} />
       : <Skeleton active paragraph={{ rows: 6 }} />}
     <SpanInspector span={detail?.spans.find((s) => s.spanId === inspect) ?? null} models={detail ? modelsOf(detail.spans, inspect) : []} onClose={() => setInspect(null)} />
   </div>

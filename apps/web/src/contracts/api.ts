@@ -894,6 +894,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/agent-models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Agent Models */
+        get: operations["get_agent_models_api_platform_agent_models_get"];
+        /**
+         * Put Agent Models
+         * @description 保存各 Agent 的模型；只接受网关真实提供或已配置的模型，空值表示回退默认。
+         */
+        put: operations["put_agent_models_api_platform_agent_models_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/support/reception/queue": {
         parameters: {
             query?: never;
@@ -1781,6 +1802,33 @@ export interface components {
             modelId?: string | null;
             /** Promptversion */
             promptVersion?: string | null;
+        };
+        /** AgentModelItem */
+        AgentModelItem: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Description */
+            description: string;
+            /** Tier */
+            tier: string;
+            /** Model */
+            model?: string | null;
+            /** Defaultmodel */
+            defaultModel?: string | null;
+        };
+        /** AgentModelsRequest */
+        AgentModelsRequest: {
+            /** Assignments */
+            assignments: {
+                [key: string]: string | null;
+            };
+        };
+        /** AgentModelsView */
+        AgentModelsView: {
+            /** Agents */
+            agents: components["schemas"]["AgentModelItem"][];
         };
         /** ArtifactView */
         ArtifactView: {
@@ -4853,6 +4901,10 @@ export interface components {
             jobId?: string | null;
             /** Outcomemessageid */
             outcomeMessageId?: string | null;
+            /** Triggertext */
+            triggerText?: string | null;
+            /** Outcometext */
+            outcomeText?: string | null;
             /** Versions */
             versions: {
                 [key: string]: unknown;
@@ -6725,6 +6777,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UsageView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_agent_models_api_platform_agent_models_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentModelsView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_agent_models_api_platform_agent_models_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Demo-View-Role"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentModelsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentModelsView"];
                 };
             };
             /** @description Validation Error */

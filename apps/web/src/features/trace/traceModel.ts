@@ -74,8 +74,21 @@ export function citationChain(citations: TraceCitation[]): ChainItem[] {
 
 // ── 编排卡片树（反馈 10-18 #3）─────────────────────────────────────────────
 export type CardState = 'ok' | 'fail' | 'skipped' | 'none' | 'running'
+export type TraceCheck = { name: string; hit: boolean; detail: string }
+/** 闸门/程序核验逐项检查（反馈 10-19 #3），记录在 reasons 的 {checks: [...]} 里 */
+export function checksOf(span: Pick<TraceSpan, 'reasons'> | null | undefined): TraceCheck[] {
+  for (const r of span?.reasons ?? []) if (r && typeof r === 'object' && Array.isArray((r as { checks?: unknown }).checks)) {
+    return ((r as { checks: TraceCheck[] }).checks).filter((c) => c && typeof c.name === 'string')
+  }
+  return []
+}
 export type OrchCard = {
   key: string; label: string; role: string; state: CardState; summary: string
+  /** 角色徽标：Leader / Worker / 闸门 / 核验 */
+  badge: 'leader' | 'worker' | 'gate' | 'check' | 'agent'
+  checks: TraceCheck[]
+  /** 汇合点（Leader）收到的各 Worker 结果 */
+  inputs: { label: string; text: string }[]
   spanId: string | null; start: number; end: number; durationMs: number | null
   model: string | null; records: number; attempts: number
   /** 运行完成但留下问题（程序核验发现问题等），卡片用琥珀描边提示 */
@@ -122,8 +135,12 @@ export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { row
     const firstReason = last?.span.reasons?.find((r) => typeof r === 'string') as string | undefined
     const state = toState(last?.status)
     const summary = last?.span.summary || firstReason || last?.span.errorDetail || last?.span.errorCode || (state === 'none' ? '本次未经过此节点' : state === 'ok' ? '已完成' : last?.note || '')
+    const role = ROLE[name] ?? (last?.kind === 'decision' ? '闸门 · 决策' : 'Agent')
+    const head = role.split(' · ')[0]
     return {
-      key: name, label: AGENT_LABEL[name] ?? last?.span.label ?? name, role: ROLE[name] ?? (last?.kind === 'decision' ? '闸门 · 决策' : 'Agent'),
+      key: name, label: AGENT_LABEL[name] ?? last?.span.label ?? name, role,
+      badge: head === 'Leader' ? 'leader' : head === 'Worker' ? 'worker' : head === '闸门' ? 'gate' : head === '核验' ? 'check' : 'agent',
+      checks: checksOf(last?.span), inputs: [],
       state, summary, spanId: last?.spanId ?? null, start: hits[0]?.start ?? 0, end: last?.end ?? 0,
       durationMs: hits.length ? hits.reduce((a, h) => a + Math.max(0, h.end - h.start), 0) : null,
       model: lastModel ? (lastModel.modelReturned || lastModel.modelRequested || null) : null,
@@ -135,9 +152,16 @@ export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { row
   const rows: OrchRow[] = []
   for (const l of LAYOUT) {
     if (l.optional && !l.names.some((n) => byName.has(n))) continue
-    const names = l.names
-    rows.push({ key: l.key, title: l.title, fan: Boolean(l.fan) && names.length > 1, cards: names.map(card) })
+    // 本次没经过的节点不占位（反馈 10-19 #4）
+    const cards = l.names.map(card).filter((c) => c.state !== 'none' && c.state !== 'skipped')
+    if (!cards.length) continue
+    const fan = Boolean(l.fan) && cards.length > 1
+    const title = l.key === 'workers' ? (fan ? `并行派发 ${cards.length} 个 Worker` : '派发') : l.key === 'checks' && fan ? '两道核验' : l.title
+    rows.push({ key: l.key, title, fan, cards })
   }
+  const workers = rows.find((r) => r.key === 'workers')?.cards ?? []
+  const leader = rows.find((r) => r.key === 'compose')?.cards[0]
+  if (leader) leader.inputs = workers.filter((w) => w.state === 'ok').map((w) => ({ label: w.label, text: w.summary }))
   const extra = [...byName.keys()].filter((n) => !known.has(n))
   if (extra.length) rows.push({ key: 'after', title: '发送后', fan: extra.length > 1, cards: extra.map(card) })
   return { rows, total }

@@ -25,12 +25,12 @@ beforeEach(() => {
 describe('ConversationTrace', () => {
   it('P1–P3', async () => {
     render(<ConfigProvider><MemoryRouter><ConversationTrace conversationId="c1" /></MemoryRouter></ConfigProvider>)
-    expect(await screen.findByText('命中 2 条知识：洁面')).toBeInTheDocument()
+    expect((await screen.findAllByText('命中 2 条知识：洁面')).length).toBeGreaterThan(0)
     expect(api.traces).toHaveBeenCalledWith({ conversationId: 'c1', limit: 12 })
     expect(screen.getByText(/第 2 轮 .*（最新）/)).toBeInTheDocument()
     fireEvent.mouseDown(screen.getByRole('combobox', { name: '切换轮次' }))
     fireEvent.click(await screen.findByText(/第 1 轮/))
-    expect(await screen.findByText('未命中相关知识')).toBeInTheDocument()
+    expect((await screen.findAllByText('未命中相关知识')).length).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('button', { name: '共情起草' }))
     await waitFor(() => expect(screen.getAllByText('草稿 52 字').length).toBeGreaterThan(1))
   })
