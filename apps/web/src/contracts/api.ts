@@ -1830,6 +1830,30 @@ export interface components {
             /** Agents */
             agents: components["schemas"]["AgentModelItem"][];
         };
+        /**
+         * AgentUsage
+         * @description 按 Agent 汇总（阶段 5）：模型调用跨度挂在哪个 Agent 下就算谁的。
+         */
+        AgentUsage: {
+            /** Agent */
+            agent: string;
+            /** Calls */
+            calls: number;
+            /** Prompttokens */
+            promptTokens: number;
+            /** Completiontokens */
+            completionTokens: number;
+            /** Cachedtokens */
+            cachedTokens: number;
+            /** Latencyseconds */
+            latencySeconds: number;
+            /** Estimatedcost */
+            estimatedCost: number | null;
+            /** Traces */
+            traces: number;
+            /** Latesttraceid */
+            latestTraceId: string | null;
+        };
         /** ArtifactView */
         ArtifactView: {
             /** Sha256 */
@@ -5054,6 +5078,11 @@ export interface components {
             byDay: {
                 [key: string]: number;
             };
+            /**
+             * Byagent
+             * @default []
+             */
+            byAgent: components["schemas"]["AgentUsage"][];
         };
         /** UsageView */
         UsageView: {

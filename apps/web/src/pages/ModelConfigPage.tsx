@@ -310,7 +310,7 @@ export function ModelConfigPage() {
         </Button>
       } />
       <div className="yt-page">
-      <Tabs className="yt-config-tabs" activeKey={tab} onChange={(key) => setParams((old) => { const next = new URLSearchParams(old); next.set('tab', key); if (key !== 'trace') next.delete('trace'); return next })}
+      <Tabs className="yt-config-tabs" activeKey={tab} onChange={(key) => setParams((old) => { const next = new URLSearchParams(old); next.set('tab', key); if (key !== 'trace') { next.delete('trace'); next.delete('conversation') } return next })}
         items={[{ key: 'models', label: '模型与成本', children: <>
 
       {error ? (
@@ -366,9 +366,9 @@ export function ModelConfigPage() {
           handleTestRerank={handleTestRerank} />
       </Drawer>
       <AgentModelsPanel />
-      {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} /></section>}
+      {usage && <section className="yt-usage-section"><h2 className="yt-section-title">评测与成本</h2><UsagePanel usage={usage} onOpenTrace={(id) => setParams((old) => { const next = new URLSearchParams(old); next.set('tab', 'trace'); next.set('trace', id); return next })} /></section>}
         </> },
-        { key: 'trace', label: 'Agent 追踪', children: <TraceConsole initialTrace={params.get('trace')} /> }]} />
+        { key: 'trace', label: 'Agent 追踪', children: <TraceConsole initialTrace={params.get('trace')} initialConversation={params.get('conversation')} /> }]} />
       </div>
     </div>
   )

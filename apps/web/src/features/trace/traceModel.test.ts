@@ -78,3 +78,21 @@ describe('traceModel', () => {
     expect(buildLanes(t(0), more as never).rows.find((r) => r.spanId === 'd2')!.models).toHaveLength(1)
   })
 })
+
+describe('修复回路（阶段 5）', () => {
+  // R1 起草出现两次却没标出修复回路；R2 回路起点不是打回草稿的那道核验；R3 没有重试时也画回路
+  const loop = [
+    span({ spanId: 'k', seq: 0, name: 'composer', startedAt: t(0), endedAt: t(900), durationMs: 900 }),
+    span({ spanId: 'p', seq: 1, name: 'program_check', startedAt: t(900), endedAt: t(910), durationMs: 10 }),
+    span({ spanId: 'q', seq: 2, name: 'verifier', status: 'ok', reasons: ['回复的说法没有来源支持'], startedAt: t(910), endedAt: t(1500), durationMs: 590 }),
+    span({ spanId: 'k2', seq: 3, name: 'composer', attempt: 2, startedAt: t(1500), endedAt: t(2300), durationMs: 800 }),
+    span({ spanId: 'p2', seq: 4, name: 'program_check', startedAt: t(2300), endedAt: t(2310), durationMs: 10 }),
+  ]
+  it('R1 R2 marks the loop from the verifier back to the composer', () => {
+    const { repair } = buildOrchestration(t(0), loop as never)
+    expect(repair).toEqual({ from: '核验', fromKey: 'verifier', reason: '回复的说法没有来源支持', attempts: 2, spanId: 'q' })
+  })
+  it('R3 no loop without a retry', () => {
+    expect(buildOrchestration(t(0), loop.slice(0, 3) as never).repair).toBeNull()
+  })
+})

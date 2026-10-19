@@ -13,7 +13,7 @@ import { UsagePanel } from './UsagePanel'
 
 const empty = { calls: 0, promptTokens: 0, completionTokens: 0, cachedTokens: 0, cacheHitRate: null,
   callsMissingTokens: 0, estimatedCost: null, replyRuns: 0, callsPerReply: null, costPerReply: null,
-  byStage: [], byModel: [], byDay: {} }
+  byStage: [], byModel: [], byDay: {}, byAgent: [] }
 const view: UsageView = {
   live: { ...empty, calls: 6, promptTokens: 60000, completionTokens: 3000, cachedTokens: 12000, cacheHitRate: 0.2,
     replyRuns: 3, callsPerReply: 2, byStage: [{ stage: 'draft', calls: 3, promptTokens: 40000, completionTokens: 2400, cachedTokens: 8000, latencySeconds: 12 },
@@ -51,5 +51,16 @@ describe('UsagePanel', () => {
     const main = [...container.querySelectorAll('.yt-usage-kpis.is-main > div')].map((el) => el.getAttribute('aria-label'))
     expect(main).toEqual(['每条回复成本', '缓存命中率', '每条回复调用'])
   })
+  it('P5 groups cost by agent and jumps to the latest trace', async () => {
+    const opened: string[] = []
+    const withAgents = { ...view, live: { ...view.live, byAgent: [
+      { agent: 'composer', calls: 3, promptTokens: 40000, completionTokens: 2400, cachedTokens: 8000, latencySeconds: 12, estimatedCost: null, traces: 3, latestTraceId: 'trace-1' },
+      { agent: 'verifier', calls: 3, promptTokens: 20000, completionTokens: 600, cachedTokens: 4000, latencySeconds: 6, estimatedCost: null, traces: 3, latestTraceId: null },
+    ] } }
+    render(<ConfigProvider><UsagePanel usage={withAgents} onOpenTrace={(id) => opened.push(id)} /></ConfigProvider>)
+    expect(screen.getByText('共情起草')).toBeInTheDocument()
+    expect(screen.getAllByText('核验').length).toBeGreaterThan(0)
+    screen.getByLabelText('查看共情起草最近追踪').click()
+    expect(opened).toEqual(['trace-1'])
+  })
 })
-

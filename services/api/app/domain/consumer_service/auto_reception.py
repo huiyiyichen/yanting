@@ -386,7 +386,7 @@ def process_job(runtime: Any, job_id: str) -> None:
                 mode_revision=job.mode_revision, message_revision=job.message_revision,
                 orchestration=runtime.settings.orchestration,
             )
-            progress.begin(job_id, conversation_id)
+            progress.begin(job_id, conversation_id, trace)
             progress.mark(job_id, "安全检查", "running")
             checks = _safety_checks(trigger.body or "")
             handoff = any(item["hit"] for item in checks)

@@ -1,4 +1,4 @@
-import { ApiOutlined, CheckCircleFilled, CheckOutlined, ClockCircleOutlined, CloseCircleFilled, CloseOutlined, CustomerServiceOutlined, MinusCircleOutlined, RightOutlined, RobotOutlined, SafetyCertificateOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
+import { ApiOutlined, CheckCircleFilled, CheckOutlined, ClockCircleOutlined, CloseCircleFilled, CloseOutlined, CustomerServiceOutlined, MinusCircleOutlined, RollbackOutlined, RightOutlined, RobotOutlined, SafetyCertificateOutlined, SendOutlined, UserOutlined } from '@ant-design/icons'
 import type { CSSProperties } from 'react'
 import { useMemo } from 'react'
 import { buildOrchestration, cardStateText, fmtMs, type OrchCard, type TraceSpan } from './traceModel'
@@ -48,7 +48,7 @@ export function OrchestrationTree({ startedAt, spans, selected, lit = null, comp
   onSelect: (spanId: string) => void
   trigger?: string | null; outcome?: string | null; outcomeStatus?: string
 }) {
-  const { rows, total } = useMemo(() => buildOrchestration(startedAt, spans), [startedAt, spans])
+  const { rows, total, repair } = useMemo(() => buildOrchestration(startedAt, spans), [startedAt, spans])
   const cards = rows.flatMap((r) => r.cards).filter((c) => c.durationMs != null)
   const handoff = outcomeStatus === 'handoff' || outcomeStatus === 'failed'
   return <div className={`yt-orch${compact ? ' is-compact' : ''}`} aria-label="编排流程">
@@ -65,6 +65,12 @@ export function OrchestrationTree({ startedAt, spans, selected, lit = null, comp
         {row.cards.map((card) => <Card key={card.key} card={card} total={total} compact={compact}
           selected={Boolean(card.spanId && card.spanId === selected)} lit={lit} onSelect={onSelect} />)}
       </div>
+      {row.key === 'checks' && repair && <button type="button" className="yt-orch-loop" aria-label="修复回路"
+        disabled={!repair.spanId} onClick={() => repair.spanId && onSelect(repair.spanId)}>
+        <RollbackOutlined className="ic" />
+        <span className="t"><b>修复回路</b>{repair.from}未过 → 打回共情起草，重新起草{repair.attempts > 2 ? ` ${repair.attempts - 1} 次` : '一次'}</span>
+        {repair.reason && !compact && <q title={repair.reason}>{repair.reason}</q>}
+      </button>}
     </div>)}
     {(outcome != null || handoff) && <div className={`yt-orch-row is-tail`}><div className={`yt-orch-end is-out${handoff ? ' is-handoff' : ''}`}>
       <span className="who">{handoff ? <><CustomerServiceOutlined />转人工</> : <><RobotOutlined />发给客户</>}</span>

@@ -1,4 +1,4 @@
-import { CheckOutlined, CloseOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { ApartmentOutlined, CheckOutlined, CloseOutlined, MessageOutlined, MoreOutlined, PlayCircleOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { Alert, Button, Dropdown, Empty, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag, message } from 'antd'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -356,7 +356,11 @@ export function RiskDashboardPage() {
           <Dropdown menu={{ items: [
             { key: 'ignored', label: '忽略风险', icon: <CloseOutlined />, disabled: !['pending', 'in_progress'].includes(incident.riskStatus) },
             { key: 'reopen', label: '重新介入', icon: <ReloadOutlined />, disabled: !['resolved', 'ignored'].includes(incident.riskStatus) },
-          ], onClick: ({ key }) => beginAction(key as RiskAction['status']) }}>
+            { type: 'divider' },
+            { key: 'trace', label: '查看 Agent 追踪', icon: <ApartmentOutlined />, disabled: !primaryId },
+          ], onClick: ({ key }) => key === 'trace'
+            ? primaryId && navigate(`/platform/models?tab=trace&conversation=${encodeURIComponent(primaryId)}`)
+            : beginAction(key as RiskAction['status']) }}>
             <Button aria-label="更多处置" title="更多处置" icon={<MoreOutlined />} />
           </Dropdown>
         </div>

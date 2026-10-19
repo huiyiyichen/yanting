@@ -95,6 +95,21 @@ export type OrchCard = {
   issues: number
 }
 export type OrchRow = { key: string; title?: string; fan: boolean; cards: OrchCard[] }
+/** 修复回路（阶段 5）：起草 → 核验未过 → 重新起草。from 是打回草稿的那道核验。 */
+export type RepairLoop = { from: string; fromKey: string; reason: string; attempts: number; spanId: string | null }
+
+/** 起草跨度出现第 2 次时，找出它之前最近一次留下问题的核验节点作为回路起点。 */
+export function repairLoopOf(spans: TraceSpan[]): RepairLoop | null {
+  const top = [...spans].filter((s) => !isModelSpan(s)).sort((a, b) => a.seq - b.seq)
+  const composes = top.filter((s) => s.name === 'composer')
+  const retry = composes.find((s, i) => i > 0 || s.attempt > 1)
+  if (!retry || composes.length < 2) return null
+  const before = top.filter((s) => s.seq < retry.seq && (s.name === 'program_check' || s.name === 'verifier'))
+  const gate = before.at(-1)
+  const reason = (gate?.reasons ?? []).find((r): r is string => typeof r === 'string') ?? ''
+  return { from: gate ? (AGENT_LABEL[gate.name] ?? gate.name) : '核验', fromKey: gate?.name ?? 'verifier', reason,
+    attempts: composes.length, spanId: gate?.spanId ?? null }
+}
 
 const ROLE: Record<string, string> = {
   safety_gate: '闸门 · 入口', triage: 'Leader · 理解与分派', trajectory: 'Worker · 查询', knowledge: 'Worker · 检索', vision: 'Worker · 看图',
@@ -117,7 +132,7 @@ const toState = (status: string | undefined): CardState =>
   !status ? 'none' : status === 'ok' ? 'ok' : status === 'skipped' ? 'skipped' : status === 'running' ? 'running' : 'fail'
 
 /** 把一次追踪整理成编排卡片树：每个 Agent 一张卡（多次尝试合并，显示最后一次）。 */
-export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { rows: OrchRow[]; total: number } {
+export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { rows: OrchRow[]; total: number; repair: RepairLoop | null } {
   const { rows: lanes, total } = buildLanes(startedAt, spans)
   const byName = new Map<string, LaneRow[]>()
   for (const r of lanes) if (!isModelSpan(r.span)) byName.set(r.span.name, [...(byName.get(r.span.name) ?? []), r])
@@ -166,7 +181,7 @@ export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { row
   if (leader) leader.inputs = workers.filter((w) => w.state === 'ok').map((w) => ({ label: w.label, text: w.summary }))
   const extra = [...byName.keys()].filter((n) => !known.has(n))
   if (extra.length) rows.push({ key: 'after', title: '发送后', fan: extra.length > 1, cards: extra.map(card) })
-  return { rows, total }
+  return { rows, total, repair: repairLoopOf(spans) }
 }
 
 export const fmtMs = (v: number | null | undefined) => v == null ? '' : v < 1000 ? `${Math.round(v)}ms` : `${(v / 1000).toFixed(1)}s`

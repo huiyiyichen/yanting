@@ -25,3 +25,18 @@ def test_usage_summary_separates_mock_and_groups_by_stage(workspace):
     assert view["mock"]["callsPerReply"] == view["mock"]["calls"]
     future = client.get("/api/platform/usage?from=2099-01-01", headers=SUPPORT).json()
     assert future["mock"]["calls"] == 0
+
+
+def test_usage_groups_model_calls_by_agent_with_trace_link(workspace):
+    """G5 成本没有按 Agent 分组，或分组行无法跳到对应追踪（阶段 5）。"""
+    client, _, _ = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "在吗")
+    assert client.post(f"/api/support/reception/{cid}/assistant", headers=SUPPORT).status_code == 200
+    view = client.get("/api/platform/usage", headers=SUPPORT).json()
+    agents = {row["agent"]: row for row in view["mock"]["byAgent"]}
+    assert {"composer", "verifier"} <= set(agents)
+    assert sum(row["calls"] for row in agents.values()) == view["mock"]["calls"]
+    trace_id = agents["composer"]["latestTraceId"]
+    assert trace_id and client.get(f"/api/platform/traces/{trace_id}", headers=SUPPORT).status_code == 200
+    assert view["live"]["byAgent"] == []

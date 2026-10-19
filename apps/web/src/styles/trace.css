@@ -164,3 +164,14 @@ html[data-theme='dark'] .yt-oc .bd.is-leader { color: var(--tr-model); }
 .yt-rd-msg { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; background: var(--tr-wash); }
 .yt-rd-msg .r { font-size: 11px; font-weight: 600; color: var(--tr-ink3); }
 .yt-rd-msg.is-assistant { background: color-mix(in srgb, var(--tr-model) 14%, var(--tr-card)); }
+
+/* 修复回路（阶段 5）：核验未过 → 打回起草。虚线琥珀框 + 回转箭头，点击打开打回草稿的那道核验 */
+.yt-orch-loop { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 10px auto 0; padding: 6px 10px;
+  border: 1px dashed color-mix(in srgb, #d99a2b 70%, transparent); border-radius: 8px; background: color-mix(in srgb, #d99a2b 8%, var(--tr-card));
+  color: var(--tr-ink); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.yt-orch-loop:disabled { cursor: default; }
+.yt-orch-loop .ic { color: #d99a2b; font-size: 14px; flex: none; }
+.yt-orch-loop .t { flex: none; }
+.yt-orch-loop .t b { margin-right: 6px; color: #b07a16; }
+.yt-orch-loop q { min-width: 0; overflow: hidden; color: var(--tr-ink3); white-space: nowrap; text-overflow: ellipsis; quotes: none; }
+.yt-orch.is-compact .yt-orch-loop { margin-top: 6px; padding: 4px 8px; }

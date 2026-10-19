@@ -9,6 +9,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from threading import Lock
+from typing import Any
 
 DISPLAY_STEPS = ("安全检查", "读取轨迹", "知识检索", "起草", "核验", "发送")
 #: 工作流节点名 → 显示步骤；图片读取并入读取轨迹，两个核验节点合并
@@ -32,6 +33,8 @@ class RunState:
     conversation_id: str
     steps: dict[str, StepState] = field(default_factory=lambda: {n: StepState(n) for n in DISPLAY_STEPS})
     outcome: str | None = None
+    #: 本轮的追踪（进程内对象）。有它时全景按实际运行的 Agent 跨度显示，而不是固定步骤
+    trace: Any = None
 
     def snapshot(self, now: float | None = None) -> list[dict]:
         now = time.perf_counter() if now is None else now
@@ -47,9 +50,44 @@ _running: dict[str, RunState] = {}
 _last: dict[str, dict] = {}
 
 
-def begin(job_id: str, conversation_id: str) -> None:
+def begin(job_id: str, conversation_id: str, trace: Any = None) -> None:
     with _lock:
-        _running[job_id] = RunState(job_id, conversation_id)
+        _running[job_id] = RunState(job_id, conversation_id, trace=trace)
+
+
+#: 跨度名 → 全景显示名（与 panorama.AGENT_LABEL 一致）
+SPAN_LABEL = {
+    "safety_gate": "安全闸门", "triage": "分诊", "trajectory": "轨迹查询", "knowledge": "知识", "vision": "视觉",
+    "composer": "共情起草", "program_check": "程序核验", "verifier": "核验", "output_gate": "输出闸门",
+    "send_gate": "发送闸门", "rewriter": "改写",
+}
+
+
+def live_steps(trace: Any, now: float | None = None) -> list[dict] | None:
+    """从运行中的追踪读实时跨度：每个顶层 Agent 一行，运行中的显示已用时间，多次尝试合并。"""
+    spans = list(getattr(trace, "spans", None) or [])
+    if not spans:
+        return None
+    now = time.perf_counter() if now is None else now
+    steps: dict[str, dict] = {}
+    for span in sorted(spans, key=lambda item: item.seq):
+        if span.parent_span_id or span.kind in {"model", "model_call"}:
+            continue
+        if span.ended_at is None:
+            status, elapsed = "active", round((now - span._t0) * 1000)
+        else:
+            failed = span.status not in {"ok", "skipped"}
+            status = "fail" if failed else "skipped" if span.status == "skipped" else "done"
+            elapsed = span.duration_ms or 0
+        step = steps.get(span.name)
+        if step is None:
+            steps[span.name] = {"name": SPAN_LABEL.get(span.name) or span.label or span.name, "status": status,
+                                "durationMs": elapsed, "group": span.parallel_group, "attempts": 1}
+            continue
+        step["durationMs"] += elapsed
+        step["attempts"] += 1
+        step["status"] = status
+    return list(steps.values()) or None
 
 
 def mark(job_id: str, step: str, status: str) -> None:
@@ -92,7 +130,9 @@ def running_for(conversation_id: str) -> dict | None:
     with _lock:
         for run in _running.values():
             if run.conversation_id == conversation_id:
-                return {"jobId": run.job_id, "steps": run.snapshot()}
+                steps = live_steps(run.trace) if run.trace is not None else None
+                # 追踪要到本轮结束才落库，运行中不给 traceId，免得“查看追踪”打不开
+                return {"jobId": run.job_id, "steps": steps or run.snapshot()}
     return None
 
 

@@ -47,4 +47,16 @@ describe('TraceConsole', () => {
     expect(screen.queryByText('黑板')).toBeNull()
     expect(screen.queryByText('时序')).toBeNull()
   })
+  it('C6 从风险详情带会话跳来时先按会话筛选；C7 有修复时显示修复回路', async () => {
+    const repaired = { ...detail, spans: [
+      span({ spanId: 'k1', seq: 0, name: 'composer', startedAt: t(0), endedAt: t(500), durationMs: 500 }),
+      span({ spanId: 'v1', seq: 1, name: 'verifier', reasons: ['回复的说法没有来源支持'], startedAt: t(500), endedAt: t(900), durationMs: 400 }),
+      span({ spanId: 'k2', seq: 2, name: 'composer', attempt: 2, startedAt: t(900), endedAt: t(1400), durationMs: 500 }),
+      span({ spanId: 'v2', seq: 3, name: 'verifier', startedAt: t(1400), endedAt: t(1800), durationMs: 400 })] }
+    api.trace.mockResolvedValue(repaired)
+    render(<ConfigProvider><TraceConsole initialConversation="conv-9" /></ConfigProvider>)
+    expect(await screen.findByLabelText('修复回路')).toHaveTextContent('核验未过')
+    expect(api.traces).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 'conv-9' }))
+    expect(screen.getByDisplayValue('conv-9')).toBeInTheDocument()
+  })
 })

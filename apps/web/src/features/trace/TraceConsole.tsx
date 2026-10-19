@@ -12,9 +12,11 @@ const hm = (iso: string) => new Date(Date.parse(iso) + 8 * 3600000).toISOString(
 const secs = (a: string, b?: string | null) => (b ? `${((Date.parse(b) - Date.parse(a)) / 1000).toFixed(1)}s` : '')
 
 /** Agent 追踪台（模型配置页签）：筛选、列表、编排卡片树（主视图，含耗时）与引用链、节点检查器、回放、导出。 */
-export function TraceConsole({ initialTrace }: { initialTrace?: string | null }) {
+export function TraceConsole({ initialTrace, initialConversation }: { initialTrace?: string | null; initialConversation?: string | null }) {
   const [list, setList] = useState<TraceListView | null>(null)
-  const [filters, setFilters] = useState<{ status?: string; conversationId?: string; hasRepair: boolean }>({ hasRepair: false })
+  // 从风险详情跳来时带会话 ID：列表先按该会话筛选
+  const [filters, setFilters] = useState<{ status?: string; conversationId?: string; hasRepair: boolean }>(
+    { hasRepair: false, ...(initialConversation ? { conversationId: initialConversation } : {}) })
   const [currentId, setCurrentId] = useState<string | null>(initialTrace ?? null)
   const [detail, setDetail] = useState<TraceDetailView | null>(null)
   const [view, setView] = useState<'编排' | '引用'>('编排')
@@ -29,6 +31,7 @@ export function TraceConsole({ initialTrace }: { initialTrace?: string | null })
   }, [filters])
   useEffect(() => { void load() }, [load])
   useEffect(() => { if (initialTrace) setCurrentId(initialTrace) }, [initialTrace])
+  useEffect(() => { if (initialConversation) { setFilters((f) => ({ ...f, conversationId: initialConversation })); setCurrentId(null) } }, [initialConversation])
   useEffect(() => {
     if (!currentId) { setDetail(null); return }
     let live = true
@@ -60,7 +63,7 @@ export function TraceConsole({ initialTrace }: { initialTrace?: string | null })
 
   return <div className="yt-trace" aria-label="Agent 追踪">
     <div className="yt-trace-filters">
-      <Input allowClear size="small" placeholder="会话号" style={{ width: 160 }} onPressEnter={(e) => setFilters((f) => ({ ...f, conversationId: (e.target as HTMLInputElement).value.trim() || undefined }))}
+      <Input allowClear size="small" placeholder="会话号" defaultValue={initialConversation ?? undefined} style={{ width: 160 }} onPressEnter={(e) => setFilters((f) => ({ ...f, conversationId: (e.target as HTMLInputElement).value.trim() || undefined }))}
         onChange={(e) => { if (!e.target.value) setFilters((f) => ({ ...f, conversationId: undefined })) }} />
       <Select allowClear size="small" placeholder="结果" style={{ width: 110 }} value={filters.status} onChange={(status) => setFilters((f) => ({ ...f, status }))}
         options={['sent', 'handoff', 'failed'].map((v) => ({ value: v, label: STATUS[v] }))} />

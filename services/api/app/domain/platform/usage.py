@@ -10,7 +10,7 @@ import json
 from collections import defaultdict
 from datetime import UTC, date, datetime, time, timedelta, timezone
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -66,6 +66,19 @@ class ModelUsage(ApiModel):
     estimated_cost: float | None
 
 
+class AgentUsage(ApiModel):
+    """按 Agent 汇总（阶段 5）：模型调用跨度挂在哪个 Agent 下就算谁的。"""
+    agent: str
+    calls: int
+    prompt_tokens: int
+    completion_tokens: int
+    cached_tokens: int
+    latency_seconds: float
+    estimated_cost: float | None
+    traces: int
+    latest_trace_id: str | None
+
+
 class UsageBucket(ApiModel):
     calls: int
     prompt_tokens: int
@@ -80,6 +93,7 @@ class UsageBucket(ApiModel):
     by_stage: list[StageUsage]
     by_model: list[ModelUsage]
     by_day: dict[str, int]
+    by_agent: list[AgentUsage] = Field(default_factory=list)
 
 
 class UsageView(ApiModel):
@@ -164,5 +178,61 @@ def usage_summary(session: Session, prices: dict[str, ModelPrice], *, start: dat
             by_day=dict(sorted(days.items())),
         )
 
-    return UsageView(live=bucket(buckets[False], reply_runs[False]), mock=bucket(buckets[True], reply_runs[True]),
-                     priced_models=sorted(prices))
+    agents = agent_usage(session, prices, lower=_bound(start, end=False), upper=_bound(end, end=True))
+    live, mock = bucket(buckets[False], reply_runs[False]), bucket(buckets[True], reply_runs[True])
+    live.by_agent, mock.by_agent = agents[False], agents[True]
+    return UsageView(live=live, mock=mock, priced_models=sorted(prices))
+
+
+def agent_usage(session: Session, prices: dict[str, ModelPrice], *, lower: datetime | None = None,
+                upper: datetime | None = None) -> dict[bool, list[AgentUsage]]:
+    """从追踪的模型调用跨度按所属 Agent 汇总；没有父 Agent 的调用记为 other。"""
+    from app.audit.trace_models import AgentSpanRow
+
+    query = select(AgentSpanRow).where(AgentSpanRow.kind.in_(("model_call", "model")))
+    if lower is not None:
+        query = query.where(AgentSpanRow.started_at >= lower)
+    if upper is not None:
+        query = query.where(AgentSpanRow.started_at < upper)
+    calls = list(session.scalars(query))
+    parents: dict[str, AgentSpanRow] = {}
+    pending = {c.parent_span_id for c in calls if c.parent_span_id}
+    while pending:  # 嵌套时一直向上找到非模型跨度
+        rows = list(session.scalars(select(AgentSpanRow).where(AgentSpanRow.span_id.in_(pending))))
+        parents.update({row.span_id: row for row in rows})
+        pending = {row.parent_span_id for row in rows
+                   if row.kind in {"model_call", "model"} and row.parent_span_id
+                   and row.parent_span_id not in parents}
+
+    def owner(span: AgentSpanRow) -> str:
+        current = parents.get(span.parent_span_id or "")
+        while current is not None and current.kind in {"model_call", "model"}:
+            current = parents.get(current.parent_span_id or "")
+        return current.name if current is not None else "other"
+
+    groups: dict[bool, dict[str, dict]] = {True: defaultdict(lambda: {"calls": [], "traces": {}}),
+                                           False: defaultdict(lambda: {"calls": [], "traces": {}})}
+    for call in calls:
+        group = groups[bool(call.is_mock)][owner(call)]
+        group["calls"].append(call)
+        moment = call.started_at.isoformat() if call.started_at else ""
+        if moment >= group["traces"].get(call.trace_id, ""):
+            group["traces"][call.trace_id] = moment
+    out: dict[bool, list[AgentUsage]] = {}
+    for mock, by_name in groups.items():
+        rows = []
+        for name, group in by_name.items():
+            items = group["calls"]
+            costs = [estimate_cost(prices, c.model_returned or c.model_requested or "", prompt=c.prompt_tokens,
+                                   cached=c.cached_tokens, completion=c.completion_tokens) for c in items]
+            latest = max(group["traces"].items(), key=lambda kv: kv[1])[0] if group["traces"] else None
+            rows.append(AgentUsage(
+                agent=name, calls=len(items), prompt_tokens=sum(c.prompt_tokens or 0 for c in items),
+                completion_tokens=sum(c.completion_tokens or 0 for c in items),
+                cached_tokens=sum(c.cached_tokens or 0 for c in items),
+                latency_seconds=round(sum(c.duration_ms or 0 for c in items) / 1000, 3),
+                estimated_cost=round(sum(costs), 6) if costs and all(c is not None for c in costs) else None,
+                traces=len(group["traces"]), latest_trace_id=latest,
+            ))
+        out[mock] = sorted(rows, key=lambda row: (-row.prompt_tokens, row.agent))
+    return out
