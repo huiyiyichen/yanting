@@ -142,6 +142,9 @@ def _describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tupl
                 summary += f" · {'、'.join(why[:2])}，交事实核验"
             return _brief({"回复": _replies(draft)}), _brief(output), summary
         output = {"问题": issues, "核验原因": why}
+        scope = result.get("verify_scope")
+        if scope:
+            output["核验范围"] = f"读 {scope['reviewed']} / {scope['total']} 条来源（草稿引用 {scope['cited']} 条）"
         summary = (f"逐条对照来源，{'、'.join(why[:2])}均有据" if why else "事实核验通过") if not issues \
             else f"发现 {len(issues)} 个问题：{issues[0][:40]}"
         return _brief({"回复": _replies(draft)}), _brief(output), summary
@@ -153,6 +156,13 @@ def _describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tupl
         chars = len(replies[0]["body"]) if replies else 0
         summary = (f"定稿 {chars} 字" if replies else "没有可发送的回复") + (f" · 删去 {dropped} 段" if dropped else "") \
             + (f" · {len(flags)} 处待复核" if flags else "")
-        return None, _brief({"最终回复": replies, "待复核": flags, "删去段数": dropped}), summary
+        rule = result.get("gate_rule")
+        if rule:
+            from app.domain.consumer_service.grounded_workflow import GATE_RULES
+            summary += f" · {rule}"
+        out = {"最终回复": replies, "待复核": flags, "删去段数": dropped}
+        if rule:
+            out["闸门规则"] = f"{rule} {GATE_RULES.get(rule, '')}"
+        return None, _brief(out), summary
     keys = sorted(k for k in result if k not in {"steps", "calls"})
     return None, _brief({k: result[k] for k in keys[:8]}), ""

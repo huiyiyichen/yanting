@@ -188,6 +188,18 @@ def normalize_draft_customer_language(draft: GroundedDraft) -> GroundedDraft:
 _AUXILIARY_HINTS = ("service_summary", "交接摘要", "服务摘要", "memory", "记忆", "断点", "个性化建议")
 
 
+#: 发送闸门 G 规则（阶段 4 固定下来）。修复回路最多一次，修复后的草稿重新走程序校验与事实核验，
+#: 之后仍有问题才按下表处理。G6 以 ModelOutputInvalid 抛出，由调用方转人工。
+GATE_RULES = {
+    "G1": "全部通过，原样发送",
+    "G2": "只有交接摘要、记忆、建议等附加字段有问题：撤下这些字段，回复照常",
+    "G3": "客服草稿：事实核验问题逐条标注给客服复核，不撤回复",
+    "G4": "客服草稿：程序校验修复后仍未过，只保留回复并标注",
+    "G5": "自动接待：删去未通过核验的段落，剩余部分仍完整才发送",
+    "G6": "自动接待：无法安全发送，转人工",
+}
+
+
 def is_auxiliary_issue(issue: VerificationIssue) -> bool:
     """True when the issue is about a field outside the reply (summary, memory, advice...)."""
     if issue.format_error or issue.reply_index is not None:
@@ -365,6 +377,8 @@ class FlowState(TypedDict, total=False):
     images: list
     verification_issues: list[VerificationIssue]
     verify_invoked: bool
+    verify_scope: dict
+    gate_rule: str
     verify_reasons: list[str]
     check_items: list[dict]
     risk_level: str
@@ -447,6 +461,8 @@ def run_grounded_workflow(
                                 parallel_group=group) as span:
                     alive()
                     result = handler(state)
+                    if key == "composer" and result.get("attempt"):
+                        span.attempt = result["attempt"]  # 修复轮的起草记为第 2 次，追踪才能画修复回路
                     span.reasons = [str(issue)[:200] for issue in result.get("issues", [])[:8]]
                     if result.get("verify_reasons"):
                         span.reasons.append({"verifyReasons": result["verify_reasons"]})
@@ -929,7 +945,9 @@ def run_grounded_workflow(
             text_issues = validate_customer_reply(reply.body, catalog)
             claim_issues = validate_claims(reply.body, reply.claims, catalog)
             care_issues = validate_care_preferences([reply.body], state["latest_message"])
-            counts["text"] += len(text_issues); counts["claims"] += len(claim_issues); counts["care"] += len(care_issues)
+            counts["text"] += len(text_issues)
+            counts["claims"] += len(claim_issues)
+            counts["care"] += len(care_issues)
             candidate_issues = [*text_issues, *claim_issues, *care_issues]
             if candidate_issues:
                 reply_issues.extend(candidate_issues)
@@ -1005,11 +1023,19 @@ def run_grounded_workflow(
             conversation_id, *state["context"].history_conversation_ids,
             *(order.conversation_id for order in state["context"].orders),
         }
-        review_sources = [
-            source for source in state["sources"]
-            if source.kind not in {"customer_message", "staff_message"}
-            or source.subject_id in context_ids or source.source_id in refs
-        ]
+        if multi:
+            # 阶段 4：A5 只读草稿实际引用的来源，加上本会话消费者原话和图片观察（判断语境与图片回复）。
+            review_sources = [
+                source for source in state["sources"]
+                if source.source_id in refs or source.kind == "image_observation"
+                or (source.kind == "customer_message" and source.subject_id == conversation_id)
+            ]
+        else:
+            review_sources = [
+                source for source in state["sources"]
+                if source.kind not in {"customer_message", "staff_message"}
+                or source.subject_id in context_ids or source.source_id in refs
+            ]
         result, calls = complete(
             state, "verify",
             VERIFIER_PROMPT + "\n" + BREAKPOINT_REVIEW + "\n" + PERSONALIZATION_REVIEW
@@ -1038,11 +1064,20 @@ def run_grounded_workflow(
         return {"issues": [issue.detail for issue in verdict.blocking_issues], "calls": calls,
                 "verification_issues": verdict.blocking_issues,
                 "verify_invoked": True,
+                "verify_scope": {"reviewed": len(review_sources), "total": len(state["sources"]),
+                                 "cited": len(refs)},
                 "verification_format_errors": state.get("verification_format_errors", 0)
                 + sum(issue.format_error for issue in verdict.issues),
                 "style_issues": [issue.detail for issue in verdict.issues if issue.category == "style"]}
 
     def accepted(state: FlowState):
+        """发送闸门（规则固定，见 GATE_RULES）。返回值带 gate_rule 记录命中的规则。"""
+        decided = _accepted(state)
+        if "gate_rule" not in decided:
+            decided = {**decided, "gate_rule": "G2" if decided.get("auxiliary_dropped") else "G1"}
+        return decided
+
+    def _accepted(state: FlowState):
         update: dict = {}
         verifier_issues = state.get("verification_issues") or []
         if state["issues"] and verifier_issues and state["issues"] == [i.detail for i in verifier_issues]:
@@ -1067,14 +1102,14 @@ def run_grounded_workflow(
                 verifier_issues = state.get("verification_issues") or []
                 if verifier_issues and state["issues"] == [v.detail for v in verifier_issues]:
                     flags = [{"replyIndex": i.reply_index, "detail": i.detail} for i in verifier_issues]
-                    return {**update, "review_flags": flags, "issues": []}
+                    return {**update, "review_flags": flags, "issues": [], "gate_rule": "G3"}
                 # Program-check issues cannot be attributed to one field: keep only the reply.
                 draft = state["draft"].model_copy(update={
                     "service_summary": "", "memory": [], "personalized_advice": [],
                     "service_breakpoints": None if state["draft"].service_breakpoints is None else [],
                 })
                 flags = [{"replyIndex": None, "detail": detail} for detail in state["issues"]]
-                return {**update, "draft": draft, "review_flags": flags, "issues": [],
+                return {**update, "draft": draft, "review_flags": flags, "issues": [], "gate_rule": "G4",
                         "auxiliary_dropped": [*update.get("auxiliary_dropped", []), *state["issues"]]}
             if state.get("verification_issues"):
                 partial = partial_verified_draft(
@@ -1083,7 +1118,7 @@ def run_grounded_workflow(
                 )
                 if partial:
                     draft, dropped = partial
-                    return {**update, "draft": draft, "segments_dropped": dropped, "issues": []}
+                    return {**update, "draft": draft, "segments_dropped": dropped, "issues": [], "gate_rule": "G5"}
             raise ModelOutputInvalid(state["issues"][0][:100], detail="；".join(state["issues"])[:500])
         return {}
 
@@ -1128,7 +1163,16 @@ def run_grounded_workflow(
     graph.add_edge("compose", "check")
     graph.add_conditional_edges("check", lambda s: "compose" if s["issues"] and s["attempt"] < 2
                                else "accepted" if s["issues"] or not s.get("verify_reasons") else "verify")
-    graph.add_conditional_edges("verify", lambda s: "compose" if s["issues"] and s["attempt"] < 2 else "accepted")
+
+    def after_verify(state: FlowState) -> str:
+        if not state["issues"] or state["attempt"] >= 2:
+            return "accepted"
+        if multi and all(is_auxiliary_issue(i) for i in state.get("verification_issues") or []):
+            # 只涉及附加字段（交接摘要、建议等）的问题由发送闸门撤下字段，不为它重新起草
+            return "accepted"
+        return "compose"
+
+    graph.add_conditional_edges("verify", after_verify, ["compose", "accepted"])
     graph.add_edge("accepted", END)
     out = graph.compile().invoke({"steps": [], "issues": [], "calls": []})
     trace.versions.setdefault("promptVersion", out.get("prompt_version"))

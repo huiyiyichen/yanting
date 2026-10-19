@@ -39,8 +39,8 @@ def _provider(provider):
 
 
 def _run(factory, provider, cid, search, orchestration="multi"):
-    from app.domain.consumer_service.grounded_workflow import run_grounded_workflow
     from app.audit import tracer
+    from app.domain.consumer_service.grounded_workflow import run_grounded_workflow
 
     settings = get_settings().model_copy(update={"orchestration": orchestration})
     with factory() as session, tracer.use(None):
