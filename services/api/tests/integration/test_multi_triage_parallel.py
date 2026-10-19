@@ -8,6 +8,10 @@ P4 轨迹查询与知识检索实际上仍是先后执行（时间上不重叠�
 P5 并行分支的父跨度互相嵌套，或没有标并行组。
 P6 分诊出故障时回复失败，而不是按保守路由全部派发。
 P7 single 模式行为改变（出现分诊跨度、知识先后执行之外的路径）。
+P8 知识分支的来源没有并入起草的来源目录（汇合 J1）。
+P9 意图与情绪 Agent 没与取证并行，或起草没有采用它的结论。
+
+（原 test_multi_orchestration.py 的 M1–M7 与本文件重复，已合并到这里。）
 """
 
 import json
@@ -213,3 +217,22 @@ def test_single_mode_has_no_understanding_agent(workspace):
 
     assert "understand" not in _spans(result) and seen["understand"] == 0
     assert "customerUnderstanding" not in seen["compose"][0][1]
+
+
+def test_knowledge_sources_join_the_composer_catalog(workspace):
+    """P8 汇合 J1：知识分支的来源并入起草的来源目录。"""
+    client, factory, provider = workspace
+    cid = fixtures._create(client)
+    fixtures._send(client, cid, "这款面霜敏感肌能用吗")
+    seen = _understanding_provider(provider, {"intent": "product_question", "emotion_level": "calm", "evidence": ""})
+    evidence = [{
+        "chunk_id": "k1", "document_id": "doc1", "document_title": "面霜使用说明", "document_version": "1",
+        "quoted_excerpt": "敏感肌可先在耳后试用", "source_text": "敏感肌可先在耳后试用",
+        "document_metadata": {}, "applicability": {},
+    }]
+
+    result = _run(factory, provider, cid, lambda query, session=None: (evidence, "sufficient"))
+
+    catalog = {s["sourceId"] for s in seen["compose"][-1][1]["sourceCatalog"]}
+    assert "knowledge:k1" in catalog
+    assert any(s.source_id == "knowledge:k1" for s in result["sources"])
