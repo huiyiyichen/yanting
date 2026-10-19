@@ -116,7 +116,7 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 60.0
     auto_reply_timeout_seconds: float = Field(default=45.0, ge=5, le=120)
     #: 编排方式：single=现有单图；multi=多 Agent 编排（逐阶段接入，可随时切回 single 对比）
-    orchestration: Literal["single", "multi"] = "single"
+    orchestration: Literal["single", "multi"] = "multi"
     #: 改进方案 P1-7：模型价格表 JSON，每百万 Token 元，如 {"deepseek-chat":{"input":2,"cachedInput":0.5,"output":8}}
     model_prices_json: str = ""
     #: 改进方案 P0-2：回复只有寒暄、共情、补问时只做程序校验，不调用模型核验
