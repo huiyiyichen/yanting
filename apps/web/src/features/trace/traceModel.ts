@@ -156,7 +156,9 @@ export function buildOrchestration(startedAt: string, spans: TraceSpan[]): { row
     const cards = l.names.map(card).filter((c) => c.state !== 'none' && c.state !== 'skipped')
     if (!cards.length) continue
     const fan = Boolean(l.fan) && cards.length > 1
-    const title = l.key === 'workers' ? (fan ? `并行派发 ${cards.length} 个 Worker` : '派发') : l.key === 'checks' && fan ? '两道核验' : l.title
+    // 只有时间上真的重叠才叫并行；单流程里轨迹与知识是先后执行的
+    const overlap = cards.some((a, i) => cards.some((b, j) => j > i && a.start < b.end && b.start < a.end))
+    const title = l.key === 'workers' ? (fan ? `${overlap ? '并行' : '依次'}调用 ${cards.length} 个 Worker` : '派发') : l.key === 'checks' && fan ? '两道核验' : l.title
     rows.push({ key: l.key, title, fan, cards })
   }
   const workers = rows.find((r) => r.key === 'workers')?.cards ?? []

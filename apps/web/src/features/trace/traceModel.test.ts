@@ -65,7 +65,7 @@ describe('traceModel', () => {
     expect(workers.fan).toBe(true)
     // 反馈 10-19 #4：没运行/跳过的节点不占位
     expect(workers.cards.map((c) => c.label)).toEqual(['轨迹查询', '知识'])
-    expect(workers.title).toBe('并行派发 2 个 Worker')
+    expect(workers.title).toBe('并行调用 2 个 Worker')
     expect(cardStateText(workers.cards[0])).toBe('已返回结果')
     const composer = rows[2].cards[0]
     expect(composer.attempts).toBe(2); expect(composer.state).toBe('ok'); expect(composer.spanId).toBe('d2')
