@@ -70,17 +70,39 @@ def describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tuple
 def _describe(agent: str, state: dict[str, Any], result: dict[str, Any]) -> tuple[Any, Any, str]:
     latest = state.get("latest_message") or result.get("latest_message") or ""
     issues = [str(i)[:200] for i in result.get("issues", []) or []]
+    if agent == "triage":
+        route = result.get("route")
+        dump = route.dump() if hasattr(route, "dump") else {}
+        names = {"trajectory": "轨迹查询", "knowledge": "知识", "vision": "视觉"}
+        workers = "、".join(names[w] for w in dump.get("workers", []))
+        output = {"派发": dump.get("workers", []), "意图": dump.get("intent_hint"),
+                  "情绪": dump.get("emotion_hint"), "保守路由": dump.get("conservative"),
+                  "理由": dump.get("reasons", []), "版本": dump.get("version")}
+        summary = f"派发 {workers}" + (" · 保守路由" if dump.get("conservative") else "") \
+            + (f" · {dump['reasons'][0]}" if dump.get("reasons") else "")
+        return _brief({"最新客户消息": latest, "图片": len(result.get("images") or [])}), _brief(output), summary
     if agent == "trajectory":
         context = result.get("context")
         products = [p.name for p in getattr(context, "products", [])[:4]]
         orders = [o.order_id for o in getattr(context, "orders", [])[:4]]
         sources = result.get("sources") or []
         output = {"最新消息": latest, "商品": products, "订单": orders,
-                  "服务来源": _source_kinds(sources), "图片": len(result.get("images") or []),
+                  "服务来源": _source_kinds(sources), "图片": len(result.get("images") or state.get("images") or []),
                   "风险等级": result.get("risk_level")}
         head = f"读取 {len(sources)} 条服务来源"
-        return _brief({"最新客户消息": latest, "消息数": len(result.get("messages") or [])}), _brief(output), (
+        messages = result.get("messages") or state.get("messages") or []
+        return _brief({"最新客户消息": latest, "消息数": len(messages)}), _brief(output), (
             head + (f" · {products[0]}" if products else "") + (f" · {len(orders)} 个订单" if orders else ""))
+    if agent == "triage":
+        route = result.get("route")
+        dumped = route.dump() if hasattr(route, "dump") else {}
+        names = {"trajectory": "轨迹", "knowledge": "知识", "vision": "视觉"}
+        workers = [names.get(w, w) for w in dumped.get("workers", [])]
+        output = {"派发": workers, "意图": dumped.get("intent_hint"), "情绪": dumped.get("emotion_hint"),
+                  "保守路由": dumped.get("conservative"), "理由": dumped.get("reasons"), "版本": dumped.get("version")}
+        summary = f"派发 {'、'.join(workers)}" + (" · 保守路由" if dumped.get("conservative") else "") \
+            + (f" · {dumped.get('intent_hint')}" if dumped.get("intent_hint") not in {None, "unknown"} else "")
+        return _brief({"最新客户消息": latest, "图片": len(result.get("images") or [])}), _brief(output), summary
     if agent == "knowledge":
         hits = result.get("knowledge") or []
         titles = list(dict.fromkeys(str(h.get("document_title", "")) for h in hits if h.get("document_title")))

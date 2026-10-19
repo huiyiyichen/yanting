@@ -440,7 +440,9 @@ class ConsumerServiceAssistant:
         self._session.flush()
         return view
 
-    def _knowledge(self, query: str) -> tuple[list[dict[str, Any]], str]:
+    def _knowledge(self, query: str, *, session: Session | None = None) -> tuple[list[dict[str, Any]], str]:
+        """知识检索。多 Agent 并行取证时由知识分支传入自己的只读会话，避免与轨迹查询共用一个会话。"""
+        db = session or self._session
         if self._runtime is None:
             return [], "unavailable"
         from app.domain.enums import Visibility
@@ -448,7 +450,7 @@ class ConsumerServiceAssistant:
         from app.knowledge.retrieval import RetrievalRequest, retrieve
 
         try:
-            base_ids = list(self._session.scalars(select(KnowledgeBaseRow.knowledge_base_id).where(
+            base_ids = list(db.scalars(select(KnowledgeBaseRow.knowledge_base_id).where(
                 KnowledgeBaseRow.knowledge_base_id.like("loreal-%"),
                 KnowledgeBaseRow.enabled.is_(True),
             )))
@@ -456,7 +458,7 @@ class ConsumerServiceAssistant:
                 return [], "not_found"
             skus = set(re.findall(r"\b(?:XC|XL|XW)\d{5}\b", query.upper()))
             result = retrieve(
-                self._session,
+                db,
                 settings=self._runtime.settings,
                 embedding_provider=self._runtime.embedding_provider,
                 request=RetrievalRequest(

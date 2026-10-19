@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 import time
 from collections.abc import Callable
 from time import monotonic
-from typing import Any, Literal, TypedDict, get_args
+from typing import Annotated, Any, Literal, TypedDict, get_args
 
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -53,6 +54,7 @@ from app.domain.consumer_service.reply_policy import (
     normalize_customer_terms,
     validate_customer_reply,
 )
+from app.domain.consumer_service.triage import TriageRoute, conservative_route, triage
 from app.domain.consumer_service.verification_policy import verification_reasons
 from app.errors import ConflictError, ModelOutputInvalid, ProviderNotConfigured, ProviderTimeout
 from app.integrations.model_provider import ChatMessage, ModelProvider
@@ -330,8 +332,16 @@ serviceStatements只可支持服务沟通过程和说过的承诺，不作为回
 不足以支持的候选应指出问题并要求移除，不为了发现风险而凑满三类。"""
 
 
+def merge_steps(old: list | None, new: list | None) -> list:
+    """并行分支各自在同一份旧列表后追加一步；按对象身份合并，单流程下等同于直接覆盖。"""
+    old, new = list(old or []), list(new or [])
+    return [*old, *[step for step in new if not any(step is seen for seen in old)]]
+
+
 class FlowState(TypedDict, total=False):
     multi: bool
+    route: TriageRoute
+    knowledge_sources: list[GroundingSource]
     context: Any
     sources: list[GroundingSource]
     input_hash: str
@@ -346,7 +356,7 @@ class FlowState(TypedDict, total=False):
     raw_draft: dict | None
     result: Any
     calls: list[dict]
-    steps: list[WorkflowStep]
+    steps: Annotated[list[WorkflowStep], merge_steps]
     issues: list[str]
     attempt: int
     service_statements: list[GroundingSource]
@@ -427,13 +437,14 @@ def run_grounded_workflow(
             raise ConflictError("接待任务已失效")
         remaining_seconds()
 
-    def tracked(name: str, handler: Callable, key: str = "", kind: str = "agent"):
+    def tracked(name: str, handler: Callable, key: str = "", kind: str = "agent", group: str | None = None):
         def node(state: FlowState):
             start = time.perf_counter()
             if on_step is not None:
                 on_step(name, "running")
             try:
-                with trace.span(key or name, kind, label=name, attempt=max(1, state.get("attempt", 0) or 1)) as span:
+                with trace.span(key or name, kind, label=name, attempt=max(1, state.get("attempt", 0) or 1),
+                                parallel_group=group) as span:
                     alive()
                     result = handler(state)
                     span.reasons = [str(issue)[:200] for issue in result.get("issues", [])[:8]]
@@ -475,15 +486,10 @@ def run_grounded_workflow(
             return {**result, "steps": steps}
         return node
 
-    def collect(state: FlowState):
+    def intake(state: FlowState) -> dict:
+        """轻量读取：会话消息、当前问题、图片和提示词。不读订单/工单，供分诊在取证前使用。"""
         from app.config import get_settings
-        from app.domain.consumer_service.service_breakpoints import additional_statements
-        context = ConsumerServiceRepository(session).context(conversation_id)
-        sources = collect_sources(session, conversation_id, context)
-        validate_sources_budget(sources)
         messages = conversation_messages(session, conversation_id)
-        statements = additional_statements(messages, sources)
-        validate_sources_budget([*sources, *statements])
         customer = [m for m in messages if m.sender_role.value == "customer" and (m.body or m.attachments)]
         if not customer:
             raise ModelOutputInvalid("当前会话没有消费者消息")
@@ -505,22 +511,41 @@ def run_grounded_workflow(
         if images:
             system += "\n" + IMAGE_REPLY_RULES
         return {
-            "context": context, "sources": sources, "messages": messages,
-            "input_hash": assistant_input_hash(session, conversation_id, sources=sources),
+            "messages": messages,
             "latest_message": customer[-1].body or "消费者发送了图片，未附文字问题",
-            "memory": memory_view(session, conversation_id, sources), "images": images,
+            "images": images,
             "prompt_version": prompt_version, "system_prompt": system, "calls": [], "attempt": 0,
-            "service_statements": statements, "multi": multi,
+            "multi": multi,
             "service_rules": {"repeatWindowHours": get_settings().risk_repeat_contact_hours},
+        }
+
+    def trajectory(state: FlowState) -> dict:
+        """服务轨迹：订单、工单、历史会话、服务记忆与当前风险。始终使用主会话。"""
+        from app.domain.consumer_service.service_breakpoints import additional_statements
+        context = ConsumerServiceRepository(session).context(conversation_id)
+        sources = collect_sources(session, conversation_id, context)
+        validate_sources_budget(sources)
+        statements = additional_statements(state["messages"], sources)
+        validate_sources_budget([*sources, *statements])
+        return {
+            "context": context, "sources": sources,
+            "input_hash": assistant_input_hash(session, conversation_id, sources=sources),
+            "memory": memory_view(session, conversation_id, sources),
+            "service_statements": statements,
             "risk_level": _active_risk_level(session, conversation_id),
         }
 
-    def retrieve(state: FlowState):
+    def collect(state: FlowState):
+        # 单流程：先轻量读取再查轨迹，与拆分前的输出字段一致
+        first = intake(state)
+        return {**first, **trajectory({**state, **first})}
+
+    def knowledge_query(state: FlowState, product_names: list[str]) -> str:
         customer = [m.body for m in state["messages"] if m.sender_role.value == "customer" and m.body]
-        query = " ".join([state["latest_message"],
-                          *[p.name for p in state["context"].products[:2]], *customer[-3:-1]])[:1800]
-        evidence, status = knowledge_search(query)
-        sources = [*state["sources"], *[
+        return " ".join([state["latest_message"], *product_names[:2], *customer[-3:-1]])[:1800]
+
+    def evidence_sources(evidence: list[dict]) -> list[GroundingSource]:
+        return [
             GroundingSource(
                 source_id=f"knowledge:{e['chunk_id']}", kind="knowledge", subject_id=e["document_id"],
                 label=e["document_title"], text=e.get("source_text", e["quoted_excerpt"]),
@@ -538,13 +563,34 @@ def run_grounded_workflow(
                     "sourceUrl": e.get("document_metadata", {}).get("source_url", ""),
                 },
             ) for e in evidence
-        ]]
-        validate_sources_budget(sources)
-        display_evidence = [
-            {key: value for key, value in item.items() if key != "source_text"}
-            for item in evidence
         ]
-        return {"sources": sources, "knowledge": display_evidence, "knowledge_status": status}
+
+    def display(evidence: list[dict]) -> list[dict]:
+        return [{key: value for key, value in item.items() if key != "source_text"} for item in evidence]
+
+    def retrieve(state: FlowState):
+        query = knowledge_query(state, [p.name for p in state["context"].products])
+        evidence, status = knowledge_search(query)
+        sources = [*state["sources"], *evidence_sources(evidence)]
+        validate_sources_budget(sources)
+        return {"sources": sources, "knowledge": display(evidence), "knowledge_status": status}
+
+    search_takes_session = "session" in inspect.signature(knowledge_search).parameters
+
+    def knowledge_branch(state: FlowState):
+        """知识 Worker（并行分支）：用自己的只读会话，不碰轨迹查询正在用的主会话。"""
+        from sqlalchemy.orm import Session as _Session
+        with _Session(bind=session.get_bind(), autoflush=False) as readonly:
+            try:
+                products = [p.name for p in ConsumerServiceRepository(readonly).context(conversation_id).products]
+            except Exception:  # 商品名只用来扩充检索词，读不到时只用消息检索
+                products = []
+            query = knowledge_query(state, products)
+            evidence, status = (knowledge_search(query, session=readonly) if search_takes_session
+                                else knowledge_search(query))
+            readonly.rollback()
+        return {"knowledge_sources": evidence_sources(evidence), "knowledge": display(evidence),
+                "knowledge_status": status}
 
     def complete(
         state: FlowState, stage: str, system: str, payload: dict, max_tokens: int,
@@ -607,7 +653,8 @@ def run_grounded_workflow(
         alive()
         return result, list(calls_log)
 
-    def observe_images(state: FlowState):
+    def observe(state: FlowState) -> dict:
+        """视觉 Worker：只调用看图模型并把观察写回图片对象，不读写数据库。"""
         images = state["images"]
         pending = [image for image in images if image.observation is None]
         calls = state["calls"]
@@ -712,15 +759,50 @@ def run_grounded_workflow(
             for image in pending:
                 image.observation = by_id[image.attachment.attachment_id]
                 image.model_id, image.is_mock = result.model, result.is_mock
+        return {"images": images, "calls": calls}
+
+    def apply_observations(state: FlowState) -> dict:
+        images = state["images"]
         updated = {f"image:{image.attachment.attachment_id}":
                    observation_source(image.attachment, image.observation) for image in images}
         sources = [updated.get(source.source_id, source) for source in state["sources"]]
         validate_sources_budget(sources)
         return {
-            "sources": sources, "images": images, "calls": calls,
+            "sources": sources,
             "input_hash": assistant_input_hash(session, conversation_id, sources=sources),
             "memory": memory_view(session, conversation_id, sources),
         }
+
+    def observe_images(state: FlowState):
+        seen = observe(state)
+        return {**seen, **apply_observations({**state, **seen})}
+
+    def triage_node(state: FlowState):
+        """分诊 Agent A1：轻量读取后按路由表 R1 决定派哪些取证 Worker。"""
+        first = intake(state)
+        customer = [m.body for m in first["messages"] if m.sender_role.value == "customer" and m.body]
+        try:
+            route = triage(first["latest_message"], customer[:-1], has_images=bool(first["images"]))
+        except Exception as exc:  # pragma: no cover - triage() 自身已兜底，这里再防一层
+            route = conservative_route(bool(first["images"]), f"分诊异常：{type(exc).__name__}")
+        return {**first, "route": route}
+
+    def join(state: FlowState):
+        """汇合节点 J1：把知识和视觉分支的结果并入轨迹查询的来源目录，再交给起草。"""
+        route = state["route"]
+        for name, label in (("knowledge", "知识"), ("vision", "视觉")):
+            if not getattr(route, name):
+                trace.skipped(name, f"分诊未派发{label}：" + "；".join(route.reasons[:1]), kind="query" if name == "knowledge" else "agent",
+                              label=label)
+        update: dict = {}
+        if state.get("knowledge_sources"):
+            update["sources"] = [*state["sources"], *state["knowledge_sources"]]
+            validate_sources_budget(update["sources"])
+        if not route.knowledge:
+            update.update(knowledge=[], knowledge_status="skipped")
+        if route.vision and state["images"]:
+            update.update(apply_observations({**state, **update}))
+        return update
 
     def dialogue(state: FlowState):
         # 已在 sourceCatalog 的消息只发来源 ID，不重复发送原文（P1-7 上下文去重）。
@@ -1006,20 +1088,43 @@ def run_grounded_workflow(
         return {}
 
     graph = StateGraph(FlowState)
-    for key, name, handler, kind in [
-        ("collect", "服务轨迹", collect, "query"), ("retrieve", "知识检索", retrieve, "query"),
-        ("observe_images", "图片读取", observe_images, "agent"),
-        ("compose", "理解与起草", compose, "agent"), ("check", "来源与字段校验", deterministic, "gate"),
-        ("verify", "独立事实核验", verify, "agent"), ("accepted", "输出确认", accepted, "decision"),
-    ]:
-        graph.add_node(key, tracked(name, handler, {
-            "collect": "trajectory", "retrieve": "knowledge", "observe_images": "vision",
-            "compose": "composer", "check": "program_check", "verify": "verifier", "accepted": "output_gate",
-        }[key], kind))
-    graph.add_edge(START, "collect")
-    graph.add_conditional_edges("collect", lambda state: "observe_images" if state["images"] else "retrieve")
-    graph.add_edge("observe_images", "retrieve")
-    graph.add_edge("retrieve", "compose")
+    shared = [
+        ("compose", "理解与起草", compose, "agent", "composer"),
+        ("check", "来源与字段校验", deterministic, "gate", "program_check"),
+        ("verify", "独立事实核验", verify, "agent", "verifier"),
+        ("accepted", "输出确认", accepted, "decision", "output_gate"),
+    ]
+    if multi:
+        # 阶段 2+3：分诊 Leader 派发，轨迹 / 知识 / 视觉并行取证，汇合后交给起草。
+        # 只有轨迹查询使用主会话；知识分支自开只读会话，视觉分支不读数据库。
+        for key, name, handler, kind, span_key in [
+            ("triage", "分诊", triage_node, "agent", "triage"),
+            ("trajectory", "服务轨迹", trajectory, "query", "trajectory"),
+            ("knowledge", "知识检索", knowledge_branch, "query", "knowledge"),
+            ("vision", "图片读取", observe, "agent", "vision"),
+            *shared,
+        ]:
+            group = "evidence" if key in {"trajectory", "knowledge", "vision"} else None
+            graph.add_node(key, tracked(name, handler, span_key, kind, group))
+        graph.add_node("join", join)  # 汇合只合并状态，不单独记跨度
+        graph.add_edge(START, "triage")
+        graph.add_conditional_edges("triage", lambda s: s["route"].workers(),
+                                    ["trajectory", "knowledge", "vision"])
+        for key in ("trajectory", "knowledge", "vision"):
+            graph.add_edge(key, "join")
+        graph.add_edge("join", "compose")
+    else:
+        for key, name, handler, kind, span_key in [
+            ("collect", "服务轨迹", collect, "query", "trajectory"),
+            ("retrieve", "知识检索", retrieve, "query", "knowledge"),
+            ("observe_images", "图片读取", observe_images, "agent", "vision"),
+            *shared,
+        ]:
+            graph.add_node(key, tracked(name, handler, span_key, kind))
+        graph.add_edge(START, "collect")
+        graph.add_conditional_edges("collect", lambda state: "observe_images" if state["images"] else "retrieve")
+        graph.add_edge("observe_images", "retrieve")
+        graph.add_edge("retrieve", "compose")
     graph.add_edge("compose", "check")
     graph.add_conditional_edges("check", lambda s: "compose" if s["issues"] and s["attempt"] < 2
                                else "accepted" if s["issues"] or not s.get("verify_reasons") else "verify")
