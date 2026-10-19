@@ -10,6 +10,7 @@ import contextlib
 import contextvars
 import hashlib
 import json
+import threading
 import time
 import uuid
 from collections.abc import Iterator
@@ -21,6 +22,11 @@ from app.logging_setup import get_logger
 
 _log = get_logger(__name__)
 _current: contextvars.ContextVar[Trace | None] = contextvars.ContextVar("yt_trace", default=None)
+#: 当前上下文里打开的跨度（trace_id, span_id）链。用 contextvar 而不是 Trace 实例上的栈：
+#: LangGraph 并行分支在线程池里运行，并且每个分支拿到的是派发时上下文的副本，
+#: 所以并行分支的父跨度都是派发点，彼此不会互相当成父节点。
+_open_spans: contextvars.ContextVar[tuple[tuple[str, str], ...]] = contextvars.ContextVar(
+    "yt_open_spans", default=())
 #: 记录器自身失败次数（进程内），供完整性检查与健康页读取
 recorder_errors = 0
 
@@ -78,22 +84,29 @@ class Trace:
     spans: list[Span] = field(default_factory=list)
     artifacts: dict[str, tuple[str, str]] = field(default_factory=dict)
     citations: list[dict[str, Any]] = field(default_factory=list)
-    _stack: list[str] = field(default_factory=list)
+    _lock: threading.RLock = field(default_factory=threading.RLock, repr=False, compare=False)
     _flushed_artifacts: set[str] = field(default_factory=set)
     _flushed_citations: int = 0
 
     # ── 记录 ─────────────────────────────────────────────────────────────
+    def _open_parent(self) -> str | None:
+        for trace_id, span_id in reversed(_open_spans.get()):
+            if trace_id == self.trace_id:
+                return span_id
+        return None
+
     def _new_span(self, name: str, kind: str, **values: Any) -> Span:
-        parent = values.pop("parent_span_id", None) or (self._stack[-1] if self._stack else None)
-        span = Span(span_id=f"spn-{uuid.uuid4().hex[:16]}", name=name, kind=kind,
-                    parent_span_id=parent, seq=len(self.spans), **values)
-        self.spans.append(span)
+        parent = values.pop("parent_span_id", None) or self._open_parent()
+        with self._lock:  # 并行分支同时开跨度时，seq 与列表顺序必须一致且不重复
+            span = Span(span_id=f"spn-{uuid.uuid4().hex[:16]}", name=name, kind=kind,
+                        parent_span_id=parent, seq=len(self.spans), **values)
+            self.spans.append(span)
         return span
 
     @contextlib.contextmanager
     def span(self, name: str, kind: str = "agent", **values: Any) -> Iterator[Span]:
         span = self._new_span(name, kind, **values)
-        self._stack.append(span.span_id)
+        token = _open_spans.set((*_open_spans.get(), (self.trace_id, span.span_id)))
         try:
             yield span
         except Exception as exc:
@@ -102,8 +115,7 @@ class Trace:
             span.end("timeout" if "Timeout" in type(exc).__name__ else "failed")
             raise
         finally:
-            if self._stack and self._stack[-1] == span.span_id:
-                self._stack.pop()
+            _open_spans.reset(token)
             span.end(span.status if span.status != "running" else "ok")
 
     def decision(self, name: str, reasons: list[Any], *, status: str = "ok", label: str = "") -> Span:
@@ -119,7 +131,8 @@ class Trace:
     def artifact(self, kind: str, content: Any) -> str:
         text = content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, default=str)
         digest = _sha(text)
-        self.artifacts.setdefault(digest, (kind, text))
+        with self._lock:
+            self.artifacts.setdefault(digest, (kind, text))
         return digest
 
     def model_call(self, *, stage: str, started: float, messages: list[Any] | None, result: Any = None,
@@ -171,11 +184,12 @@ class Trace:
 
     def cite(self, *, message_id: str | None, style: str, segment_index: int, text: str,
              source_id: str, source_record_id: str | None, verdict: str) -> None:
-        self.citations.append({
-            "message_id": message_id, "reply_style": style, "segment_index": segment_index,
-            "segment_text": text, "source_id": source_id, "source_record_id": source_record_id,
-            "verdict": verdict,
-        })
+        with self._lock:
+            self.citations.append({
+                "message_id": message_id, "reply_style": style, "segment_index": segment_index,
+                "segment_text": text, "source_id": source_id, "source_record_id": source_record_id,
+                "verdict": verdict,
+            })
 
     def finish(self, status: str, *, outcome_message_id: str | None = None) -> None:
         self.status = status
