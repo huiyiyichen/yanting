@@ -70,7 +70,9 @@ flowchart LR
 
 ## 快速开始
 
-下面步骤使用 Windows PowerShell。准备 Node.js **22.12+**、Python **3.11**、[uv](https://docs.astral.sh/uv/) 和模型服务凭证。
+评审与演示请直接使用作品提交包：解压后双击根目录的 `start-submission.cmd`。包里已经包含业务数据、附件、知识索引和数据库快照，不需要 clone 源码、不需要导入 Excel、也不需要重新发布知识。
+
+下面的步骤面向需要读源码、跑测试或二次开发的场景。使用 Windows PowerShell，准备 Node.js **22.12+**、Python **3.11**、[uv](https://docs.astral.sh/uv/) 和模型服务凭证。
 
 ### 1. 获取源码与配置
 
@@ -103,7 +105,19 @@ YANTING_EMBEDDING_MODEL_ID=BAAI/bge-m3
 .\services\api\.venv\Scripts\python.exe -X utf8 scripts\fetch_embedding_model.py --repo BAAI/bge-m3 --allow-pattern "onnx/*"
 ```
 
-ONNX 编码模型约 **2.29 GB**，默认缓存于 `%LOCALAPPDATA%\anker-agent\models`，后续启动复用缓存。也可在模型配置中使用远程编码服务。
+ONNX 编码模型约 **2.29 GB**，默认缓存于 `%LOCALAPPDATA%\anker-agent\models`，后续启动复用缓存。
+
+不想下载本地模型时，可以在 `services/api/.env` 里改用 OpenAI 兼容的远程编码服务：
+
+```dotenv
+YANTING_EMBEDDING_BACKEND=http
+YANTING_EMBEDDING_HTTP_BASE_URL=
+YANTING_EMBEDDING_HTTP_API_KEY=
+YANTING_EMBEDDING_MODEL_ID=
+YANTING_EMBEDDING_DIMENSION=
+```
+
+远程编码服务只要 `/v1/embeddings` 接口即可，向量维度会自动读取。注意包内或本机已发布的知识索引是用 BGE-M3 建的（稠密 1024 维 + 稀疏通道），换用其它编码模型后必须重新发布知识索引，否则维度对不上、检索会用不了；远程服务通常只返回稠密向量，混合检索会退化为纯语义召回。
 
 ### 3. 导入业务数据并发布知识
 
